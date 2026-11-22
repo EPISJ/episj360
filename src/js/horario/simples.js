@@ -11,15 +11,20 @@
 var H3=null,H3_IMP=false,H3S={tipo:"",quem:"",seg:""},H3_PRONTO=null,H3_H=null,H3_ENVIO=false;
 const H3_MSG0={assunto:"Horário — alterações a partir de {semana}",
   corpo:"Olá {nome},\n\nO seu horário na EPISJ 360 foi atualizado.\n\n{alteracoes}\n\nPode ver o horário de cada semana em {ligacao} (Horários360 › Semana).\n\nCom os melhores cumprimentos,\nDireção Pedagógica",
-  curta:"EPISJ 360: o seu horário mudou ({n}). Veja em {ligacao}"};
-function h3Norm(v){v=v&&typeof v==="object"?v:{};return{t:+v.t||0,salT:+v.salT||0,modo:v.modo==="completa"?"completa":"simples",sal:v.sal||"",tel:v.tel&&typeof v.tel==="object"?v.tel:{},ult:v.ult&&typeof v.ult==="object"?v.ult:{},
+  curta:"EPISJ 360: o seu horário mudou ({n}). Veja em {ligacao}",
+  // 0.9.170: WhatsApp (formadores, um a um) e turmas (grupo da turma ou formandos um a um)
+  wa:"Olá {primeiro_nome},\n\nO seu horário mudou ({n}).\n\n{alteracoes}\n\nVeja o horário de cada semana em {ligacao} (Horários360 › Semana).\n\nDireção Pedagógica — EPISJ",
+  waT:"Horário da turma {turma} — mudou a partir de {semana}.\n\n{alteracoes}\n\nVeja o horário em {ligacao} (Horários360 › Semana).\n\nDireção Pedagógica — EPISJ"};
+function h3Norm(v){v=v&&typeof v==="object"?v:{};return{t:+v.t||0,salT:+v.salT||0,modo:v.modo==="completa"?"completa":"simples",sal:v.sal||"",tel:v.tel&&typeof v.tel==="object"?v.tel:{},telF:v.telF&&typeof v.telF==="object"?v.telF:{},wa:Array.isArray(v.wa)?v.wa:[],ultC:v.ultC&&typeof v.ultC==="object"?v.ultC:{},ult:v.ult&&typeof v.ult==="object"?v.ult:{},
   env:Array.isArray(v.env)?v.env:[],auto:Object.assign({on:false,email:true,push:true,min:10},v.auto||{}),msg:Object.assign({},H3_MSG0,v.msg||{}),visto:+v.visto||0}}
 function h3Carregar(){if(!H3_PRONTO)H3_PRONTO=DB.get("kv","h3").then(v=>{H3=h3Norm(v);h3ModoAplicar()}).catch(()=>{H3=h3Norm(null);h3ModoAplicar()});return H3_PRONTO}
 function h3Sal(){const a=new Uint8Array(9);crypto.getRandomValues(a);return [...a].map(x=>x.toString(36).padStart(2,"0")).join("")}
 function h3Guardar(){if(RO||LIMPAR||!H3)return;H3.t=Date.now();DB.put("kv","h3",H3);
   nuvFila("h3",()=>{try{if(NUVOK()&&!nuvDesl()){if(H3_SINC)nuvemPut("H3",H3,H3.t);else h3TrazerNuvem()}}catch(e){}},2500);try{guidePubAgendar()}catch(e){}} // 0.9.149: fila de envios (sai ao fechar a página)
 function h3Juntar(a,b){const n=h3Norm((b.t||0)>(a.t||0)?b:a),o=(b.t||0)>(a.t||0)?a:b;
-  n.tel=Object.assign({},o.tel,n.tel);for(const [k,v] of Object.entries(o.ult||{})){const q=n.ult[k];if(!q){n.ult[k]=v;continue}const r=Object.assign({},(v.t||0)>(q.t||0)?v:q);
+  n.tel=Object.assign({},o.tel,n.tel);n.telF=Object.assign({},o.telF,n.telF); // 0.9.170: telemóveis dos formandos (WhatsApp)
+  {const w=new Map();for(const x of(o.wa||[]).concat(n.wa||[]))w.set(x.t+"|"+x.por+"|"+x.id,x);n.wa=[...w.values()].sort((x,y)=>x.t-y.t).slice(-300)}
+  for(const [k,v] of Object.entries(o.ultC||{})){const q=n.ultC[k];if(!q||(v.t||0)>(q.t||0))n.ultC[k]=v}for(const [k,v] of Object.entries(o.ult||{})){const q=n.ult[k];if(!q){n.ult[k]=v;continue}const r=Object.assign({},(v.t||0)>(q.t||0)?v:q);
     for(const [c,ct] of [["em","emT"],["tl","tlT"]]){const x=(v[ct]||0)>(q[ct]||0)?v:q;if(x[c]!==undefined){r[c]=x[c];r[ct]=x[ct]}}if(r.em&&r.em===r.tl){const z=[v,q].find(y=>y.c&&y.em===r.em&&y.tl===r.tl);if(z)r.c=z.c}n.ult[k]=r}
   const m=new Map();for(const x of(o.env||[]).concat(n.env||[]))m.set(x.t+"|"+x.por,x);n.env=[...m.values()].sort((x,y)=>x.t-y.t).slice(-200);if(o.sal&&(!n.sal||(o.salT||0)<(n.salT||Infinity))){n.sal=o.sal;n.salT=o.salT||0}return n}
 // 0.9.149: os dados só vivem na nuvem — até à primeira leitura, nada se envia sem antes juntar com o que lá está (h3Juntar nunca apaga contactos nem avisos)
@@ -226,6 +231,25 @@ function h3Pendentes(){const st=mhEstado();if(!st||!H3)return[];const r=[];
     if(emOk&&tlOk)continue;
     r.push({t,p,cur,h,novo:!base,mais,menos,emOk,tlOk})}
   return r.sort((a,b)=>COLL_PT.compare(String(a.t.name),String(b.t.name)))}
+/* ---------- 0.9.170: turmas (formandos) — avisos pelo WhatsApp ----------
+   Como para os formadores: o horário de cada turma (em vigor e seguintes) em frases; H3.ultC[classId]={c,h,t} = o último
+   horário avisado. Avisa-se pelo grupo de avisos da turma (texto pronto) ou os formandos um a um (wa.me, ver core/whatsapp.js). */
+function h3TurmaDe(c){const E=escData();return E.turmas.find(t=>t.id===c.id)||E.turmas.find(t=>t.id===(ESD.mapaC||{})[c.id])||E.turmas.find(t=>norm(t.cod||"")===norm(c.name||""))||null}
+function h3LinhasC(st,cid){const VL=cpVersoes(st),hj=calHoje(),D=st.days||["Seg","Ter","Qua","Qui","Sex"],P=st.periods||[],o=new Set();
+  for(const V of VL){if(V.ate&&V.ate<hj)continue;const m=h3Celulas(st,V,"c",cid),pre=V.de&&V.de>hj?"A partir de "+calDM(V.de)+" · ":"";
+    for(const [k,L] of m){const [di,pi]=k.split("|").map(Number),p=P[pi]||{};if(!D[di])continue;
+      for(const x of L)o.add(`${pre}${D[di]} ${p.start||p.label||pi+1}${p.end?"–"+p.end:""} · ${x.disc}${x.form?" · "+x.form:""}${x.sala?" · "+x.sala:""}`)}}
+  const DS=["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"],ord=s=>{const m=/(Seg|Ter|Qua|Qui|Sex|Sáb|Dom)\S* (\d\d:\d\d)?/.exec(s);return (s.startsWith("A partir")?"1":"0")+(m?DS.indexOf(m[1].slice(0,3))+(m[2]||""):"")+s};
+  return [...o].sort((a,b)=>ord(a).localeCompare(ord(b)))}
+function h3PendentesC(){const st=mhEstado();if(!st||!H3)return[];const r=[];
+  for(const c of st.classes||[]){const cur=h3LinhasC(st,c.id),h=esHash(cur.join("\n")),ant=H3.ultC[c.id];if(!ant&&!cur.length)continue;if(ant&&ant.h===h)continue;
+    const base=ant&&ant.c,A=new Set(base||[]),B=new Set(cur);r.push({c,t:h3TurmaDe(c),cur,h,novo:!base,mais:base?cur.filter(x=>!A.has(x)):cur,menos:base?base.filter(x=>!B.has(x)):[]})}
+  return r.sort((a,b)=>COLL_PTN.compare(String((a.t&&a.t.cod)||a.c.name),String((b.t&&b.t.cod)||b.c.name)))}
+function h3MarcarC(x){H3.ultC[x.c.id]={c:x.cur,h:x.h,t:Date.now()};H3.env.push({t:Date.now(),por:(EU&&EU.email)||"",quem:"Turma "+((x.t&&x.t.cod)||x.c.name||""),canais:["wa"],n:x.novo?-1:x.mais.length+x.menos.length});if(H3.env.length>200)H3.env=H3.env.slice(-200)}
+function h3TxtC(x){if(x.novo)return x.cur.map(s=>"• "+s).join("\n");return (x.mais.length?"Aulas novas ou mudadas:\n"+x.mais.map(s=>"+ "+s).join("\n"):"")+(x.mais.length&&x.menos.length?"\n\n":"")+(x.menos.length?"Deixam de existir:\n"+x.menos.map(s=>"− "+s).join("\n"):"")}
+function h3PreencherC(tpl,x,nome){const sem=calDM(h3Seg(calHoje()),{day:"numeric",month:"long"});
+  return String(tpl||"").replace(/\{turma\}/g,(x.t&&x.t.cod)||x.c.name||"").replace(/\{alteracoes\}/g,h3TxtC(x)).replace(/\{ligacao\}/g,h3Lig()).replace(/\{semana\}/g,sem).replace(/\{primeiro_nome\}/g,waPrimeiro(nome)).replace(/\{nome\}/g,nome||"")}
+function h3FormandosC(x){return x.t?escData().formandos.filter(f=>f.turmaId===x.t.id&&!f.estado):[]}
 function h3Txt(x){if(x.novo)return "O seu horário:\n"+x.cur.map(s=>"  "+s).join("\n");
   return (x.mais.length?"Aulas novas ou mudadas:\n"+x.mais.map(s=>"  + "+s).join("\n"):"")+(x.mais.length&&x.menos.length?"\n\n":"")+(x.menos.length?"Deixam de existir:\n"+x.menos.map(s=>"  − "+s).join("\n"):"")}
 /* 0.9.171: {nome} = só o primeiro nome do formador («Olá Joel,») */
@@ -235,7 +259,7 @@ function h3Preencher(tpl,x){const n=x.novo?"horário novo":(x.mais.length+x.meno
   return String(tpl||"").replace(/\{nome\}/g,h3PNome(x)).replace(/\{alteracoes\}/g,h3Txt(x)).replace(/\{ligacao\}/g,h3Lig()).replace(/\{semana\}/g,sem).replace(/\{n\}/g,n)}
 function h3Marcar(x,canais){const u=Object.assign({},H3.ult[x.t.id]||{}),agora=Date.now(),todos=canais.includes("marca");
   if(todos||canais.includes("email")){u.em=x.h;u.emT=agora}
-  if(todos||canais.includes("push")||canais.includes("sms")){u.tl=x.h;u.tlT=agora}
+  if(todos||canais.includes("push")||canais.includes("sms")||canais.includes("wa")){u.tl=x.h;u.tlT=agora}
   if(u.em===x.h&&u.tl===x.h)u.c=x.cur;u.t=agora;H3.ult[x.t.id]=u;
   H3.env.push({t:agora,por:(EU&&EU.email)||"",quem:x.t.name||"",canais,n:x.novo?-1:x.mais.length+x.menos.length});if(H3.env.length>200)H3.env=H3.env.slice(-200)}
 async function h3Push(x){const tp=h3Topico(h3Email(x.p));if(!tp)throw new Error("sem tópico");
@@ -323,7 +347,7 @@ async function hsComRender(){await null;try{await esdPronto}catch(e){}await h3Ca
   if(!st){el.innerHTML=`<div class="pp-vz">${ICO.cal}<p>Ainda não há horário para ${esc(anoAtivo().nome)}. Importe os PDF do Untis em «Semana».</p></div>`;return}
   const sms=h3SmsLink(L),semEm=L.filter(x=>!h3Email(x.p)).length;
   let h=`<div class="card"><h3 style="margin:0 0 4px">Por avisar</h3>
-    <p class="hint" style="margin:0 0 10px">${L.length?"Formadores com o horário diferente do último aviso. Cada um só sai da lista depois de avisado pelas duas vias: email e telemóvel (notificação ou SMS). Quem já foi avisado por uma via só recebe a outra.":"Todos os formadores já foram avisados do horário atual, por email e por telemóvel."}</p>`;
+    <p class="hint" style="margin:0 0 10px">${L.length?"Formadores com o horário diferente do último aviso. Cada um só sai da lista depois de avisado pelas duas vias: email e telemóvel (notificação, SMS ou WhatsApp). Quem já foi avisado por uma via só recebe a outra.":"Todos os formadores já foram avisados do horário atual, por email e por telemóvel."}</p>`;
   if(L.length){h+=`<div class="tw"><table class="rt"><thead><tr><th><input type="checkbox" id="h3All" checked aria-label="Todos"></th><th>Formador</th><th>Email</th><th>Telemóvel</th><th>Avisado por</th><th>O que mudou</th></tr></thead><tbody>`+
     L.map(x=>`<tr><td><input type="checkbox" data-h3sel="${esc(x.t.id)}" checked></td><td>${esc((x.p&&x.p.nome)||x.t.name)}</td><td>${esc(h3Email(x.p)||"—")}</td><td>${esc(h3Tel(H3.tel[(x.p||{}).id])||"—")}</td>
       <td><span class="h3via ${x.emOk?"ok":""}">${x.emOk?"✓ ":""}Email</span> <span class="h3via ${x.tlOk?"ok":""}">${x.tlOk?"✓ ":""}Telemóvel</span></td>
@@ -334,8 +358,19 @@ async function hsComRender(){await null;try{await esdPronto}catch(e){}await h3Ca
       <button class="b" id="h3Pu">Enviar notificação ao telemóvel</button>
       <button class="b" id="h3EmPu">Email e notificação</button>
       ${sms?`<a class="b s" id="h3Sms" href="${esc(sms)}">SMS pelo telemóvel</a>`:""}
+      <button class="b s" id="h3Wa" title="Abre o WhatsApp com a mensagem de cada formador já escrita (gratuito)">WhatsApp um a um</button>
       <span class="grow"></span><button class="b s" id="h3Marc" title="Dar como avisados sem enviar nada">Marcar como avisados</button></div>
     <p class="hint" id="h3Msg" style="margin:8px 0 0">${ms?"":"Para enviar emails, entre com o Office 365 da escola (como para os outros envios). "}${semEm?semEm+" sem email em Escola360 › Formadores. ":""}</p>`}
+  h+=`</div>`;
+  // 0.9.170: turmas (formandos) pelo WhatsApp
+  const LC=h3PendentesC();
+  h+=`<div class="card"><h3 style="margin:0 0 4px">Turmas — avisar os formandos pelo WhatsApp</h3>
+    <p class="hint" style="margin:0 0 10px">${LC.length?"Turmas com o horário diferente do último aviso. Use o grupo de avisos da turma (texto pronto a copiar) ou envie aos formandos um a um. Os telemóveis dos formandos escrevem-se em Escola360 › Formandos (ficam só com a Direção). Gratuito: sai pelo WhatsApp de quem envia.":"Todas as turmas já foram avisadas do horário atual."}</p>`;
+  if(LC.length){h+=`<div class="tw"><table class="rt"><thead><tr><th>Turma</th><th>Formandos com telemóvel</th><th>O que mudou</th><th></th></tr></thead><tbody>`+
+    LC.slice(0,80).map(x=>{const F=h3FormandosC(x),ct=F.filter(f=>waTelFor(f)).length;return `<tr><td><b>${esc((x.t&&x.t.cod)||x.c.name)}</b>${x.t?"":` <small class="hint">(sem turma na Escola360)</small>`}</td><td>${ct} de ${F.length}</td>
+      <td><details><summary>${x.novo?"horário ("+x.cur.length+" tempo"+(x.cur.length===1?"":"s")+")":`${x.mais.length?"+"+x.mais.length:""}${x.mais.length&&x.menos.length?" / ":""}${x.menos.length?"−"+x.menos.length:""}`}</summary><pre class="h3dif">${esc(h3TxtC(x))}</pre></details></td>
+      <td style="white-space:nowrap"><button class="b s" type="button" data-h3wag="${esc(x.c.id)}">Grupo da turma</button> <button class="b s" type="button" data-h3waf="${esc(x.c.id)}"${ct?"":" disabled title=\"Nenhum formando desta turma tem telemóvel\""}>Formandos um a um</button> <button class="b s" type="button" data-h3wam="${esc(x.c.id)}" title="Dar a turma como avisada sem enviar nada">Marcar</button></td></tr>`}).join("")+`</tbody></table></div>
+    ${LC.length>80?`<p class="hint">E mais ${LC.length-80} turmas.</p>`:""}<div class="row" style="margin-top:8px"><span class="grow"></span><button class="b s" type="button" id="h3WaMT">Marcar todas as turmas como avisadas</button></div>`}
   h+=`</div>`;
   // avisos automáticos
   h+=`<div class="card"><h3 style="margin:0 0 4px">Avisos automáticos</h3>
@@ -347,22 +382,25 @@ async function hsComRender(){await null;try{await esdPronto}catch(e){}await h3Ca
     <label class="h3lb">Assunto do email<input type="text" data-h3m2="assunto" value="${esc(H3.msg.assunto)}"></label>
     <label class="h3lb">Email<textarea data-h3m2="corpo" rows="9">${esc(H3.msg.corpo)}</textarea></label>
     <label class="h3lb">Mensagem curta (notificação e SMS)<input type="text" data-h3m2="curta" value="${esc(H3.msg.curta)}"></label>
+    <label class="h3lb">WhatsApp aos formadores <small class="hint">— também {primeiro_nome}</small><textarea data-h3m2="wa" rows="6">${esc(H3.msg.wa)}</textarea></label>
+    <label class="h3lb">WhatsApp às turmas <small class="hint">— {turma}, {alteracoes}, {semana}, {ligacao}; um a um também {primeiro_nome}</small><textarea data-h3m2="waT" rows="6">${esc(H3.msg.waT)}</textarea></label>
     <div class="row" style="margin-top:6px"><button class="b s" id="h3MsgRep">Repor as mensagens originais</button></div></div>`;
   // contactos
   const F=(st.teachers||[]).map(t=>({t,p:h3ProfDe(st,t.id)})).filter(x=>x.p).sort((a,b)=>COLL_PT.compare(a.p.nome,b.p.nome));
   h+=`<div class="card"><h3 style="margin:0 0 4px">Contactos dos formadores</h3>
-    <p class="hint" style="margin:0 0 8px">O email vem de Escola360 › Formadores. Os telemóveis servem só para o SMS e ficam só com a Direção (não são publicados). O tópico é o que cada formador escreve na app ntfy para receber as notificações — também o vê em Horários360 › Semana.</p>
+    <p class="hint" style="margin:0 0 8px">O email vem de Escola360 › Formadores. Os telemóveis servem para o SMS e o WhatsApp e ficam só com a Direção (não são publicados). O tópico é o que cada formador escreve na app ntfy para receber as notificações — também o vê em Horários360 › Semana.</p>
     <div class="tw"><table class="rt"><thead><tr><th>Formador</th><th>Email</th><th>Telemóvel</th><th>Tópico das notificações</th></tr></thead><tbody>`+
     F.map(({p})=>{const tp=h3Topico(h3Email(p));return `<tr><td>${esc(p.nome)}</td><td>${esc(h3Email(p)||"—")}</td><td><input type="text" data-h3tel="${esc(p.id)}" value="${esc(H3.tel[p.id]||"")}" placeholder="9xx xxx xxx" inputmode="tel" style="width:140px"></td><td>${tp?`<code class="h3top">${esc(tp)}</code> <button class="b s" data-h3cp="${esc(tp)}" title="Copiar">Copiar</button>`:"—"}</td></tr>`}).join("")+`</tbody></table></div></div>`;
   // como funciona
   h+=`<div class="card"><h3 style="margin:0 0 4px">Como chegam os avisos (tudo gratuito)</h3><ul class="hint" style="margin:0;padding-left:18px">
     <li><b>Email</b> — pela conta do Office 365 da escola de quem envia, como os outros envios da EPISJ 360.</li>
     <li><b>Notificação no telemóvel</b> — pelo <b>ntfy</b> (serviço gratuito e de código aberto, sem conta): o formador instala a app ntfy e subscreve o seu tópico. Chega como uma mensagem, mas não gasta SMS. A mensagem só diz que o horário mudou e onde o ver.</li>
+    <li><b>WhatsApp</b> — gratuito: a app abre o WhatsApp de quem envia (no computador ou no telemóvel) com o número e a mensagem já escritos, e basta carregar em Enviar; passa-se de pessoa em pessoa. Para as turmas há também o texto pronto para o grupo de avisos da turma.</li>
     <li><b>SMS</b> — não há serviço de SMS gratuito em Portugal para muitos envios (os gratuitos dão 1 SMS por dia ou só créditos de teste). Por isso o botão abre a app Mensagens do telemóvel (ou do Mac) com os números e o texto já preenchidos: sai pelo tarifário do telemóvel da escola.</li></ul></div>`;
   // histórico
   const E=H3.env.slice(-30).reverse();
   if(E.length)h+=`<div class="card"><h3 style="margin:0 0 6px">Últimos avisos</h3><div class="tw"><table class="rt"><thead><tr><th>Quando</th><th>Formador</th><th>Por</th><th>Enviado por</th></tr></thead><tbody>`+
-    E.map(e=>`<tr><td>${esc(new Date(e.t).toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"}))}</td><td>${esc(e.quem)}</td><td>${esc((e.canais||[]).map(c=>({email:"email",push:"notificação",sms:"SMS",marca:"marcado à mão"})[c]||c).join(", "))}</td><td>${esc(e.por)}</td></tr>`).join("")+`</tbody></table></div></div>`;
+    E.map(e=>`<tr><td>${esc(new Date(e.t).toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"}))}</td><td>${esc(e.quem)}</td><td>${esc((e.canais||[]).map(c=>({email:"email",push:"notificação",sms:"SMS",wa:"WhatsApp",marca:"marcado à mão"})[c]||c).join(", "))}</td><td>${esc(e.por)}</td></tr>`).join("")+`</tbody></table></div></div>`;
   el.innerHTML=h;
   const sel=()=>{const ids=new Set([...el.querySelectorAll("[data-h3sel]:checked")].map(i=>i.dataset.h3sel));return L.filter(x=>ids.has(x.t.id))};
   const m=t=>{const e=$("#h3Msg");if(e)e.textContent=t};
@@ -380,6 +418,18 @@ async function hsComRender(){await null;try{await esdPronto}catch(e){}await h3Ca
   if(b5)b5.onclick=()=>{setTimeout(()=>{const S=sel().filter(x=>!x.tlOk&&h3Tel(H3.tel[(x.p||{}).id]));if(S.length&&confirm("A mensagem foi enviada pelo telemóvel? Os "+S.length+" formadores com telemóvel ficam como avisados por telemóvel."))
     {S.forEach(x=>h3Marcar(x,["sms"]));h3Guardar();hsComRender()}},1500)};
   if(b4)b4.onclick=()=>{const S=sel();if(!S.length)return;if(!confirm(`Dar ${S.length} formador${S.length===1?"":"es"} como avisado${S.length===1?"":"s"} pelas duas vias sem enviar nada?`))return;S.forEach(x=>h3Marcar(x,["marca"]));h3Guardar();hsComRender()};
+  // 0.9.170: WhatsApp
+  const bw=$("#h3Wa");if(bw)bw.onclick=()=>{const S=sel();if(!S.length){toast("Escolha pelo menos um formador");return}
+    waFila(S.map(x=>({id:x.t.id,x,nome:(x.p&&x.p.nome)||x.t.name||"",tel:h3Tel(H3.tel[(x.p||{}).id]),txt:waPreencher(h3Preencher(H3.msg.wa,x),(x.p&&x.p.nome)||x.t.name||"")})),{titulo:"Horário por WhatsApp — formadores",
+      onFeito:y=>{h3Marcar(y.x,["wa"]);waRegistar("h3",y.id,y.nome)},fim:n=>{if(n)hsComRender()}})};
+  const xC=id=>LC.find(y=>y.c.id===id);
+  el.querySelectorAll("[data-h3wag]").forEach(b=>b.onclick=()=>{const x=xC(b.dataset.h3wag);if(!x)return;
+    waGrupo("Grupo da turma "+((x.t&&x.t.cod)||x.c.name),h3PreencherC(H3.msg.waT,x,"").replace(/Olá ,/g,"Olá a todos,"),{sub:"Copie e cole no grupo de avisos da turma, ou abra o WhatsApp e escolha o grupo. A turma fica como avisada.",onFeito:()=>{h3MarcarC(x);waRegistar("h3t",x.c.id,"grupo");setTimeout(hsComRender,400)}})});
+  el.querySelectorAll("[data-h3waf]").forEach(b=>b.onclick=()=>{const x=xC(b.dataset.h3waf);if(!x)return;const F=h3FormandosC(x),com=F.filter(f=>waTelFor(f)).length;
+    waFila(F.map(f=>({id:f.id,nome:f.nome,tel:waTelFor(f),txt:h3PreencherC(H3.msg.waT,x,f.nome)})),{titulo:"Horário da turma "+((x.t&&x.t.cod)||x.c.name)+" — formandos",
+      sub:"Depois de enviar a todos, a turma fica como avisada.",onFeito:f=>waRegistar("h3t",x.c.id,f.nome),fim:n=>{if(n&&n>=com){h3MarcarC(x);h3Guardar()}if(n)hsComRender()}})});
+  el.querySelectorAll("[data-h3wam]").forEach(b=>b.onclick=()=>{const x=xC(b.dataset.h3wam);if(!x)return;h3MarcarC(x);h3Guardar();hsComRender()});
+  const bmt=$("#h3WaMT");if(bmt)bmt.onclick=()=>{if(!confirm(`Dar as ${LC.length} turmas como avisadas sem enviar nada?`))return;LC.forEach(h3MarcarC);h3Guardar();hsComRender()};
   el.querySelectorAll("[data-h3prev]").forEach(b=>b.onclick=()=>{const x=L.find(y=>y.t.id===b.dataset.h3prev);if(!x)return;const w=window.open("","_blank");if(!w){toast("O navegador bloqueou a janela — permita janelas deste site");return}
     w.document.open();w.document.write(h3EmailHtml(x).replace("<body",`<body`).replace('<div style="max-width:780px;padding:8px 4px">',`<div style="max-width:780px;padding:8px 4px"><p style="font-family:Segoe UI,Arial,sans-serif;font-size:12px;color:#6b7385;margin:0 0 14px">Pré-visualização · Para: ${esc(h3Email(x.p))} · Assunto: ${esc(h3Preencher(H3.msg.assunto,x))}</p>`));w.document.close()});
   el.querySelectorAll("[data-h3a]").forEach(i=>i.onchange=()=>{H3.auto[i.dataset.h3a]=i.checked;h3Guardar()});

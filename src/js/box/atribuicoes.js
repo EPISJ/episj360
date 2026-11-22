@@ -21,7 +21,7 @@ function emailAuto(nome){const w=String(nome||"").normalize("NFD").replace(/[\u0
   if(!w.length)return "";return (w.length>1?w[0]+"."+w[w.length-1]:w[0])+"@"+EMAIL_DOM}
 // só preenche quem não tem email — nunca muda um email escrito à mão
 function emailsAuto(){let n=0;(cfg.profs||[]).forEach(p=>{if(!String(p.email||"").trim()){const e=emailAuto(p.nome);if(e){p.email=e;n++}}});return n}
-function renderProfs(){
+function renderProfs(){if(!renderProfs.wa){renderProfs.wa=1;waPronto().then(()=>{if(curTab==="prof")renderProfs()})} // 0.9.170: telemóveis (peça H3)
   if(emailsAuto())save();
   const q=norm(($("#profFilter")||{}).value||"");
   const list=cfg.profs.filter(p=>!q||norm((p.cod||"")+" "+p.nome+" "+p.email).includes(q));
@@ -35,11 +35,14 @@ function renderProfs(){
    <td><input type="text" data-k="abrev" value="${esc(p.abrev||"")}" maxlength="8"></td>
    <td><input type="email" data-k="email" value="${esc(p.email)}"></td>
    <td><input type="date" data-k="nasc" value="${esc(p.nasc||"")}" title="Data de nascimento (só para o widget Aniversários do Dashboard; não é publicada)"></td>
+   <td><input type="tel" data-wtel="${esc(p.id)}" value="${esc(waTelVer(H3&&H3.tel[p.id]))}" placeholder="9xx xxx xxx" inputmode="tel" title="Para o SMS e o WhatsApp (só a Direção; não é publicado)"></td>
    <td class="hm" style="color:var(--muted)">${cnt[p.id]||0}</td>
-   <td><button class="x" title="Remover" data-del>×</button></td></tr>`).join("")+(resto>0?`<tr><td colspan="7" style="text-align:center"><button class="b s" type="button" data-profmais>Mostrar mais ${Math.min(resto,500)} (faltam ${resto}) — ou procure acima</button></td></tr>`:"")||`<tr><td colspan="7" class="hint">${cfg.profs.length?"Ninguém corresponde à procura.":"Ainda sem formadores — adicione no formulário acima ou cole uma lista abaixo."}</td></tr>`;
+   <td><button class="x" title="Remover" data-del>×</button></td></tr>`).join("")+(resto>0?`<tr><td colspan="8" style="text-align:center"><button class="b s" type="button" data-profmais>Mostrar mais ${Math.min(resto,500)} (faltam ${resto}) — ou procure acima</button></td></tr>`:"")||`<tr><td colspan="8" class="hint">${cfg.profs.length?"Ninguém corresponde à procura.":"Ainda sem formadores — adicione no formulário acima ou cole uma lista abaixo."}</td></tr>`;
 }
 var PROF_N=200;
-$("#tbProfs").addEventListener("input",e=>{const tr=e.target.closest("tr");const p=cfg.profs.find(x=>x.id===tr.dataset.id);
+// 0.9.170: telemóvel do formador (o mesmo do Horários360 › Comunicar) — peça H3, só a Direção
+$("#tbProfs").addEventListener("change",async e=>{const i=e.target.closest("[data-wtel]");if(!i)return;await waPronto();if(!waTelGravar("p",i.dataset.wtel,i.value)){toast("Número de telemóvel inválido");return}i.value=waTelVer(H3.tel[i.dataset.wtel])});
+$("#tbProfs").addEventListener("input",e=>{if(!e.target.dataset.k)return;const tr=e.target.closest("tr");const p=cfg.profs.find(x=>x.id===tr.dataset.id);
   if(e.target.dataset.k==="nome"){const ant=emailAuto(p.nome);if(!String(p.email||"").trim()||p.email===ant){p.email=emailAuto(e.target.value);const ie=tr.querySelector('[data-k="email"]');if(ie)ie.value=p.email}}
   p[e.target.dataset.k]=e.target.value;save();if(e.target.dataset.k==="nome")nomesMudaram();try{esRecarregar()}catch(_){}});
 const nomesMudaram=debounce(()=>{renderMods();renderGrid()},300);

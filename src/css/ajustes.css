@@ -246,3 +246,16 @@ body.callamplo #calLinha>.cal-l.amp{flex:1 0 auto;display:flex;flex-direction:co
 .cal-l.amp .cal-ld{top:calc(50% - 6px)}
 .cal-l.amp .cal-ld.cm{top:4px}.cal-l.amp .cal-ld.bx{top:auto;bottom:4px}
 .cal-l.amp .cal-ldt.bx{top:auto;bottom:3px}
+
+/* 0.9.170: WhatsApp — janela «um a um» e texto para o grupo (sem verde: o verde é só dos botões de importar) */
+.wa-bg{position:fixed;inset:0;z-index:2000;background:rgba(15,23,42,.32);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px}
+.wa-box{background:var(--card,#fff);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:0 24px 60px rgba(15,23,42,.22);width:min(620px,100%);max-height:min(88vh,820px);overflow:auto;padding:18px 20px}
+.wa-h{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}.wa-h>div{flex:1;min-width:0}.wa-h b{font-size:17px}.wa-h small{color:var(--muted);font-size:12.5px}
+.wa-quem{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 8px;font-size:14px}.wa-quem span{color:var(--muted)}
+.wa-box textarea{width:100%;box-sizing:border-box;font:inherit;font-size:13.5px;line-height:1.45;resize:vertical}
+.wa-bt{margin-top:10px;gap:8px;flex-wrap:wrap;align-items:center}.wa-bt a.b{text-decoration:none}
+.wa-lista{margin:12px 0 0;padding:10px 0 0 22px;border-top:1px solid var(--line);columns:2;column-gap:20px;font-size:12.5px;max-height:180px;overflow:auto}
+.wa-lista li{break-inside:avoid;color:var(--muted)}.wa-lista li button{background:none;border:0;padding:1px 0;font:inherit;color:inherit;cursor:pointer;text-align:left}
+.wa-lista li.cur{color:var(--ink);font-weight:600}.wa-lista li.ok{color:var(--brand)}
+.wa-dest{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--brandbg,#f6f8fb)}
+.wa-tur{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px;max-height:200px;overflow:auto}.wa-tur small,.wa-dest small{color:var(--muted)}

@@ -166,7 +166,7 @@ function formandoEmail(f){return String((f&&f.email)||"").trim().toLowerCase()||
 function forEmailsRep(){const c=new Map(),add=e=>{if(e)c.set(e,(c.get(e)||0)+1)};escData().formandos.forEach(f=>add(formandoEmail(f)));(cfg.profs||[]).forEach(p=>add(String(p.email||"").trim().toLowerCase()));
   return new Set([...c].filter(([,n])=>n>1).map(([e])=>e))}
 function forEstTag(f){return f.estado?`<span class="tag exc">${esc(FOR_EST_TXT[f.estado]||f.estado)}</span>`:""}
-function renderFormandos(){const e=escData(),q=norm($("#forFilter").value||""),ft=$("#forTurmaF").value,a=anoAtivo();
+function renderFormandos(){if(!renderFormandos.wa&&podePublicar()){renderFormandos.wa=1;waPronto().then(()=>{if(curTab==="for"&&FOR_AB)renderFormandos()})} /* 0.9.170: telemóveis (peça H3) */ const e=escData(),q=norm($("#forFilter").value||""),ft=$("#forTurmaF").value,a=anoAtivo();
   $("#forTurmaF").innerHTML=turmaOpts(ft,`<option value="">Todas as turmas</option>`);$("#fTurma").innerHTML=turmaOpts($("#fTurma").value);$("#forBulkT").innerHTML=turmaOpts($("#forBulkT").value,`<option value="">— na própria lista —</option>`);
   document.querySelectorAll("#forEstF [data-fe]").forEach(b=>b.classList.toggle("on",b.dataset.fe===FOR_EST));
   const TM=new Map(e.turmas.map(t=>[t.id,t])),cod=id=>(TM.get(id)||{}).cod||"";
@@ -208,6 +208,7 @@ function forFicha(f){const E=escData(),a=anoAtivo(),t=E.turmas.find(x=>x.id===f.
     <label>Data de nascimento<input type="date" data-k="nasc" value="${esc(f.nasc||"")}"></label>
     <label>Turma<select data-k="turmaId">${turmaOpts(f.turmaId)}</select></label>
     <label class="w2">Email da escola${f.email?" (exceção)":" (automático)"}<input type="email" data-k="email" value="${esc(f.email||"")}" placeholder="${esc(typeof emailAuto==="function"?emailAuto(f.nome):"")}" spellcheck="false"></label>
+    ${podePublicar()&&!RO?`<label>Telemóvel <small>(só a Direção)</small><input type="tel" data-wtel="${esc(f.id)}" value="${esc(H3?waTelVer((H3.telF||{})[f.id]):"")}" placeholder="9xx xxx xxx" inputmode="tel" title="Para os avisos por WhatsApp. Não é publicado nem visto pelos formadores."></label>`:""}
     <label>Situação<select data-k="estado"><option value="">Ativo</option><option value="desistente"${f.estado==="desistente"?" selected":""}>Desistente</option><option value="transferido"${f.estado==="transferido"?" selected":""}>Transferido</option></select></label></div>
     <p class="frnota">${formandoEmail(f)?`<a href="mailto:${esc(formandoEmail(f))}">${esc(formandoEmail(f))}</a> — ${f.email?"escrito à mão (exceção à regra)":"primeiro nome + último apelido; se este formando tiver outro email, escreva-o acima"}`:""}${FOR_REP&&FOR_REP.has(formandoEmail(f))?' · <b style="color:var(--bad)">há outra pessoa com este email</b>':""}</p>
     ${id!=null?`<p class="frnota">${id} anos · ${id>=18?"maior de idade":"menor de idade"}${an!=null?` · ${an===0?"faz anos hoje":`faz ${id+1} anos a ${esc(forDataPt(f.nasc).slice(0,5))} (daqui a ${an} dia${an>1?"s":""})`}`:""}</p>`:""}
@@ -241,6 +242,8 @@ function forFicha(f){const E=escData(),a=anoAtivo(),t=E.turmas.find(x=>x.id===f.
 var FOR_N=200;
 {let h=null;$("#forFilter").addEventListener("input",()=>{FOR_N=200;clearTimeout(h);h=setTimeout(renderFormandos,120)})}$("#forTurmaF").addEventListener("change",()=>{FOR_N=200;renderFormandos()});
 $("#forEstF").addEventListener("click",e=>{const b=e.target.closest("[data-fe]");if(!b)return;FOR_EST=b.dataset.fe;FOR_N=200;renderFormandos()});
+// 0.9.170: telemóvel do formando (WhatsApp) — guardado na peça H3 (só a Direção), nunca em escola.formandos (que é publicada para os formadores)
+$("#tbFor").addEventListener("change",async e=>{const i=e.target.closest("[data-wtel]");if(!i)return;await waPronto();if(!waTelGravar("f",i.dataset.wtel,i.value)){toast("Número de telemóvel inválido");return}i.value=waTelVer(H3.telF[i.dataset.wtel]);toast(i.value?"Telemóvel guardado":"Telemóvel apagado")});
 $("#tbFor").addEventListener("change",e=>{const r=e.target.closest(".frr");if(!r||!e.target.dataset.k)return;const f=escData().formandos.find(x=>x.id===r.dataset.id);if(!f)return;const k=e.target.dataset.k,v=e.target.value.trim();
   if(k==="estado"){if(v)f.estado=v;else delete f.estado}
   else if(k==="email"){const em=v.toLowerCase();if(!em||em===emailAuto(f.nome))delete f.email;else f.email=em}
@@ -254,16 +257,20 @@ $("#tbFor").addEventListener("click",e=>{if(e.target.closest("[data-formais]")){
   if(e.target.closest("[data-fdel]")&&f){if(!confirm(`Apagar o formando ${f.nome}? Pode anular a seguir.`))return;const E=escData();ponto("Antes de apagar o formando "+f.nome);E.formandos=E.formandos.filter(x=>x!==f);FOR_AB="";save();renderFormandos();esRecarregar();toast("Formando apagado (pode anular)");return}
   if(e.target.closest("[data-fab]")&&f){FOR_AB=FOR_AB===f.id?"":f.id;renderFormandos()}});
 $("#forForm").addEventListener("submit",e=>{e.preventDefault();const nome=$("#fNome").value.trim();if(!nome)return;escData().formandos.push({id:uid(),num:$("#fNum").value.trim(),nome,turmaId:$("#fTurma").value});save();const t=$("#fTurma").value;$("#forForm").reset();$("#fTurma").value=t;renderFormandos();esRecarregar();$("#fNum").focus()});
-$("#forImport").onclick=()=>{const lines=$("#forBulk").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);if(!lines.length)return;
-  ponto("Antes de colar uma lista de formandos");const E=escData(),fix=$("#forBulkT").value;let add=0,upd=0,bad=0;
+$("#forImport").onclick=async()=>{const lines=$("#forBulk").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);if(!lines.length)return;
+  await waPronto(); // 0.9.170: a lista pode trazer o telemóvel (vai para a peça H3, só da Direção)
+  ponto("Antes de colar uma lista de formandos");const E=escData(),fix=$("#forBulkT").value;let add=0,upd=0,bad=0,nTel=0;
   for(const l of lines){let p=l.split(/\t|;/).map(x=>x.trim()).filter(Boolean);if(!p.length)continue;
+    let tel="";{const k=p.findIndex(x=>/^(\+|00)?[\d\s().-]{9,}$/.test(x)&&/^(\+|00|9|2)/.test(x.replace(/[\s().-]/g,""))&&h3Tel(x));if(k>=0&&p.length>1){tel=h3Tel(p[k]);p.splice(k,1)}}
     if(/^(n\.?º|num|número|numero)$/i.test(p[0])||/^nome$/i.test(p[0]))continue;
     let num="",turma=null;if(/^\d{1,5}$/.test(p[0])){num=p.shift()}
     if(!fix&&p.length>1){const t=turmaPorCod(p[p.length-1]);if(t){turma=t;p.pop()}}
     const nome=p.join(" ").trim();const tid=fix||(turma&&turma.id)||"";if(!nome){bad++;continue}
     const ex=E.formandos.find(f=>(num&&f.num===num&&f.turmaId===tid)||norm(f.nome)===norm(nome));
-    if(ex){if(num)ex.num=num;if(tid)ex.turmaId=tid;upd++}else{E.formandos.push({id:uid(),num,nome,turmaId:tid});add++}}
-  save();renderFormandos();esRecarregar();$("#forMsg").textContent=`${add} acrescentado(s), ${upd} atualizado(s)${bad?`, ${bad} linha(s) ignorada(s)`:""}.`;if(add||upd)$("#forBulk").value=""};
+    let alvo=ex;if(ex){if(num)ex.num=num;if(tid)ex.turmaId=tid;upd++}else{alvo={id:uid(),num,nome,turmaId:tid};E.formandos.push(alvo);add++}
+    if(tel&&H3&&alvo){H3.telF=H3.telF||{};H3.telF[alvo.id]=tel;nTel++}}
+  if(nTel)h3Guardar();
+  save();renderFormandos();esRecarregar();$("#forMsg").textContent=`${add} acrescentado(s), ${upd} atualizado(s)${nTel?`, ${nTel} telemóvel(eis)`:""}${bad?`, ${bad} linha(s) ignorada(s)`:""}.`;if(add||upd)$("#forBulk").value=""};
 
 /* ---------- 0.9.139: importar o «Mapa dos alunos por turma» do dbGEP (PDF) ----------
    Lê só número, nome, data de nascimento, turma e d)esistente / t)ransferido. Morada, n.º de identificação e NIF ficam de fora.

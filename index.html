@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
-<!-- GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.171 -->
+<!-- GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.172 -->
 <meta charset="utf-8">
-<script src="app/sem-armazenamento.js?v=0.9.171"></script>
+<script src="app/sem-armazenamento.js?v=0.9.172"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'wasm-unsafe-eval'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>EPISJ 360 — Escola Profissional da Ilha de São Jorge</title>
@@ -11,8 +11,8 @@
 <!-- 0.9.50: a letra Poppins vem do próprio site (mais rápido, funciona sem o Google e também dentro do Horários360) -->
 <link rel="preload" href="fonts/poppins-latin-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/poppins-latin-600.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="app/app.css?v=0.9.171">
-<script src="app/cabeca.js?v=0.9.171"></script>
+<link rel="stylesheet" href="app/app.css?v=0.9.172">
+<script src="app/cabeca.js?v=0.9.172"></script>
 </head>
 <body>
 <div id="privLock" role="dialog" aria-modal="true" aria-labelledby="privTit">
@@ -533,6 +533,7 @@
     <div class="row" style="margin-bottom:10px;align-items:flex-end">
       <label class="grow">Procurar<input type="text" id="forFilter" placeholder="número, nome ou turma"></label>
       <label style="width:220px">Turma<select id="forTurmaF"></select></label>
+      <button class="b s" type="button" id="forWa" title="Aviso por WhatsApp aos formandos de uma ou mais turmas (gratuito)">Aviso por WhatsApp</button>
       <div class="frseg" id="forEstF" role="group" aria-label="Situação"><button type="button" data-fe="">Todos</button><button type="button" data-fe="ativo">Ativos</button><button type="button" data-fe="desistente">Desistentes</button><button type="button" data-fe="transferido">Transferidos</button><button type="button" data-fe="email" title="Formandos com um email igual ao de outra pessoa">Emails repetidos</button></div>
     </div>
     <div id="tbFor" class="frl"></div>
@@ -540,7 +541,7 @@
   </div>
   <div class="card">
     <h2>Colar uma lista de formandos</h2>
-    <p class="hint">Copie do Excel ou do pleon as colunas <b>número, nome e turma</b> (a turma pelo código, ex.: <code>A04</code>), um formando por linha. Quem já existir (mesmo número na mesma turma, ou mesmo nome) é atualizado, não duplicado.</p>
+    <p class="hint">Copie do Excel ou do pleon as colunas <b>número, nome e turma</b> (a turma pelo código, ex.: <code>A04</code>), um formando por linha. Quem já existir (mesmo número na mesma turma, ou mesmo nome) é atualizado, não duplicado. Pode juntar uma coluna com o <b>telemóvel</b> (para os avisos por WhatsApp; fica só com a Direção).</p>
     <textarea id="forBulk" placeholder="1&#9;Nome do formando&#9;A04"></textarea>
     <div class="row" style="margin-top:8px"><label style="width:240px">Turma, se a lista não a tiver<select id="forBulkT"></select></label><button class="b imp" id="forImport" style="align-self:flex-end">Importar formandos</button><span id="forMsg" class="hint" style="margin:0;align-self:flex-end"></span></div>
   </div>
@@ -844,9 +845,10 @@
     <div id="pFormMsg"></div>
     <div class="row" style="margin-bottom:10px">
       <label class="grow">Procurar<input type="text" id="profFilter" placeholder="código, nome ou email"></label>
+      <button class="b s" type="button" id="profWa" style="align-self:flex-end" title="Aviso por WhatsApp aos formadores (gratuito)">Aviso por WhatsApp</button>
     </div>
     <table class="rt">
-      <thead><tr><th style="width:130px">Código</th><th>Nome</th><th style="width:84px">Sigla</th><th>Email</th><th style="width:150px" title="Para o widget Aniversários do Dashboard">Nascimento</th><th class="hm">Módulos</th><th></th></tr></thead>
+      <thead><tr><th style="width:130px">Código</th><th>Nome</th><th style="width:84px">Sigla</th><th>Email</th><th style="width:150px" title="Para o widget Aniversários do Dashboard">Nascimento</th><th style="width:140px" title="Para o SMS e o WhatsApp. Só a Direção vê; não é publicado">Telemóvel</th><th class="hm">Módulos</th><th></th></tr></thead>
       <tbody id="tbProfs"></tbody>
     </table>
     <div id="profWarn"></div>
@@ -1167,6 +1169,7 @@
       <label class="grow">Formador<select id="mProf"></select></label>
       <button class="b" id="sendAll" style="align-self:flex-end">Enviar a todos com PDF</button>
       <label class="chip" style="align-self:flex-end"><input type="checkbox" id="sendReg" checked> registar o envio</label>
+      <button class="b s" id="waAll" type="button" style="align-self:flex-end" title="Abre o WhatsApp com a mensagem de cada formador já escrita (gratuito)">WhatsApp um a um</button>
     </div>
     <div id="sendMsg"></div>
     <div id="mails"></div>
@@ -1526,8 +1529,8 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="app/rede.js?v=0.9.171"></script>
-<script src="app/app.js?v=0.9.171"></script>
-<script src="app/extra.js?v=0.9.171"></script>
+<script src="app/rede.js?v=0.9.172"></script>
+<script src="app/app.js?v=0.9.172"></script>
+<script src="app/extra.js?v=0.9.172"></script>
 </body>
 </html>

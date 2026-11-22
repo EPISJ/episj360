@@ -210,13 +210,21 @@ function renderMails(){
     let mb=fill(cfg.mail.body,t,true);
     const href=`mailto:${encodeURIComponent(t.p.email)}?subject=${encodeURIComponent(subj(t))}&body=${encodeURIComponent(mb)}`,ok=ENV_OK[t.p.id];
     return `<div class="prof"><div class="hd"><b>${esc(t.p.nome)}</b><span>${esc(t.p.email||"(sem email)")}</span><span class="grow"></span>${ok?`<span class="tag ok">✓ enviado às ${new Date(ok).toLocaleTimeString("pt-PT",{hour:"2-digit",minute:"2-digit"})}</span>`:""}<span class="tag bad">${t.miss} em falta</span>
-     <button class="b s" data-cp="${i}">Copiar mensagem</button><button class="b s" data-pdf="${i}">PDF</button>${t.p.email?`<a class="b s" style="text-decoration:none" data-mt="${i}" href="${href}">Abrir no email</a><button class="b" data-send="${i}">Enviar com PDF</button>`:""}</div>
+     ${waTelProf(t.p)?`<button class="b s" data-wa="${i}" title="WhatsApp para ${esc(waTelVer(waTelProf(t.p)))}">WhatsApp</button>`:""}${waUltimo("box",t.p.id)?`<span class="tag" title="Aberto no WhatsApp">WhatsApp ${new Date(waUltimo("box",t.p.id)).toLocaleDateString("pt-PT",{day:"2-digit",month:"2-digit"})}</span>`:""}<button class="b s" data-cp="${i}">Copiar mensagem</button><button class="b s" data-pdf="${i}">PDF</button>${t.p.email?`<a class="b s" style="text-decoration:none" data-mt="${i}" href="${href}">Abrir no email</a><button class="b" data-send="${i}">Enviar com PDF</button>`:""}</div>
      <div class="mailbox" style="margin:10px 14px 14px;max-height:260px;overflow:auto">${esc(msCfg().lista?body:mb)}</div></div>`}).join("")+(resto>0?`<div style="text-align:center;margin:6px 0 14px"><button class="b s" id="mailMais" type="button">Mostrar mais ${Math.min(30,resto)} mensagens (faltam ${resto})</button></div>`:"")||`<p class="hint">Nenhum formador com documentação em falta.</p>`);
   const bm=$("#mailMais");if(bm)bm.onclick=()=>{MAIL_N+=30;renderMails()};
+  {const bw=$("#waAll"),nw=T.filter(t=>waTelProf(t.p)).length;if(bw){bw.textContent=nw?`WhatsApp um a um (${nw})`:"WhatsApp um a um";bw.title=nw?"Abre o WhatsApp com a mensagem de cada formador já escrita (gratuito)":"Escreva os telemóveis em Escola360 › Formadores"}}
+  if(!H3&&!renderMails.wa){renderMails.wa=1;waPronto().then(()=>{if(curTab==="env")renderMails()})} // 0.9.170: telemóveis (peça H3)
   msUI(true);
 }
 var MAIL_N=30; // var: sem TDZ se a página for desenhada antes desta linha
-$("#mails").addEventListener("click",async e=>{const b=e.target.closest("[data-cp],[data-pdf],[data-mt],[data-send]");if(!b)return;
+/* 0.9.170: documentos em falta por WhatsApp (gratuito, um clique por formador) — texto curto, com a lista resumida */
+function boxWaTxt(t){const R=rowsFor(t,true),max=12,L=R.slice(0,max).map(r=>`• ${r.turma} · ${discShort(r.disc)} · ${r.mod} — ${faltaDesc(r)}`);
+  return `Olá ${waPrimeiro(t.p.nome)},\n\nNa Box ainda falta${t.miss===1?"":"m"} ${t.miss} documento${t.miss===1?"":"s"} do ano letivo ${anoLetivo()}${cfg.mail.prazo?` (prazo: ${cfg.mail.prazo})`:""}:\n\n${L.join("\n")}${R.length>max?`\n… e mais ${R.length-max} (a lista completa segue por email).`:""}\n\nObrigado,\nDireção Pedagógica — EPISJ`}
+function boxWaFila(T){waFila(T.map(t=>({id:t.p.id,nome:t.p.nome,tel:waTelProf(t.p),txt:boxWaTxt(t)})),{titulo:"Documentos em falta — WhatsApp",onFeito:x=>waRegistar("box",x.id,x.nome),fim:n=>{if(n)renderMails()}})}
+$("#waAll").onclick=async()=>{await waPronto();const T=mailCache.filter(t=>t.miss);if(!T.length){toast("Nenhum formador com documentação em falta");return}boxWaFila(T)};
+$("#mails").addEventListener("click",async e=>{const bw=e.target.closest("[data-wa]");if(bw){boxWaFila([mailCache[+bw.dataset.wa]]);return}
+  const b=e.target.closest("[data-cp],[data-pdf],[data-mt],[data-send]");if(!b)return;
   if(b.dataset.cp){const t=mailCache[+b.dataset.cp];copy(`Para: ${t.p.email}\nAssunto: ${subj(t)}\n\n${fill(cfg.mail.body,t)}`);return}
   if(b.dataset.pdf){const t=mailCache[+b.dataset.pdf];baixarPDF(()=>pdfFormador(t),pdfNomeF(t));return}
   if(b.dataset.mt){const t=mailCache[+b.dataset.mt];baixarPDF(()=>pdfFormador(t),pdfNomeF(t));toast("PDF descarregado — anexe-o ao email");return}

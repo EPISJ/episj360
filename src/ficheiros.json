@@ -30,6 +30,7 @@
   "js/escola/planos-dsd.js",
   "js/horario/horario.js",
   "js/horario/simples.js",
+  "js/core/whatsapp.js",
   "js/sala/sala.js",
   "js/core/entrada.js",
   "js/escola/calendario.js",

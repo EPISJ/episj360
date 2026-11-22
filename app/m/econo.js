@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.174 — ecrã do módulo «econo», carregado quando é aberto */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.175 — ecrã do módulo «econo», carregado quando é aberto */
 "use strict";
 // ===== src/js/econo/econo.js =====
 /* Econo360 — ecrã do módulo (carregado só quando o Econo360 é aberto; os dados estão em econo/econo-dados.js) */

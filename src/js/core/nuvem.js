@@ -161,9 +161,22 @@ async function nuvemBases(rootId){if(!NUVOK()||nuvDesl())return;const l=basesIdx
 const b64=u=>{let s="";const a=new Uint8Array(u.buffer,u.byteOffset,u.byteLength);for(let i=0;i<a.length;i++)s+=String.fromCharCode(a[i]);return btoa(s)};
 const unb64=s=>{const b=atob(s),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return new Uint32Array(a.buffer)};
 let nuvTxN=-1;
-async function nuvemTextos(force){if(!NUVOK()||nuvDesl())return;if(!force&&TX.size===nuvTxN)return;nuvTxN=TX.size;
-  const arr=[];for(const r of TX.values())arr.push(r.sig?{...r,sig:b64(r.sig)}:r);
-  await nuvemPut("tx",arr);nuvSetT("txN",arr.length)}
+/* 0.9.175: os textos dos documentos já lidos deixaram de ir numa só peça «tx» reescrita inteira a cada leitura (passava dos 6 MB e a base de
+   dados cancelava a gravação: «statement timeout»). A «tx» antiga fica como está (só se lê) e os textos novos vão em peças pequenas
+   «tx1», «tx2»… (até ~2,5 MB cada): só se reescreve a última peça, enquanto for pequena. Só se grava depois de ler as peças da nuvem,
+   para saber o que já lá está. */
+var TX_NUV=TX_NUV||new Set(),TX_LIDO=TX_LIDO||false,TX_PECA=TX_PECA||null; // assinaturas já na nuvem; peças lidas; última peça pequena {nome,arr,len}
+const TX_MAX=2500000,txAss=r=>r.sha1+"|"+(r.c!=null?1:0),txReg=r=>r.sig?{...r,sig:b64(r.sig)}:r;
+async function nuvemTextos(force){if(!NUVOK()||nuvDesl()||!TX_LIDO)return;if(!force&&TX.size===nuvTxN)return;nuvTxN=TX.size;
+  const novos=[];for(const r of TX.values())if(r&&r.sha1&&!TX_NUV.has(txAss(r)))novos.push(txReg(r));if(!novos.length)return;
+  let idx={};try{idx=(await (await nuvem("GET","")).json()).itens||{}}catch(e){return}
+  let max=0;for(const k in idx){const m=/^tx(\d+)$/.exec(k);if(m)max=Math.max(max,+m[1])}
+  let peca=TX_PECA&&TX_PECA.nome==="tx"+max?TX_PECA:{nome:"tx"+(max+1),arr:[],len:0};
+  for(const r of novos){const n=JSON.stringify(r).length;if(peca.arr.length&&peca.len+n>TX_MAX){await txGravar(peca);peca={nome:"tx"+(+peca.nome.slice(2)+1),arr:[],len:0}}peca.arr.push(r);peca.len+=n}
+  await txGravar(peca)}
+async function nuvemTextosJa(f){try{await nuvemTextos(f)}catch(e){console.warn("textos na nuvem",e)}}
+async function txGravar(p){const t=Date.now();NUV.erro="";await nuvemPut(p.nome,p.arr,t);if(NUV.erro)throw new Error(NUV.erro);
+  for(const r of p.arr)TX_NUV.add(txAss(r));nuvSetT(p.nome,t);TX_PECA=p.len<TX_MAX?p:null}
 // ao entrar: traz o que for mais recente na nuvem e envia o que for mais recente aqui
 // 0.9.154: nuvemTrazer(true) traz só a configuração (formadores, escola, atribuições) — o que a entrada precisa; as análises das pastas,
 // as contagens e os textos dos documentos (o que pesa) vêm depois, em segundo plano, com nuvemTrazer()
@@ -208,11 +221,15 @@ async function nuvemTrazer(so1){
     for(const root in basesIdx())if(!idx["B_"+root])await nuvemBases(root);
     // 4) documentos já lidos (não voltam a ser pedidos à Box)
     await textosProntos;
-    if(idx.tx&&(idx.tx.t||0)>(L.tx||0)){const arr=await nuvemGet("tx");let n=0;
-      for(const r of arr){if(!r||!r.sha1)continue;if(TX.has(r.sha1)){const o=TX.get(r.sha1);if(r.c!=null&&o.c==null){o.c=r.c;delete o.cx;await DB.put("textos",r.sha1,o);n++}continue} // 0.9.101: cabeçalho lido noutro computador
-        if(r.sig)r.sig=unb64(r.sig);TX.set(r.sha1,r);await DB.put("textos",r.sha1,r);n++}
-      if(n){txRev++;mudou=true}nuvSetT("tx",idx.tx.t)}
-    if(TX.size&&(!idx.tx||TX.size>(nuvT().txN||0)))await nuvemTextos(true);
+    // 0.9.175: «tx» (antiga, só leitura) e as peças «tx1», «tx2»…
+    {const ks=Object.keys(idx).filter(k=>/^tx\d*$/.test(k)).sort((a,b)=>(+a.slice(2)||0)-(+b.slice(2)||0));let n=0,ok=true;
+      for(const k of ks){if((idx[k].t||0)<=(L[k]||0))continue;let arr;try{arr=await nuvemGet(k)}catch(e){ok=false;break}if(!Array.isArray(arr))continue;let len=0;
+        for(const r of arr){if(!r||!r.sha1)continue;TX_NUV.add(txAss(r));if(k!=="tx")len+=JSON.stringify(r).length;
+          if(TX.has(r.sha1)){const o=TX.get(r.sha1);if(r.c!=null&&o.c==null){o.c=r.c;delete o.cx;await DB.put("textos",r.sha1,o);n++}continue} // 0.9.101: cabeçalho lido noutro computador
+          const x=Object.assign({},r);if(x.sig)x.sig=unb64(x.sig);TX.set(x.sha1,x);await DB.put("textos",x.sha1,x);n++}
+        if(k!=="tx"&&k===ks[ks.length-1]&&len<TX_MAX)TX_PECA={nome:k,arr,len};nuvSetT(k,idx[k].t)}
+      if(n){txRev++;mudou=true}if(ok)TX_LIDO=true}
+    if(TX.size&&TX_LIDO)await nuvemTextosJa(true);
     // 0.9.113: contador dos pedidos à Box (somado entre computadores)
     if(idx.BU&&(idx.BU.t||0)>(L.BU||0)){try{buJuntar(await nuvemGet("BU"))}catch(x){}nuvSetT("BU",idx.BU.t)}
     }

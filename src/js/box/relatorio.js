@@ -144,7 +144,7 @@ async function verificarFundo0(){
       if(Date.now()-last>15000){last=Date.now();if(curTab==="rel")renderReport();if(curTab==="alt")renderAlt()}},()=>my!==bgRun||buTravado(),2);
     el.textContent=`${r.done-r.err} documentos lidos`;setTimeout(()=>{if(!bgOn)el.style.display="none"},6000)}
   catch(e){el.textContent="leitura interrompida"}
-  bgOn=false;nuvemTextos();if(curTab==="rel")renderReport();if(curTab==="alt")renderAlt();
+  bgOn=false;nuvemTextosJa();if(curTab==="rel")renderReport();if(curTab==="alt")renderAlt();
 }
 $("#qGo").onclick=async()=>{
   if(!SES){toast("Entre primeiro na Box");return}

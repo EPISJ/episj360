@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
-<!-- GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.135 -->
+<!-- GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.136 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>EPISJ 360 — Escola Profissional da Ilha de São Jorge</title>
@@ -9,8 +9,8 @@
 <!-- 0.9.50: a letra Poppins vem do próprio site (mais rápido, funciona sem o Google e também dentro do Horários360) -->
 <link rel="preload" href="fonts/poppins-latin-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/poppins-latin-600.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="app/app.css?v=0.9.135">
-<script src="app/cabeca.js?v=0.9.135"></script>
+<link rel="stylesheet" href="app/app.css?v=0.9.136">
+<script src="app/cabeca.js?v=0.9.136"></script>
 </head>
 <body>
 <div id="privLock" role="dialog" aria-modal="true" aria-labelledby="privTit">
@@ -230,9 +230,9 @@
     <div id="calPer"></div>
     <div class="row" id="calMunL" style="margin-top:12px"><label style="width:160px" title="Dia e mês do feriado municipal do concelho da escola">Feriado municipal<input type="text" id="calMunD" placeholder="dd/mm" inputmode="numeric"></label><label class="grow">Nome do feriado municipal<input type="text" id="calMunN"></label></div>
   </div>
-  <div class="card">
+  <div class="card" id="calAnoCard">
     <h2>Calendário do ano</h2>
-    <div class="row" style="margin-bottom:10px"><label style="width:280px">Turma<select id="calTurma"></select></label><label style="width:200px">Marcos<select id="calTipo"></select></label></div>
+    <div class="row" style="margin-bottom:10px"><label style="width:280px">Turma<select id="calTurma"></select></label><label style="width:200px">Marcos<select id="calTipo"></select></label><button class="b s" id="calAmp" type="button" style="align-self:flex-end;margin-left:auto" title="Mostra o calendário em todo o ecrã, sem o menu lateral (Esc para sair)">Ampliar</button></div>
     <div id="calGrid"></div>
     <div id="calDia"></div>
   </div>
@@ -876,27 +876,42 @@
 <!-- 2. BOX -->
 <section id="box" class="on">
   <div class="card" id="boxLive">
-    <h2>Pastas da Box <span class="tag ok" style="vertical-align:middle">só leitura</span></h2>
-    <p class="hint">A app só lê nomes de pastas e ficheiros. Não abre, altera, move nem apaga nada na Box.</p>
-    <div id="loginBox" class="boxlogin">
-      <p style="margin:0 0 10px"><b>Ligar a Box</b> — a Box só é precisa no módulo Box360, para ler as pastas da Gestão Documental. Sem ela, o resto do Box360 abre com a última análise guardada.</p>
-      <button class="b" id="oaGo">Entrar com a Box</button>
-      <p class="hint" style="margin:8px 0 0">Só é preciso entrar uma vez neste navegador: a sessão renova-se sozinha.</p>
-      <div id="wkSet" style="display:none;margin-top:12px">
-        <p class="hint">Indique o endereço do serviço de login (Cloudflare) — ver LEIA-ME, passo 3.</p>
-        <div class="row"><label class="grow">Endereço do serviço de login<input type="text" id="wkUrl" placeholder="https://boxdoc-login.o-seu-nome.workers.dev"></label><button class="b s" id="wkSave" style="align-self:flex-end">Guardar</button></div>
-      </div>
-      <details id="devTok" style="margin-top:10px">
-        <summary class="hint" style="cursor:pointer;margin:0">Alternativa: usar um token de programador (60 minutos)</summary>
-        <div class="row" style="margin-top:8px">
-          <label class="grow">Token de programador<input type="text" id="tok" autocomplete="off" spellcheck="false" style="-webkit-text-security:disc" placeholder="cole aqui o Developer Token"></label>
-          <button class="b s" id="tokGo" style="align-self:flex-end">Ligar com token</button>
+    <div class="boxtop">
+      <div class="boxtop-main">
+      <h2>Pastas da Box <span class="tag ok" style="vertical-align:middle">só leitura</span></h2>
+      <p class="hint">A app só lê nomes de pastas e ficheiros. Não abre, altera, move nem apaga nada na Box.</p>
+      <div id="loginBox" class="boxlogin">
+        <p style="margin:0 0 10px"><b>Ligar a Box</b> — a Box só é precisa no módulo Box360, para ler as pastas da Gestão Documental. Sem ela, o resto do Box360 abre com a última análise guardada.</p>
+        <button class="b" id="oaGo">Entrar com a Box</button>
+        <p class="hint" style="margin:8px 0 0">Só é preciso entrar uma vez neste navegador: a sessão renova-se sozinha.</p>
+        <div id="wkSet" style="display:none;margin-top:12px">
+          <p class="hint">Indique o endereço do serviço de login (Cloudflare) — ver LEIA-ME, passo 3.</p>
+          <div class="row"><label class="grow">Endereço do serviço de login<input type="text" id="wkUrl" placeholder="https://boxdoc-login.o-seu-nome.workers.dev"></label><button class="b s" id="wkSave" style="align-self:flex-end">Guardar</button></div>
         </div>
-      </details>
-      <div id="boxWait" class="hint" style="display:none;margin:10px 0 0"><span class="spin"></span> A ligar à Box…</div>
+        <details id="devTok" style="margin-top:10px">
+          <summary class="hint" style="cursor:pointer;margin:0">Alternativa: usar um token de programador (60 minutos)</summary>
+          <div class="row" style="margin-top:8px">
+            <label class="grow">Token de programador<input type="text" id="tok" autocomplete="off" spellcheck="false" style="-webkit-text-security:disc" placeholder="cole aqui o Developer Token"></label>
+            <button class="b s" id="tokGo" style="align-self:flex-end">Ligar com token</button>
+          </div>
+        </details>
+        <div id="boxWait" class="hint" style="display:none;margin:10px 0 0"><span class="spin"></span> A ligar à Box…</div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="b s" id="tokOut" style="display:none" title="Só se quiser mesmo desligar a conta da Box (fica desligada em todos os computadores)">Desligar a Box</button></div>
+      <div id="boxAuth"></div><div id="nuvemMsg"></div>
+      </div>
+      <aside class="locpane" id="locCard">
+      <h3>Pastas do computador (Box Drive) <span class="tag ok" style="vertical-align:middle">0 pedidos à Box</span></h3>
+      <p class="hint">Com o Box Drive, as pastas da Box estão no disco: a app lê daí os nomes, tamanhos e datas, sem abrir ficheiros nem fazer pedidos à Box. Escolha a mesma pasta (ex.: <i>DTP 2026.2027</i>). Chrome ou Edge do computador.</p>
+      <div class="row" style="align-items:center">
+        <button class="b" id="locGo">Analisar as pastas do computador</button>
+        <button class="b s" id="locOutra">Escolher outra pasta</button>
+        <button class="b s" id="locStop" style="display:none;color:var(--bad)">■ Parar</button>
+        <span id="locMsg" class="hint" style="margin:0"></span>
+      </div>
+      <div class="prog" id="locProg"><i></i></div>
+      </aside>
     </div>
-    <div class="row" style="margin-top:10px"><button class="b s" id="tokOut" style="display:none" title="Só se quiser mesmo desligar a conta da Box (fica desligada em todos os computadores)">Desligar a Box</button></div>
-    <div id="boxAuth"></div><div id="nuvemMsg"></div>
     <div id="boxBrowse" style="display:none">
       <h3>Escolha a pasta a analisar</h3>
       <div class="row" id="crumbs" style="gap:4px;font-size:14px"></div>
@@ -915,17 +930,6 @@
       <button class="b s" id="dlList" style="display:none">Descarregar listagem (CSV)</button>
       <span id="lastInfo" class="hint" style="margin:0"></span>
     </div>
-  </div>
-  <div class="card" id="locCard">
-    <h2>Pastas do computador (Box Drive) <span class="tag ok" style="vertical-align:middle">0 pedidos à Box</span></h2>
-    <p class="hint">Num computador com o Box Drive, as pastas da Box estão no disco. A app lê-as daí: nomes das pastas e dos ficheiros, tamanhos e datas. Não abre nem descarrega ficheiros e não faz nenhum pedido à Box. Escolha a mesma pasta que analisaria na Box (ex.: <i>DTP 2026.2027</i>). Funciona no Chrome e no Edge do computador.</p>
-    <div class="row" style="align-items:center">
-      <button class="b" id="locGo">Analisar as pastas do computador</button>
-      <button class="b s" id="locOutra">Escolher outra pasta</button>
-      <button class="b s" id="locStop" style="display:none;color:var(--bad)">■ Parar</button>
-      <span id="locMsg" class="hint" style="margin:0"></span>
-    </div>
-    <div class="prog" id="locProg"><i></i></div>
   </div>
   <div class="card" id="buCard">
     <h2>Pedidos à Box este mês</h2>
@@ -1476,8 +1480,8 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="app/rede.js?v=0.9.135"></script>
-<script src="app/app.js?v=0.9.135"></script>
-<script src="app/extra.js?v=0.9.135"></script>
+<script src="app/rede.js?v=0.9.136"></script>
+<script src="app/app.js?v=0.9.136"></script>
+<script src="app/extra.js?v=0.9.136"></script>
 </body>
 </html>

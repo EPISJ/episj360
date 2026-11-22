@@ -461,3 +461,9 @@ WIDGETS.push({id:"cal",mod:"escola",nome:"Calendário escolar",desc:"Hoje no cal
 
 try{if(!localStorage.getItem("guide_wg_cal")){localStorage.setItem("guide_wg_cal","1");if(!WG_SEL.includes("cal")&&!WG_SEL2.includes("cal")){WG_SEL.splice(1,0,"cal");localStorage.setItem(WG_KEY,JSON.stringify(WG_SEL))}}}catch(e){}
 
+// Calendário do ano › modo ampliado: o quadro ocupa o ecrã todo (sem menu lateral); Esc ou o botão para sair
+function calAmpSync(){const b=document.getElementById("calAmp");if(b)b.textContent=document.body.classList.contains("calamplo")?"Sair do modo ampliado":"Ampliar"}
+function calAmpSet(on){document.body.classList.toggle("calamplo",!!on);calAmpSync()}
+(function(){const b=document.getElementById("calAmp");if(b)b.onclick=()=>calAmpSet(!document.body.classList.contains("calamplo"));
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.body.classList.contains("calamplo"))calAmpSet(false)});
+  document.querySelector("nav.side")&&document.addEventListener("click",e=>{if(document.body.classList.contains("calamplo")&&e.target.closest(".top,nav.side"))calAmpSet(false)},true)})();

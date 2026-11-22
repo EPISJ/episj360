@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.135 */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.136 */
 /* ===== src/css/fontes.css ===== */
 @font-face{font-family:Poppins;font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/poppins-latin-400.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:Poppins;font-style:normal;font-weight:500;font-display:swap;src:url(../fonts/poppins-latin-500.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -1565,6 +1565,28 @@ html.ios-aberto,html.ios-aberto body{overflow:hidden}
 .gcard,.gfundos{max-width:680px}
 .gpmods{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
 @media (max-width:520px){.gpmods{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+/* Box360 › Análise: Box Drive ao lado da ligação à Box (aproveita o espaço à direita) */
+.boxtop{display:flex;gap:20px;align-items:flex-start}
+.boxtop-main{flex:1 1 auto;min-width:0}
+.locpane{flex:0 0 380px;border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--bg)}
+.locpane h3{margin:0 0 4px;font-size:15px}
+.locpane .hint{font-size:12.5px}
+.locpane .row{gap:8px}
+@media (max-width:1100px){.boxtop{flex-direction:column;gap:12px}.locpane{flex:none;width:100%;box-sizing:border-box}}
+/* Escola360 › Calendário Escolar › Calendário do ano em modo ampliado */
+body.calamplo{overflow:hidden}
+body.calamplo #calAnoCard{position:fixed;inset:0;z-index:60;margin:0;border:0;border-radius:0;overflow:auto;padding:18px 28px 28px;box-shadow:none}
+body.calamplo #calAnoCard .cal-ano{grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}
+body.calamplo #calAnoCard .cal-m{padding:12px 12px 10px}
+body.calamplo #calAnoCard .cal-m h4{font-size:clamp(14px,1.05vw,20px)}body.calamplo #calAnoCard .cal-m h4 small{font-size:clamp(11px,.75vw,14px)}
+body.calamplo #calAnoCard .cal-g{gap:4px}
+body.calamplo #calAnoCard .cal-g i{font-size:clamp(10px,.7vw,13px)}
+body.calamplo #calAnoCard .cal-g button{font-size:clamp(11px,.85vw,17px);border-radius:6px}
+body.calamplo #calAnoCard .cal-pts i{width:6px;height:6px}
+body.calamplo #calAnoCard .cal-leg{font-size:13px}
+body.calamplo #calAnoCard .dh{display:none}
+@media (max-width:1100px){body.calamplo #calAnoCard .cal-ano{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:700px){body.calamplo #calAnoCard .cal-ano{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* ===== src/css/temas.css ===== */
 /* 0.9.94: Definições › Temas. «360» é o aspeto original (sem atributo). «Cobalto» é inspirado no aspeto da Box:
    menu lateral azul-cobalto com texto branco, conteúdo branco, linhas finas, cabeçalhos de tabela em maiúsculas pequenas

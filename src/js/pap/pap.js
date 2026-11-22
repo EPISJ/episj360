@@ -298,10 +298,14 @@ async function papPdf(k,P,x){const J=await loadPDF(),doc=new J({unit:"mm",format
   if(ctx.first){ctx.pg();doc.setFontSize(11);doc.text("Sem formandos para mostrar.",14,PDF_TOP+10)}
   pdfMoldura(doc,`${escData().nome||"Escola Profissional da Ilha de São Jorge"} · EPISJ 360 · PAP360 · ${pdfTxt(P.curso||"")}`,papFse(P));return doc}
 const papW=doc=>doc.internal.pageSize.getWidth(),papHt=doc=>doc.internal.pageSize.getHeight();
-function papPdfCab(doc,P,titulo){const W=papW(doc),f=papFse(P);let y=PDF_TOP+3;doc.setTextColor(25);doc.setFont("helvetica","bold");doc.setFontSize(11.5);
-  doc.text(pdfTxt(escData().nome||"Escola Profissional da Ilha de São Jorge"),W/2,y,{align:"center"});y+=5;doc.setFont("helvetica","normal");doc.setFontSize(9.5);
-  doc.text(pdfTxt("Ano Letivo "+papAnoDe(P).nome),W/2,y,{align:"center"});y+=4.5;doc.text(pdfTxt("Prova de Aptidão Profissional"+(P.fase&&P.fase!=="1"?" · "+papFaseTxt(P.fase):"")),W/2,y,{align:"center"});y+=8;
-  doc.setFont("helvetica","bold");doc.setFontSize(14);doc.setTextColor(22,40,80);doc.text(pdfTxt(titulo),W/2,y,{align:"center"});y+=8;
+/* 0.9.220: o bloco do título (escola, ano letivo, prova e nome do documento) fica no cabeçalho, entre os dois logótipos
+   (antes ficava por baixo da linha do cabeçalho e ocupava espaço da página). Tamanho de letra reduzido se não couber entre os logótipos. */
+function papPdfTxtCab(doc,t,y,fs,max){doc.setFontSize(fs);let w=doc.getTextWidth(t);while(w>max&&fs>8){fs-=.5;doc.setFontSize(fs);w=doc.getTextWidth(t)}doc.text(t,papW(doc)/2,y,{align:"center"})}
+function papPdfTopo(doc,L){const W=papW(doc),max=W-2*(14+44);let y=L.length>3?9.6:L.length>2?11.5:13.5;
+  for(const l of L){doc.setFont("helvetica",l.b?"bold":"normal");doc.setTextColor(...(l.cor||[25,25,25]));papPdfTxtCab(doc,pdfTxt(l.t),y,l.fs,max);y+=l.dy||4.3}}
+function papPdfCab(doc,P,titulo){const W=papW(doc),f=papFse(P);let y=PDF_TOP+3;
+  papPdfTopo(doc,[{t:escData().nome||"Escola Profissional da Ilha de São Jorge",b:1,fs:10.5,dy:4.4},{t:"Ano Letivo "+papAnoDe(P).nome,fs:8.8,dy:3.9},
+    {t:"Prova de Aptidão Profissional"+(P.fase&&P.fase!=="1"?" · "+papFaseTxt(P.fase):""),fs:8.8,dy:6},{t:titulo,b:1,fs:13,cor:[22,40,80]}]);
   doc.setFontSize(9.5);doc.setTextColor(25);doc.text("Curso:",14,y);doc.setFont("helvetica","normal");const cw=f?W-14-27-66:W-14-27;const cl=doc.splitTextToSize(pdfTxt(P.curso||"-"),cw);doc.text(cl,27,y);
   if(f){doc.setFont("helvetica","bold");doc.text("Projeto:",W-14-64,y);doc.setFont("helvetica","normal");doc.text(pdfTxt(f),W-14-49,y)}return y+4*cl.length+3}
 function papPdfAss(doc,y,L,ncol){ncol=ncol||2;const W=papW(doc),H=papHt(doc),cw=(W-28)/ncol,lh=ncol>3?15:19,linhas=Math.ceil(L.length/ncol),need=linhas*lh;
@@ -331,9 +335,9 @@ function papPdfAta(ctx,P,s){ctx.pg();const doc=ctx.doc,D=papDef(),W=papW(doc),A=
   y=papPdfPar(doc,y,String(D.ataMeio||"").replace(/\{resultado\}/g,papResultado(s.cands)).trim());y=papPdfPar(doc,y+1,D.ataFecho||"");
   doc.setFont("helvetica","normal");doc.setFontSize(9.8);doc.text(pdfTxt(`${D.localidade||"Velas"}, ${calDMA(s.data)}`),W/2,y+6,{align:"center"});
   papPdfAss(doc,y+16,[["O(a) Secretário(a)",A.sec||P.resp||""],["O(a) Presidente",P.dped||""]])}
-function papPdfGrelha(ctx,P,c){ctx.pg();const doc=ctx.doc,D=papDef(),W=papW(doc),N=D.niveis,f=papFinal(c),cp=papCP(c),nf=papNF(c);let y=PDF_TOP+2;
-  doc.setFont("helvetica","bold");doc.setFontSize(12.5);doc.setTextColor(22,40,80);doc.text(pdfTxt("Grelha de Avaliação da Prova de Aptidão Profissional"),W/2,y,{align:"center"});
-  doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(60);doc.text(pdfTxt("Ano Letivo "+papAnoDe(P).nome+(P.fase&&P.fase!=="1"?" · "+papFaseTxt(P.fase):"")),W/2,y+4.6,{align:"center"});y+=11;
+function papPdfGrelha(ctx,P,c){ctx.pg();const doc=ctx.doc,D=papDef(),W=papW(doc),N=D.niveis,f=papFinal(c),cp=papCP(c),nf=papNF(c);let y=PDF_TOP+1;
+  papPdfTopo(doc,[{t:escData().nome||"Escola Profissional da Ilha de São Jorge",b:1,fs:10.5,dy:4.6},{t:"Ano Letivo "+papAnoDe(P).nome+(P.fase&&P.fase!=="1"?" · "+papFaseTxt(P.fase):""),fs:8.8,dy:6},
+    {t:"Grelha de Avaliação da Prova de Aptidão Profissional",b:1,fs:12.5,cor:[22,40,80]}]);
   const info=[[D.rotResp,P.resp],[D.rotOrient,P.orient],[D.rotDped,P.dped],["Curso",P.curso],["Projeto n.º",papFse(P)],["Tema",c.tema],["Nome do Formando",c.nome],["Número",c.num]];
   const y0=y;info.forEach(([l,v],i)=>{doc.setFont("helvetica","bold");doc.setFontSize(8.3);doc.setTextColor(40);doc.text(pdfTxt(l+":"),14,y+i*4.2);doc.setFont("helvetica","normal");doc.setTextColor(20);
     doc.text(pdfTxt(String(v||"").slice(0,110)),48,y+i*4.2,{maxWidth:W-14-48-52})});

@@ -120,8 +120,54 @@ async function guideCarregarModulos0(){
   catch(e){fim("boxcheck",e.tempo?"bg":"erro");fim("roomcheck",e.tempo?"bg":"ok")}}
 function whoUI(){const n=EU.nome||EU.email,ini=n.split(/\s+/).filter(Boolean).map(w=>w[0]).slice(0,2).join("").toUpperCase();
   $("#who").innerHTML=`<span class="av">${esc(ini)}</span><span title="${esc(EU.email)}">${esc(n)}</span><span class="pf${EU.admin?" adm":""}" title="${esc(EU.admin?"Administrador da EPISJ 360 — perfil: "+(EU.perfilNome||PERFIL_CURTO[EU.perfil]||""):"Perfil da conta")}">${esc(EU.admin?"Administrador":(EU.perfilNome||PERFIL_CURTO[EU.perfil]||""))}</span><a href="#" id="whoOut" title="Terminar sessão" aria-label="Terminar sessão">Terminar sessão</a>`;
-  $("#who").style.display="flex";$("#whoOut").onclick=e=>{e.preventDefault();guideSair()};
+  $("#who").style.display="flex";$("#whoOut").onclick=e=>{e.preventDefault();sairAbrir()};
   try{$("#privBtn").hidden=false;renderPriv();const lk=localStorage.getItem(PRIV_ON);if(lk&&lk!==String(EU.email||"").toLowerCase())privDesbloquear()}catch(e){}}
+/* ---------- 0.9.136: Terminar sessão e limpar este computador ----------
+   Só apaga a cópia local (localStorage, IndexedDB «boxcheck», sessionStorage) depois de confirmar que a nuvem tem tudo:
+   · quem é da Direção: sincroniza agora (junta com a nuvem e envia o que só está aqui) e confere peça a peça com a base de dados;
+   · as outras contas não gravam na nuvem: se este computador tiver alterações da Direção ainda por enviar, não limpa.
+   Fica só a marca «episj_ger» (geração dos dados), para a nuvem continuar a valer por inteiro na próxima entrada. */
+function sairAbrir(){const bg=$("#sairBg");if(!bg){guideSair();return}$("#sairMsg").innerHTML="";bg.querySelectorAll("button").forEach(b=>b.disabled=false);bg.hidden=false;setTimeout(()=>{try{$("#sairSim").focus()}catch(e){}},50)}
+function sairFechar(){const bg=$("#sairBg");if(bg)bg.hidden=true}
+async function sairLocais(){ // [peça na nuvem, rótulo, data da cópia local]
+  const kv=async k=>{try{const v=await DB.get("kv",k);return v&&+v.t||0}catch(e){return 0}};
+  return [["estado","Configuração da escola",cfgT()],["ES","Horários360",await kv("esched")],["CR","Crono360",await kv("crono")],["PAP","PAP360",await kv("pap")],
+    ["FD","Folder360",await kv("folder")],["EC","Econo360",await kv("econo")],["PW","Pass360",await kv("pw")]]}
+async function sairVerificar(msg){
+  if(!navigator.onLine)return{ok:false,porque:"Este computador está sem Internet: não dá para confirmar que está tudo na nuvem."};
+  let L=await sairLocais();
+  if(nuvSB()){
+    msg("A juntar com a nuvem e a enviar o que só está neste computador…");
+    try{await nuvemSincMS()}catch(e){}
+    try{let idx=(await (await nuvem("GET","")).json()).itens||{};
+      if(cfgT()>((idx.estado&&idx.estado.t)||0)){await nuvemPut("estado",estadoAtual(),cfgT());idx=(await (await nuvem("GET","")).json()).itens||{}}
+      L=await sairLocais();
+      const falta=L.filter(([n,,t])=>t>0&&t>((idx[n]&&idx[n].t)||0)).map(x=>x[1]);
+      if(typeof rcNuvErr!=="undefined"&&rcNuvErr)falta.push("Sala360");
+      if(NUV.erro)falta.push("("+NUV.erro+")");
+      return falta.length?{ok:false,porque:"Ainda não está na nuvem: "+falta.join(", ")+"."}:{ok:true}}
+    catch(e){return{ok:false,porque:"Não foi possível falar com a base de dados ("+(e.message||e)+")."}}}
+  // outras contas: confere com o registo do que este computador já enviou para a nuvem
+  const env=nuvT(),falta=L.filter(([n,,t])=>t>0&&t>(+env[n]||0)).map(x=>x[1]);
+  let rcLocal=false;try{const r=JSON.parse(localStorage.getItem("roomcheck")||"null");rcLocal=!!(r&&r.res&&Object.keys(r.res).length&&!(+env.rc||0))}catch(e){}
+  if(rcLocal)falta.push("Sala360");
+  return falta.length?{ok:false,porque:"Este computador tem dados da Direção que podem ainda não estar na nuvem ("+falta.join(", ")+"). Peça a quem é da Direção para entrar aqui e usar «Terminar e limpar este computador»."}:{ok:true}}
+async function sairLimpar(){const bg=$("#sairBg"),M=$("#sairMsg");const msg=t=>{M.innerHTML=`<div class="msg info">${esc(t)}</div>`};
+  bg.querySelectorAll("button").forEach(b=>b.disabled=true);
+  try{const v=await sairVerificar(msg);
+    if(!v.ok){M.innerHTML=`<div class="msg bad">Não limpei este computador. ${esc(v.porque)}</div>`;bg.querySelectorAll("button").forEach(b=>b.disabled=false);return}
+    msg("Está tudo na nuvem. A apagar a cópia deste computador…");LIMPAR=true;
+    try{await sbSair()}catch(e){}try{const p=await msInit();await p.clearCache({account:MSACC})}catch(e){}MSACC=null;EU=null;
+    let ger=null;try{ger=localStorage.getItem("episj_ger")}catch(e){}
+    try{localStorage.clear();if(ger)localStorage.setItem("episj_ger",ger)}catch(e){}
+    try{sessionStorage.clear()}catch(e){}
+    await new Promise(ok=>{try{const r=indexedDB.deleteDatabase("boxcheck");r.onsuccess=r.onerror=r.onblocked=()=>ok()}catch(e){ok()}setTimeout(ok,4000)});
+    location.reload()}
+  catch(e){M.innerHTML=`<div class="msg bad">Não foi possível limpar (${esc(e.message||e)}).</div>`;bg.querySelectorAll("button").forEach(b=>b.disabled=false)}}
+(function(){const bg=document.getElementById("sairBg");if(!bg)return;
+  $("#sairNao").onclick=sairFechar;$("#sairSim").onclick=()=>{sairFechar();guideSair()};$("#sairLimpa").onclick=()=>sairLimpar();
+  bg.addEventListener("click",e=>{if(e.target===bg&&!$("#sairNao").disabled)sairFechar()});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!bg.hidden&&!$("#sairNao").disabled)sairFechar()})})();
 async function guideSair(){ // 0.9.50: a Box fica ligada (só «Desligar a Box» a desliga)
   try{await sbSair()}catch(e){}try{const p=await msInit();await p.clearCache({account:MSACC})}catch(e){}MSACC=null;EU=null;location.reload()}
 

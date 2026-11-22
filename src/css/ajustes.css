@@ -97,3 +97,9 @@ body.calamplo #calAnoCard .dh{display:none}
 .snq .cpt{margin-top:10px;gap:10px;align-items:flex-end}.snq .cpt label{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted)}
 .snq .cpt select{min-width:300px;max-width:420px}
 .snq .cptm{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px}.snq .cptm span{flex:1;min-width:240px}
+/* 0.9.136: janela de terminar sessão (com a opção de limpar este computador) */
+.nov.sair{width:min(600px,100%)}
+.nov-f.sair-f{gap:8px;flex-wrap:wrap}
+.b.s.sair-limpa{color:var(--bad);border-color:var(--bad)}
+#sairMsg:empty{display:none}
+#sairMsg{padding:14px 24px}

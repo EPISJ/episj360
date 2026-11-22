@@ -3,7 +3,9 @@
 // A EPISJ 360 faz o papel da EduSpruce na "ponte" do EduSchedule (window.__esched): guarda o horário de cada ano letivo
 // (no navegador e na nuvem da EPISJ 360) e entrega-lhe a escola, o ano letivo, o calendário, os formadores e as turmas do módulo Escola.
 // O que se acrescentar no EduSchedule (formadores, turmas) volta para o módulo Escola.
-const ES_URL="https://eduspruce.github.io/eduschedule.html";
+// 0.9.136: o Horário360 é servido pela própria EPISJ 360 (cópia do EduSchedule em /eduschedule.html, com as letras em /fontes/).
+// Antes vinha de eduspruce.github.io e corria como srcdoc na mesma origem da app: código de outro site com acesso total à EPISJ 360.
+const ES_URL=new URL("eduschedule.html",location.href).href;
 let ESD={t:0,porAno:{},copias:{},mapaT:{},mapaC:{},ligT:{},ligC:{},mapaA:{},ligA:{}};
 const esdPronto=DB.get("kv","esched").then(v=>{if(v&&typeof v==="object")ESD=Object.assign(ESD,v)}).catch(()=>{});
 let esdH=null;

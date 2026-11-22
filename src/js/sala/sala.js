@@ -194,7 +194,7 @@ function rcEhTIC(prof){if(!prof)return false;const re=/tecnologias\s+d[ae]\s+inf
   try{const a=anoAtivo().id;if(pcPlanos().some(p=>p.anoId===a&&(p.linhas||[]).some(l=>l.f===prof.id&&re.test(l.disc||""))))return true}catch(e){}
   return re.test([prof.grupo,prof.area,prof.disc,prof.disciplina].filter(Boolean).join(" "))}
 function rcTurmaTxt(t){try{return dsdTurmaTxt(t)}catch(e){return t.cod+(t.nome?" — "+t.nome:"")}}
-function rcCamposHTML(sf,v){v=v||{};const P=(cfg.profs||[]).filter(p=>p.nome).slice().sort((a,b)=>COLL_PT.compare(String(a.nome),String(b.nome)));
+function rcCamposHTML(sf,v){v=v||{};const P=(cfg.profs||[]).filter(p=>p.nome).slice().sort(cmpProf);
   let T=[];try{T=turmasDoAno().map(rcTurmaTxt)}catch(e){}
   const pIn=!v.p||P.some(p=>p.nome===v.p),tIn=!v.t||T.includes(v.t);
   return `<label>Reservado por<select id="rcPs${sf}"><option value="">— escolha o formador —</option>${P.map(p=>`<option value="${esc(p.nome)}"${p.nome===v.p?" selected":""}>${esc(p.cod?p.cod+" - "+p.nome:p.nome)}</option>`).join("")}<option value="__o"${pIn?"":" selected"}>Outro (serviço ou pessoa de fora)…</option></select></label>

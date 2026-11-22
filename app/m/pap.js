@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.192 — ecrã do módulo «pap», carregado quando é aberto */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.193 — ecrã do módulo «pap», carregado quando é aberto */
 "use strict";
 // ===== src/js/pap/pap.js =====
 /* PAP360 — ecrã do módulo (carregado só quando o PAP360 é aberto; os dados estão em pap/pap-dados.js) */
@@ -117,7 +117,7 @@ function papImportar(R,o){const D=papDef(),E=escData();let P=PAP.provas.find(p=>
 function papProvaUI(){const P=papProva();if(!P){$("#papCab").innerHTML="";papSemProva("#papCands");return}
   const D=papDef(),E=escData(),ed=papEd(),a=papAnoDe(P),T=turmasDoAno(a),t=papTurma(P),dis=ed?"":"disabled";
   if(t&&!T.some(x=>x.id===t.id))T.push(t);
-  $("#papFormDL").innerHTML=cfg.profs.slice().sort((x,y)=>COLL_PT.compare(x.nome,y.nome)).map(p=>`<option value="${esc(p.nome)}">`).join("");
+  $("#papFormDL").innerHTML=cfg.profs.slice().sort(cmpProf).map(p=>`<option value="${esc(p.nome)}">`).join("");
   $("#papJuriDL").innerHTML=PAP.contactos.slice().sort((x,y)=>COLL_PT.compare(x.nome,y.nome)).map(c=>`<option value="${esc(c.nome)}">${esc(c.empresa||"")}</option>`).join("");
   $("#papHorasDL").innerHTML=D.horas.map(h=>`<option value="${esc(h)}">`).join("");
   const dc=papDatasCal(P);

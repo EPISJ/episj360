@@ -45,7 +45,7 @@ function renderEditor(p){$("#praEd").style.display="";$("#praEdT").textContent="
   $("#peTipos").innerHTML=chipsHTML(TIPOS_MOD.map(([v,t])=>[v,`${t} (${tc[v]||0})`]),p.tipos,"data-ptipo");
   const turmas=[...new Set(ativos().map(m=>m.turma).filter(Boolean))].sort((a,b)=>COLL_PTN.compare(a,b));
   $("#peTurmas").innerHTML=turmas.length?chipsHTML(turmas.map(t=>[t,t]),p.turmas,"data-pturma"):`<span class="hint">Sem turmas — faça a análise e detete os módulos em Atribuições.</span>`;
-  $("#peProfs").innerHTML=cfg.profs.length?chipsHTML(cfg.profs.slice().sort((a,b)=>COLL_PT.compare(a.nome,b.nome)).map(x=>[x.id,x.nome]),p.profs,"data-pprof"):`<span class="hint">Sem formadores registados.</span>`;
+  $("#peProfs").innerHTML=cfg.profs.length?chipsHTML(cfg.profs.slice().sort(cmpProf).map(x=>[x.id,x.nome]),p.profs,"data-pprof"):`<span class="hint">Sem formadores registados.</span>`;
   const L=prazoItens(p),nm=new Set(L.map(x=>x.m.id)).size;
   $("#peCont").innerHTML=`Este prazo abrange <b>${L.length}</b> documento(s) em <b>${nm}</b> módulo(s)/UC/UFCD de <b>${new Set(L.map(x=>x.pid)).size}</b> formador(es).${L.length?"":" Confirme os filtros e se esses documentos estão pedidos nos módulos (Atribuições)."}`;
   const sem=L.filter(x=>x.aprox&&x.ent).length;if(sem)$("#peCont").innerHTML+=`<br>${sem} entrega(s) com data aproximada (análise anterior à v1.14). Para datas exatas, use “Ler tudo outra vez” em Análise.`;

@@ -14,7 +14,7 @@ function pcNovo(t,aid){const p=pcNorm({id:uid(),turmaId:t.id,anoId:aid||anoAtivo
 const pcProf=id=>cfg.profs.find(p=>p.id===id)||null;
 const pcProfNome=id=>{if(!id)return "";const p=pcProf(id);return p?(p.cod?p.cod+" - ":"")+p.nome:"(formador apagado)"};
 function pcProfOpts(sel){const ok=!sel||pcProf(sel);return `<option value="">— sem formador —</option>`+(ok?"":`<option value="${esc(sel)}" selected>(formador apagado)</option>`)+
-  cfg.profs.slice().sort((a,b)=>COLL_PT.compare(String(a.nome),String(b.nome))).map(p=>`<option value="${p.id}" ${p.id===sel?"selected":""}>${esc(p.nome||"(sem nome)")}${p.cod?` (${esc(p.cod)})`:""}</option>`).join("")}
+  cfg.profs.slice().sort(cmpProf).map(p=>`<option value="${p.id}" ${p.id===sel?"selected":""}>${esc(p.nome||"(sem nome)")}${p.cod?` (${esc(p.cod)})`:""}</option>`).join("")}
 // horas por semana e tempos semanais (como no Excel: horas ÷ semanas de aulas, e esse valor arredondado para cima)
 const pcSemana=(h,p)=>{const s=+p.semanas||0;return s?h/s:0};
 function pcDiscs(p,area){const o=[];for(const l of p.linhas)if(l.area===area&&!o.includes(l.disc))o.push(l.disc);return o}
@@ -194,7 +194,7 @@ async function pcImportarAplicar(anoSel,subst){if(!PC_IMP)return;const {R,file}=
     if(!t.fse&&T.projeto&&!/X{2,}/i.test(T.projeto))t.fse=fseNorm(T.projeto);
     feitos++}
   await ovPasso(87,"A acrescentar disciplinas e formadores…");R.disciplinas.forEach(pcDiscNova);
-  cfg.profs.sort((a,b)=>COLL_PT.compare(String(a.nome),String(b.nome)));
+  cfg.profs.sort(cmpProf);
   await ovPasso(92,"A guardar…");save();await ovPasso(96,"A confirmar a gravação…");
   // confirma que ficou mesmo gravado neste navegador
   let gravados=0;try{const st=JSON.parse(localStorage.getItem(KEY)||"{}");gravados=((st.escola||{}).planos||[]).filter(x=>x.anoId===ano.id).length}catch(e){}
@@ -236,7 +236,7 @@ const dsdOrd=(x,y)=>COLL_PTN.compare(String(x.t?x.t.cod:"~"),String(y.t?y.t.cod:
 function dsdEu(){if(!EU||!EU.email)return null;return cfg.profs.find(p=>String(p.email||"").trim().toLowerCase()===String(EU.email).toLowerCase())||null}
 const dsdSoEu=()=>perfilAtual()==="prof";
 function renderDSD(){const a=anoAtivo(),M=dsdDados(a.id),out=$("#dsdOut"),soEu=dsdSoEu(),TC=new Map(escData().turmas.map(t=>[t.id,t.cod]));$("#dsdAnoLbl").textContent=a.nome;
-  const CNd=new Intl.Collator("pt",{numeric:true}),CPd=new Intl.Collator("pt");const P=cfg.profs.slice().sort((x,y)=>CPd.compare(String(x.nome),String(y.nome)));
+  const CNd=new Intl.Collator("pt",{numeric:true}),CPd=new Intl.Collator("pt");const P=cfg.profs.slice().sort(cmpProf);
   if(soEu){const me=dsdEu();DSD_SEL=me?me.id:"";$("#dsdSel").innerHTML=me?`<option value="${me.id}">${esc(me.nome)}</option>`:`<option value="">—</option>`;$("#dsdSel").disabled=true;$("#dsdFilterL").style.display="none";$("#dsdPdfAll").style.display="none";
     if(!me){out.innerHTML=`<div class="msg info">A sua conta (<b>${esc(EU&&EU.email||"")}</b>) não aparece entre os formadores da escola.</div>`;$("#dsdPdf").disabled=true;return}}
   else{$("#dsdSel").disabled=false;$("#dsdFilterL").style.display="";$("#dsdPdfAll").style.display="";

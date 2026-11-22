@@ -114,7 +114,7 @@ function papImportar(R,o){const D=papDef(),E=escData();let P=PAP.provas.find(p=>
 function papProvaUI(){const P=papProva();if(!P){$("#papCab").innerHTML="";papSemProva("#papCands");return}
   const D=papDef(),E=escData(),ed=papEd(),a=papAnoDe(P),T=turmasDoAno(a),t=papTurma(P),dis=ed?"":"disabled";
   if(t&&!T.some(x=>x.id===t.id))T.push(t);
-  $("#papFormDL").innerHTML=cfg.profs.slice().sort((x,y)=>COLL_PT.compare(x.nome,y.nome)).map(p=>`<option value="${esc(p.nome)}">`).join("");
+  $("#papFormDL").innerHTML=cfg.profs.slice().sort(cmpProf).map(p=>`<option value="${esc(p.nome)}">`).join("");
   $("#papJuriDL").innerHTML=PAP.contactos.slice().sort((x,y)=>COLL_PT.compare(x.nome,y.nome)).map(c=>`<option value="${esc(c.nome)}">${esc(c.empresa||"")}</option>`).join("");
   $("#papHorasDL").innerHTML=D.horas.map(h=>`<option value="${esc(h)}">`).join("");
   const dc=papDatasCal(P);

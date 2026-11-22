@@ -56,7 +56,7 @@ $("#profForm").addEventListener("submit",e=>{e.preventDefault();
   if(email&&!/^\S+@\S+\.\S+$/.test(email)){msg("O email não parece válido.","bad");$("#pEmail").focus();return}
   const dup=cfg.profs.find(p=>(cod&&norm(p.cod)===norm(cod))||(email&&norm(p.email)===norm(email)));
   if(dup){msg(`Já existe um formador com ${cod&&norm(dup.cod)===norm(cod)?"esse código":"esse email"}: ${dup.nome}.`,"bad");return}
-  cfg.profs.push({id:uid(),cod,nome,email,abrev});cfg.profs.sort((a,b)=>COLL_PT.compare(a.nome,b.nome));save();renderAll();
+  cfg.profs.push({id:uid(),cod,nome,email,abrev});cfg.profs.sort(cmpProf);save();renderAll();
   msg(`${nome} adicionado(a).`,"ok");$("#profForm").reset();$("#pCod").focus();});
 {let h=null;$("#profFilter").addEventListener("input",()=>{PROF_N=200;clearTimeout(h);h=setTimeout(renderProfs,120)})}
 $("#profImport").onclick=()=>{
@@ -74,7 +74,7 @@ $("#profImport").onclick=()=>{
     const ex=cfg.profs.find(p=>(cod&&p.cod&&norm(p.cod)===norm(cod))||(em&&norm(p.email)===norm(em))||norm(p.nome)===norm(nm));
     if(ex){if(em)ex.email=em;if(cod)ex.cod=cod;if(nm)ex.nome=ex.nome||nm;if(!ex.email)ex.email=emailAuto(ex.nome);upd++}else{cfg.profs.push({id:uid(),cod,nome:nm,email:em||emailAuto(nm)});add++}
   }
-  cfg.profs.sort((a,b)=>COLL_PT.compare(a.nome,b.nome));
+  cfg.profs.sort(cmpProf);
   save();renderAll();
   $("#profMsg").textContent=`${add} adicionado(s), ${upd} atualizado(s)${bad?`, ${bad} linha(s) ignorada(s)`:""}.`;
   if(add||upd)$("#profBulk").value="";
@@ -85,7 +85,7 @@ $("#profImport").onclick=()=>{
    Com 1000 formadores e 60 turmas, a página de Turmas passava de dezenas de milhares de opções para uma por linha. */
 const LZ={first:[],cache:{}};
 function lzLista(kind){const k=kind+":"+cfgRev+":"+(kind==="turma"||kind==="tcod"?(anoAtivo()||{}).id:"");const c=LZ.cache[kind];if(c&&c.k===k)return c.h;let h="";
-  if(kind==="prof")h=cfg.profs.slice().sort((a,b)=>COLL_PT.compare(String(a.nome),String(b.nome))).map(p=>`<option value="${p.id}">${esc(p.nome||"(sem nome)")}${p.cod?` (${esc(p.cod)})`:""}</option>`).join("");
+  if(kind==="prof")h=cfg.profs.slice().sort(cmpProf).map(p=>`<option value="${p.id}">${esc(p.nome||"(sem nome)")}${p.cod?` (${esc(p.cod)})`:""}</option>`).join("");
   else if(kind==="tcod")h=[...new Set(turmasDoAno().map(t=>t.cod))].map(c=>`<option>${esc(c)}</option>`).join("");
   else if(kind==="turma"){const a=anoAtivo();h=escData().turmas.slice().sort((x,y)=>COLL_PTN.compare(String(x.cod),String(y.cod))).map(t=>`<option value="${t.id}">${esc(t.cod)}${turmaNoAno(t,a)?"":" (outro ano)"}</option>`).join("")}
   LZ.cache[kind]={k,h};return h}
@@ -96,7 +96,7 @@ function lzEncher(sel){if(!sel||sel.dataset.lzok)return;const o=sel.querySelecto
   const v=sel.value,kind=o.dataset.lzk,f=LZ.first[+o.dataset.lzf]||"",lab=v?(sel.selectedOptions[0]||{}).textContent:"";sel.innerHTML=f+lzLista(kind);
   if(v&&![...sel.options].some(x=>x.value===v))sel.insertAdjacentHTML("beforeend",`<option value="${esc(v)}">${esc(lab||"(apagado)")}</option>`);sel.value=v}
 ["pointerdown","mousedown","touchstart","focusin","keydown"].forEach(ev=>document.addEventListener(ev,e=>{const t=e.target;if(t&&t.tagName==="SELECT"&&!t.dataset.lzok)lzEncher(t)},true));
-function profOpts(sel,first){return (first??`<option value="">— escolher —</option>`)+cfg.profs.slice().sort((a,b)=>COLL_PT.compare(a.nome,b.nome)).map(p=>`<option value="${p.id}" ${p.id===sel?"selected":""}>${esc(p.nome||"(sem nome)")}${p.cod?` (${esc(p.cod)})`:""}</option>`).join("")}
+function profOpts(sel,first){return (first??`<option value="">— escolher —</option>`)+cfg.profs.slice().sort(cmpProf).map(p=>`<option value="${p.id}" ${p.id===sel?"selected":""}>${esc(p.nome||"(sem nome)")}${p.cod?` (${esc(p.cod)})`:""}</option>`).join("")}
 
 /* ---------- módulos do(s) ano(s) letivo(s) da análise carregada ---------- */
 let _atv=null,_atvK="";

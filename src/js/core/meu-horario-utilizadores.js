@@ -16,7 +16,7 @@ async function renderMh(){try{await esdPronto}catch(e){}const st=mhEstado(),out=
   if(!quemEl.dataset.init){quemEl.dataset.init="1";
     if(pf==="prof"){const me=cfg.profs.find(p=>String(p.email||"").toLowerCase()===String(EU&&EU.email||""));const t=me&&T.find(t=>t.id===me.id||(ESD.mapaT||{})[t.id]===me.id);if(t){tipoEl.value="t";quemEl.dataset.v=t.id}}
     if(pf==="form"){const tc=(EU&&EU.turma)||lsJ("guide_mh_turma","");const c=C.find(c=>norm(c.name)===norm(tc));if(c)quemEl.dataset.v=c.id}}
-  const tipo=tipoEl.value,L=tipo==="t"?T.slice().sort((a,b)=>COLL_PT.compare(String(a.name),String(b.name))).map(t=>[t.id,t.name+(t.short?" ("+t.short+")":"")]):C.map(c=>[c.id,c.name+(c.full&&c.full!==c.name?" — "+c.full:"")]);
+  const tipo=tipoEl.value,L=tipo==="t"?T.slice().sort(cmpTch).map(t=>[t.id,t.name+(t.short?" ("+t.short+")":"")]):C.map(c=>[c.id,c.name+(c.full&&c.full!==c.name?" — "+c.full:"")]);
   const v=L.some(x=>x[0]===quemEl.dataset.v)?quemEl.dataset.v:(L[0]||[""])[0];
   quemEl.innerHTML=L.map(([id,n])=>`<option value="${esc(id)}"${id===v?" selected":""}>${esc(n)}</option>`).join("");quemEl.dataset.v=v;
   if(!v){out.innerHTML=`<p class="hint">Sem ${tipo==="t"?"formadores":"turmas"} no horário.</p>`;return}

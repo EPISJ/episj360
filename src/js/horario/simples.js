@@ -98,7 +98,7 @@ async function hsRender(){await null;try{await esdPronto}catch(e){}try{await h3C
   $("#hsImpG").style.display=dir?"":"none";["hsImp","hsImpTudo","hsImpGpu"].forEach(i=>{const b=$("#"+i);b.hidden=false;b.style.display=""});$("#hsAvisos").innerHTML=pf==="prof"?h3AvisosFormador():"";
   if(!st){hero.innerHTML=`<div class="ay-hero"><div class="ay-top"><div><h1>Horários</h1><div class="sub">${esc(a.nome)}</div></div></div></div>`;
     out.innerHTML=`<div class="pp-vz">${ICO.cal}<p>${RO?"A Direção ainda não publicou o horário de "+esc(a.nome)+".":"Ainda não há horário para "+esc(a.nome)+". Importe os PDF do Untis (botão verde acima)."}</p></div>`;$("#hsQuem").innerHTML="";return}
-  const T=(st.teachers||[]).slice().sort((x,y)=>COLL_PT.compare(String(x.name),String(y.name))),C=(st.classes||[]).slice().sort((x,y)=>COLL_PTN.compare(String(x.name),String(y.name))),R=(st.rooms||[]).slice().sort((x,y)=>COLL_PTN.compare(String(x.name),String(y.name)));
+  const T=(st.teachers||[]).slice().sort(cmpTch),C=(st.classes||[]).slice().sort((x,y)=>COLL_PTN.compare(String(x.name),String(y.name))),R=(st.rooms||[]).slice().sort((x,y)=>COLL_PTN.compare(String(x.name),String(y.name)));
   const tipoEl=$("#hsTipo"),quemEl=$("#hsQuem");tipoEl.parentNode.style.display=pf==="form"?"none":"";
   if(!H3S.tipo){H3S.tipo=pf==="form"?"c":"t";
     if(pf==="prof"){const me=(cfg.profs||[]).find(p=>String(p.email||"").toLowerCase()===String(EU&&EU.email||""));const t=me&&T.find(t=>t.id===me.id||(ESD.mapaT||{})[t.id]===me.id);if(t)H3S.quem=t.id}
@@ -161,7 +161,7 @@ async function hsForRender(){await null;try{await esdPronto}catch(e){}try{await 
   const cache=new Map();const cel=(t,d)=>{if(!d.V||d.nl||d.fora)return null;const k=t.id+"|"+(VL.indexOf(d.V));if(!cache.has(k))cache.set(k,h3Celulas(st,d.V,"t",t.id));return cache.get(k)};
   const q=norm(H3F.q||"");
   const TT=(st.teachers||[]).filter(t=>!q||norm((t.name||"")+" "+(t.short||"")).includes(q)).map(t=>{let n=0;for(const d of dias){const m=cel(t,d);if(m)for(let pi=0;pi<NP;pi++){const L=m.get(d.i+"|"+pi);if(L)n+=L.length}}return{t,n}})
-    .sort((x,y)=>(eu(y.t)-eu(x.t))||COLL_PT.compare(String(x.t.name),String(y.t.name)));
+    .sort((x,y)=>(eu(y.t)-eu(x.t))||cmpTch(x.t,y.t));
   const comAulas=TT.filter(x=>x.n>0),semAulas=TT.filter(x=>!x.n&&!eu(x.t));
   const mostra=H3F.todos||!comAulas.length?TT:TT.filter(x=>x.n>0||eu(x.t));
   const ocup=dias.map(()=>new Array(NP).fill(0));let tot=0;const fim=calMais(H3S.seg,D.length-1);

@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.191 — ecrã do módulo «pap», carregado quando é aberto */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.192 — ecrã do módulo «pap», carregado quando é aberto */
 "use strict";
 // ===== src/js/pap/pap.js =====
 /* PAP360 — ecrã do módulo (carregado só quando o PAP360 é aberto; os dados estão em pap/pap-dados.js) */

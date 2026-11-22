@@ -131,7 +131,32 @@ function renderEscPainel(){
   $("#escTiles").innerHTML=[[T.length,"Turmas neste ano","tur"],[e.cursos.length,"Cursos","cur"],[(cfg.profs||[]).length,"Formadores","prof"],[(e.formandos||[]).length,"Formandos","for"],[`${T.filter(t=>{try{return pcDe(t.id,a.id)}catch(x){return false}}).length}/${T.length}`,"Planos curriculares","pc"]]
     .concat(modOn("eduschedule")?[[C.length?wgPct(pos,C.length)+"%":"—","Horário colocado","esch"]]:[])
     .map(([v,l,t])=>`<button class="ay-st ep-k" data-ir="${t}"><small>${esc(l)}</small><b>${esc(v)}</b></button>`).join("");
-  try{renderWidgets()}catch(x){}}
+  try{renderWidgets()}catch(x){}try{epMeuRender()}catch(x){console.warn("a minha área",x)}}
+/* 0.9.192: «A minha área» — no Dashboard do Formador, o que lhe diz respeito: a semana, as turmas, as reservas de espaços e
+   atalhos para requisitar material, reservar uma sala, ver o horário dos colegas, as entregas na Box e o ponto de situação */
+function epMeuRender(){const el=$("#epMeu");if(!el)return;let pf="";try{pf=perfilAtual()}catch(e){}
+  if(pf!=="prof"||(typeof podePublicar==="function"&&podePublicar()&&!PREV)){el.hidden=true;el.innerHTML="";return}
+  const a=anoAtivo(),hj=calHoje(),em=String(EU&&EU.email||"").toLowerCase(),me=(cfg.profs||[]).find(p=>profEmail(p)===em);
+  const st=typeof mhEstado==="function"&&podeVer("hsSem")?mhEstado():null;let tid="",sem=null,turmas=new Map(),prox=null;
+  if(st&&me){const t=(st.teachers||[]).find(t=>t.id===me.id||(ESD.mapaT||{})[t.id]===me.id);tid=t?t.id:""}
+  if(st&&tid){const VL=cpVersoes(st).slice().sort((p,q)=>String(p.de||"").localeCompare(String(q.de||""))),D=st.days||["Seg","Ter","Qua","Qui","Sex"],P=st.periods||[],NL=calNaoLetivos(a);
+    const seg=h3Seg(hj);let n=0;const agora=new Date().getHours()*60+new Date().getMinutes(),mn=x=>{const m=/(\d+):(\d+)/.exec(x||"");return m?+m[1]*60+ +m[2]:0};
+    for(let w=0;w<2&&!prox||w<1;w++)D.forEach((d,di)=>{const dt=calMais(seg,di+7*w);let V=cpVersaoEm(VL,dt);if(!V&&VL.length===1)V=VL[0];if(!V||NL.get(dt)||(a.inicio&&dt<a.inicio)||(a.fim&&dt>a.fim))return;
+      const m=h3Celulas(st,V,"t",tid);P.forEach((p,pi)=>{const L=m.get(di+"|"+pi);if(!L)return;
+        if(w===0){n+=L.length;for(const x of L){const k=x.tu||x.disc;const o=turmas.get(k)||{n:0,cor:h3Cor(st,x,"t")};o.n++;turmas.set(k,o)}}
+        if(!prox&&(dt>hj||(dt===hj&&mn(p.end)>agora)))prox={dt,dn:d,p,x:L[0]}})});
+    sem=n}
+  const oe=turmasDoAno(a).filter(t=>me&&turmaOE(t,a.id)===me.id).map(t=>t.cod);
+  let res=[];try{if(typeof rcAtivas==="function"&&podeVer("rcMapa")){const nm=norm(me&&me.nome||"");
+    res=rcAtivas().filter(r=>r.d>=hj&&nm&&(norm(r.p||"")===nm||norm(r.p||"").includes(nm)||(me&&r.pid===me.id))).sort((x,y)=>x.d.localeCompare(y.d)||x.h0-y.h0).slice(0,4)}}catch(e){res=[]}
+  const at=[["ecoReq","Requisitar material"],["rcMapa","Reservar uma sala"],["hsVer","Horário dos colegas"],["hsFor","Formadores por semana"],["meu","O que me falta entregar"],["dsd","A minha distribuição de serviço"],["crPs","Ponto de situação"]].filter(([t])=>{try{return podeVer(t)}catch(e){return false}});
+  let h=`<h2>A minha área</h2><div class="em-g">`;
+  h+=`<div class="em-b"><h4>Esta semana</h4>${st&&tid?`<div class="em-n">${sem} tempo${sem===1?"":"s"}</div><div class="em-s">${prox?`Próxima aula: <b>${esc(prox.dt===hj?"hoje":prox.dn+" "+calDM(prox.dt))}</b>, ${esc(prox.p.start||"")} · ${esc([prox.x.tu,prox.x.disc,prox.x.sala].filter(Boolean).join(" · "))}`:"Sem mais aulas marcadas."}</div><div class="em-at" style="margin-top:10px"><button class="b s" data-emir="mh">O meu horário</button></div>`:`<div class="em-s">${st?"O seu nome não foi encontrado no horário publicado.":"Ainda não há horário publicado."}</div>`}</div>`;
+  h+=`<div class="em-b"><h4>As minhas turmas</h4>${turmas.size?[...turmas].sort((x,y)=>COLL_PTN.compare(x[0],y[0])).map(([k,o])=>`<div class="em-li"><i style="background:${esc(o.cor)}"></i><span class="grow"><b>${esc(k)}</b>${oe.includes(k)?` <span class="tag">orientador educativo</span>`:""}</span><span class="em-s">${o.n} tempo${o.n===1?"":"s"}/semana</span></div>`).join(""):`<div class="em-s">Sem turmas no horário desta semana.</div>`}${oe.filter(c=>!turmas.has(c)).map(c=>`<div class="em-li"><i style="background:var(--line)"></i><span class="grow"><b>${esc(c)}</b> <span class="tag">orientador educativo</span></span></div>`).join("")}</div>`;
+  if(podeVer("rcMapa"))h+=`<div class="em-b"><h4>As minhas reservas de espaços</h4>${res.length?res.map(r=>{let e={};try{e=rcE(r.e)}catch(x){}return `<div class="em-li"><i style="background:${esc(e.c||"#64748b")}"></i><span class="grow"><b>${esc(e.sg||e.n||"")}</b> · ${esc(r.d===hj?"hoje":calDM(r.d,{weekday:"short",day:"numeric",month:"short"}))}</span><span class="em-s">${esc(rcHm(r.h0))}–${esc(rcHm(r.h1))}</span></div>`}).join(""):`<div class="em-s">Não tem reservas marcadas.</div>`}<div class="em-at" style="margin-top:10px"><button class="b s" data-emir="rcMapa">Reservar uma sala</button></div></div>`;
+  h+=`<div class="em-b"><h4>Atalhos</h4><div class="em-at">${at.map(([t,n])=>`<button class="b s" data-emir="${t}">${esc(n)}</button>`).join("")||`<span class="em-s">Sem atalhos disponíveis.</span>`}</div></div>`;
+  el.innerHTML=h+`</div>`;el.hidden=false;
+  if(!el.dataset.ok){el.dataset.ok=1;el.addEventListener("click",e=>{const b=e.target.closest("[data-emir]");if(b)show(b.dataset.emir)})}}
 $("#escNome").addEventListener("change",e=>{escData().nome=e.target.value.trim()||"Escola Profissional da Ilha de São Jorge";save();esRecarregar()});
 $("#esc").addEventListener("click",e=>{const b=e.target.closest(".ep-hero [data-ir]");if(!b)return;e.preventDefault();const t=b.dataset.ir;if(t==="esch")mostrarModulo("eduschedule",true);else show(t)});
 

@@ -180,6 +180,7 @@
       </div></details>
     <div id="pubBox" class="row" style="display:none;margin-top:12px;align-items:center"><button class="b s" id="pubGo" title="Envia as turmas, os formadores e os horários para os perfis Formador e Formando verem (só leitura)">Publicar para formadores e formandos</button><span id="pubMsg" class="hint" style="margin:0"></span></div>
   </div>
+  <div class="card ep-meu" id="epMeu" hidden></div>
   <div class="card wg-card" id="wgCard">
     <div class="wg-top"><span id="wgConta" hidden></span><span class="grow"></span><button class="b s" id="wgEsc">Escolher widgets</button></div>
     <div class="wg-grid" id="wgGrid"></div>
@@ -233,17 +234,17 @@
     <div id="calInfo"></div>
     <div id="calMsg"></div>
   </div>
-  <div class="card">
-    <h2>Períodos, interrupções e feriados</h2>
-    <div id="calPer"></div>
-    <div class="row" id="calMunL" style="margin-top:12px"><label style="width:160px" title="Dia e mês do feriado municipal do concelho da escola">Feriado municipal<input type="text" id="calMunD" placeholder="dd/mm" inputmode="numeric"></label><label class="grow">Nome do feriado municipal<input type="text" id="calMunN"></label></div>
-  </div>
   <div class="card" id="calAnoCard">
     <h2>Calendário do ano</h2>
     <div class="row" style="margin-bottom:10px"><label style="width:280px">Turma<select id="calTurma"></select></label><label style="width:200px">Marcos<select id="calTipo"></select></label><button class="b s" id="calAmp" type="button" style="align-self:flex-end;margin-left:auto" title="Mostra o calendário em todo o ecrã, sem o menu lateral (Esc para sair)">Ampliar</button></div>
     <div id="calGrid"></div>
     <div id="calDia"></div>
     <div id="calEst" class="cal-est"></div>
+  </div>
+  <div class="card">
+    <h2>Períodos, interrupções e feriados</h2>
+    <div id="calPer"></div>
+    <div class="row" id="calMunL" style="margin-top:12px"><label style="width:160px" title="Dia e mês do feriado municipal do concelho da escola">Feriado municipal<input type="text" id="calMunD" placeholder="dd/mm" inputmode="numeric"></label><label class="grow">Nome do feriado municipal<input type="text" id="calMunN"></label></div>
   </div>
   <div class="card" id="calLinhaCard">
     <div class="cal-mh"><h2>Linha do tempo das turmas</h2><button class="b s" id="calLAmp" type="button" title="Mostra a linha do tempo em todo o ecrã, com mais pormenor (Esc para sair)">Ampliar</button></div>

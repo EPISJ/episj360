@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
-<!-- GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.191 -->
+<!-- GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.192 -->
 <meta charset="utf-8">
-<script src="app/sem-armazenamento.js?v=0.9.191"></script>
+<script src="app/sem-armazenamento.js?v=0.9.192"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'wasm-unsafe-eval'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>EPISJ 360 — Escola Profissional da Ilha de São Jorge</title>
@@ -11,8 +11,8 @@
 <!-- 0.9.50: a letra Poppins vem do próprio site (mais rápido, funciona sem o Google e também dentro do Horários360) -->
 <link rel="preload" href="fonts/poppins-latin-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/poppins-latin-600.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="app/app.css?v=0.9.191">
-<script src="app/cabeca.js?v=0.9.191"></script>
+<link rel="stylesheet" href="app/app.css?v=0.9.192">
+<script src="app/cabeca.js?v=0.9.192"></script>
 </head>
 <body>
 <div id="privLock" role="dialog" aria-modal="true" aria-labelledby="privTit">
@@ -181,6 +181,7 @@
       </div></details>
     <div id="pubBox" class="row" style="display:none;margin-top:12px;align-items:center"><button class="b s" id="pubGo" title="Envia as turmas, os formadores e os horários para os perfis Formador e Formando verem (só leitura)">Publicar para formadores e formandos</button><span id="pubMsg" class="hint" style="margin:0"></span></div>
   </div>
+  <div class="card ep-meu" id="epMeu" hidden></div>
   <div class="card wg-card" id="wgCard">
     <div class="wg-top"><span id="wgConta" hidden></span><span class="grow"></span><button class="b s" id="wgEsc">Escolher widgets</button></div>
     <div class="wg-grid" id="wgGrid"></div>
@@ -234,17 +235,17 @@
     <div id="calInfo"></div>
     <div id="calMsg"></div>
   </div>
-  <div class="card">
-    <h2>Períodos, interrupções e feriados</h2>
-    <div id="calPer"></div>
-    <div class="row" id="calMunL" style="margin-top:12px"><label style="width:160px" title="Dia e mês do feriado municipal do concelho da escola">Feriado municipal<input type="text" id="calMunD" placeholder="dd/mm" inputmode="numeric"></label><label class="grow">Nome do feriado municipal<input type="text" id="calMunN"></label></div>
-  </div>
   <div class="card" id="calAnoCard">
     <h2>Calendário do ano</h2>
     <div class="row" style="margin-bottom:10px"><label style="width:280px">Turma<select id="calTurma"></select></label><label style="width:200px">Marcos<select id="calTipo"></select></label><button class="b s" id="calAmp" type="button" style="align-self:flex-end;margin-left:auto" title="Mostra o calendário em todo o ecrã, sem o menu lateral (Esc para sair)">Ampliar</button></div>
     <div id="calGrid"></div>
     <div id="calDia"></div>
     <div id="calEst" class="cal-est"></div>
+  </div>
+  <div class="card">
+    <h2>Períodos, interrupções e feriados</h2>
+    <div id="calPer"></div>
+    <div class="row" id="calMunL" style="margin-top:12px"><label style="width:160px" title="Dia e mês do feriado municipal do concelho da escola">Feriado municipal<input type="text" id="calMunD" placeholder="dd/mm" inputmode="numeric"></label><label class="grow">Nome do feriado municipal<input type="text" id="calMunN"></label></div>
   </div>
   <div class="card" id="calLinhaCard">
     <div class="cal-mh"><h2>Linha do tempo das turmas</h2><button class="b s" id="calLAmp" type="button" title="Mostra a linha do tempo em todo o ecrã, com mais pormenor (Esc para sair)">Ampliar</button></div>
@@ -1539,8 +1540,8 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="app/rede.js?v=0.9.191"></script>
-<script src="app/app.js?v=0.9.191"></script>
-<script src="app/extra.js?v=0.9.191"></script>
+<script src="app/rede.js?v=0.9.192"></script>
+<script src="app/app.js?v=0.9.192"></script>
+<script src="app/extra.js?v=0.9.192"></script>
 </body>
 </html>

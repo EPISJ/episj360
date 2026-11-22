@@ -1513,3 +1513,13 @@ body:not(.pf-dir) #esc .ep-todo,body:not(.pf-dir) #esc #epScore,body:not(.pf-dir
 .mzh2{font-size:13.5px}.mzh2 .h{font-size:14px}.mzh2 .h small{display:block;font-size:12px;font-weight:400;color:var(--muted)}.mzh2 .p{font-size:13px}
 .mzh2 .a{padding:8px 10px}.mzh2 .a b{font-size:15px}.mzh2 .a span{font-size:12.5px}.mzh2 .a em{font-size:11.5px}.mzh2 .c{min-height:54px}
 .mzleg{font-size:13px}
+
+/* 0.9.192: uma lista que não se pode mudar (ex.: o Formador na sua Distribuição de Serviço Docente) não parece que se pode escolher */
+select:disabled{-webkit-appearance:none;appearance:none;background-image:none!important;background-color:transparent!important;border-color:transparent!important;padding-left:0!important;color:var(--ink)!important;font-weight:600;opacity:1!important;cursor:default}
+/* 0.9.192: «A minha área» no Dashboard do Formador */
+.ep-meu h2{margin:0 0 12px}.ep-meu .em-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.ep-meu .em-b{border:1px solid var(--line);border-radius:10px;padding:12px}.ep-meu .em-b h4{margin:0 0 8px;font-size:13.5px;font-weight:600}
+.ep-meu .em-n{font-size:22px;font-weight:650;letter-spacing:-.02em}.ep-meu .em-s{font-size:12.5px;color:var(--muted)}
+.ep-meu .em-li{display:flex;align-items:center;gap:8px;font-size:13px;padding:5px 0;border-top:1px solid #f0f2f5}.ep-meu .em-li:first-of-type{border-top:0}
+.ep-meu .em-li i{width:10px;height:10px;border-radius:3px;flex:none}.ep-meu .em-li .grow{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ep-meu .em-at{display:flex;flex-wrap:wrap;gap:8px}.ep-meu .em-at button{font-size:13px}

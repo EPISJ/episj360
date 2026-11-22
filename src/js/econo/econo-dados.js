@@ -41,7 +41,7 @@ function ecoN(v){const n=Math.round((+v||0)*1000)/1000;return n.toLocaleString("
 function ecoNum(s){const x=String(s??"").trim().replace(/\s/g,"").replace(/€/g,"");if(!x)return NaN;return +(/,\d{1,3}$/.test(x)?x.replace(/\./g,"").replace(",","."):x.replace(/,/g,""))}
 // ---------- guardar e nuvem (como o Folder360) ----------
 function ecoGuardar(o){if((RO&&!ecoEcon())||LIMPAR)return;const t=Date.now();if(o){o.em=t;o.mod=String(EU&&EU.email||"")}ECO.t=t;ecoCalcC=null;DB.put("kv","econo",ECO);clearTimeout(ecoH);
-  ecoH=setTimeout(()=>{try{if(ecoEcon())ecoNuvPut().catch(e=>toast("Econo360: não foi possível guardar na nuvem — "+(e.message||e)));else if(NUVOK()&&!nuvDesl())nuvemPut("EC",ECO,ECO.t)}catch(e){}},2500);if(typeof ecoCatAgendar==="function")ecoCatAgendar()}
+  nuvFila("ecoH",()=>{try{if(ecoEcon())ecoNuvPut().catch(e=>toast("Econo360: não foi possível guardar na nuvem — "+(e.message||e)));else if(NUVOK()&&!nuvDesl())nuvemPut("EC",ECO,ECO.t)}catch(e){}},2500);if(typeof ecoCatAgendar==="function")ecoCatAgendar()}
 function ecoJuntar(a,b){const del=Object.assign({},b.del||{},a.del||{});
   const pick=(L1,L2)=>{const m=new Map();for(const x of(L2||[]).concat(L1||[]))if(x&&x.id&&!del[x.id]){const q=m.get(x.id);if(!q||(x.em||0)>=(q.em||0))m.set(x.id,x)}return[...m.values()]};
   const def=a.def&&b.def?((b.def.em||0)>(a.def.em||0)?b.def:a.def):(a.def||b.def||null);

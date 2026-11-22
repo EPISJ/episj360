@@ -37,7 +37,7 @@ function foFinLogo(f){return f?(foLg(f.logo)?f.logo:(f.padrao&&foLg(FO_LGP[f.pad
 function foEd(){return!RO&&podePublicar()}
 // ---------- guardar e nuvem (como o PAP360: IndexedDB + peça «FOL») ----------
 function foGuardar(o){if(RO||LIMPAR)return;const t=Date.now();if(o){o.em=t;o.mod=String(EU&&EU.email||"")}FOL.t=t;foIdxC=null;DB.put("kv","folder",FOL);clearTimeout(foH);
-  foH=setTimeout(()=>{try{if(NUVOK()&&!nuvDesl())nuvemPut("FD",FOL,FOL.t)}catch(e){}},2500)}
+  nuvFila("foH",()=>{try{if(NUVOK()&&!nuvDesl())nuvemPut("FD",FOL,FOL.t)}catch(e){}},2500)}
 function foJuntar(a,b){const del=Object.assign({},b.del||{},a.del||{});
   const pick=(L1,L2)=>{const m=new Map();for(const x of(L2||[]).concat(L1||[]))if(x&&x.id&&!del[x.id]){const q=m.get(x.id);if(!q||(x.em||0)>=(q.em||0))m.set(x.id,x)}return[...m.values()]};
   const def=a.def&&b.def?((b.def.em||0)>(a.def.em||0)?b.def:a.def):(a.def||b.def||null);

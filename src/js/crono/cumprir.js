@@ -304,6 +304,10 @@ function crRotulos(root){(root||document).querySelectorAll("table.crlab").forEac
   t.querySelectorAll(":scope>tbody>tr").forEach(tr=>{if(tr.cells.length!==h.length)return;[...tr.cells].forEach((td,i)=>{if(h[i])td.dataset.l=h[i]})})})}
 var CP={t:null,de:"",ateModo:"",ate:"",alvo:null,fase:0,anular:null,k:"",cache:null};
 try{DB.get("kv","crono_anular").then(v=>{if(v&&v.depois)CP.anular=v}).catch(()=>{})}catch(e){}
+// 0.9.148: o «Anular» da última aplicação também fica na base de dados (peça «CRA»), porque já nada fica no computador
+function cpAnularNuvem(){try{if(NUVOK()&&!nuvDesl())nuvemPut("CRA",{t:Date.now(),a:CP.anular||null},Date.now())}catch(e){}}
+async function cpAnularTrazer(){if(RO||!nuvSB())return;try{const idx=(await (await nuvem("GET","")).json()).itens||{};if(!idx.CRA)return;const r=await nuvemGet("CRA");
+  if(r&&r.a&&r.a.depois){if(!CP.anular||(r.a.em||0)>(CP.anular.em||0)){CP.anular=r.a;try{DB.put("kv","crono_anular",r.a)}catch(e){}}}else if(r&&!r.a&&CP.anular&&(r.t||0)>(CP.anular.em||0)){CP.anular=null}}catch(e){}}
 const cpNomeFase=x=>"Crono360 · desde "+calDM(x,{day:"2-digit",month:"2-digit"});
 const cpH=(v,f)=>crNum(crH1(v,f));
 // tempos por semana de um conjunto de tempos (os de semanas A/B contam a parte do ciclo)
@@ -445,7 +449,7 @@ async function cpAplicar(){if(!crPodeEditar())return;const a=crAnoSel(),asof=CR_
   const resumo=ok.map(r=>{const T=M.turmas.get(r.tid),ks=new Set();for(const F of r.fases)for(const it of F.itens)if(it.ed)ks.add(it.k);
     const m=[...ks].map(k=>{const ws=[cpSemanal(C.ctx,r.base,k,r.S)];for(const F of r.fases){const w=cpSemanal(C.ctx,F.itens,k,F.de);if(w!==ws[ws.length-1])ws.push(w)}return ws.length>1?`${(T.discs.get(k)||{}).disc||k} ${ws.map(crNum).join("→")}`:""}).filter(Boolean);
     return `${T.t.cod}${r.fases.length>1?` (${r.fases.length} fases)`:""}${m.length?": "+m.join(", "):""}`}).join(" · ");
-  CP.anular={anoId:a.id,antes,depois,em:Date.now(),por:String(EU&&EU.email||""),resumo,id:uid()};try{DB.put("kv","crono_anular",CP.anular)}catch(e){}
+  CP.anular={anoId:a.id,antes,depois,em:Date.now(),por:String(EU&&EU.email||""),resumo,id:uid()};try{DB.put("kv","crono_anular",CP.anular)}catch(e){}cpAnularNuvem();
   let avisos=[];try{avisos=cpAvisos(C,M)}catch(e){console.warn(e)}
   CR.apl=CR.apl||[];CR.apl.unshift({id:CP.anular.id,anoId:a.id,em:CP.anular.em,por:CP.anular.por,de:CP.de,ate:CP.ateModo==="d"?CP.ate:"",turmas:cods,resumo,fases:[...nf].sort(),avisos});CR.apl=CR.apl.slice(0,60);crGuardar();
   CR_CACHE.k="";CP.cache=null;CP.alvo=null;cpRecarregarHorario();
@@ -486,7 +490,7 @@ function cpAnular(){const u=CP.anular;if(!u||!crPodeEditar())return;const x=ESD.
   if(!x||!cpMesmoEstado(u.depois,x.estado)){alert("Depois desta aplicação o Horários360 já teve outras mudanças, por isso não se pode anular automaticamente sem as perder.\n\nPode desfazer à mão no Horários360 (Planificação anual › Períodos do ano) ou repor uma das cópias diárias do Horários360.");return}
   if(!confirm(`Anular a aplicação de ${new Date(u.em).toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"})}?\n\n${u.resumo||""}\n\nO Horários360 volta a ficar exatamente como estava antes.`))return;
   x.estado=u.antes;x.quando=Date.now();esdGuardar();const r=(CR.apl||[]).find(q=>q.id===u.id);if(r){r.anulada=Date.now();crGuardar()}
-  CP.anular=null;try{DB.put("kv","crono_anular",null)}catch(e){}CR_CACHE.k="";CP.cache=null;cpRecarregarHorario();cpRender();escLinhaMsg("#cpMsg","Aplicação anulada: o Horários360 voltou a ficar como estava.","ok")}
+  CP.anular=null;try{DB.put("kv","crono_anular",null)}catch(e){}cpAnularNuvem();CR_CACHE.k="";CP.cache=null;cpRecarregarHorario();cpRender();escLinhaMsg("#cpMsg","Aplicação anulada: o Horários360 voltou a ficar como estava.","ok")}
 function cpHist(){const a=crAnoSel(),L=(CR.apl||[]).filter(x=>x.anoId===a.id).slice(0,8),u=CP.anular,b=$("#cpAnular");
   if(b){const pode=!!u&&u.anoId===a.id&&ESD.porAno[a.id]&&cpMesmoEstado(u.depois,ESD.porAno[a.id].estado);b.style.display=crPodeEditar()&&u&&u.anoId===a.id?"":"none";b.disabled=!pode;b.title=pode?"Repõe o Horários360 como estava antes da última aplicação":"O Horários360 já mudou depois da última aplicação"}
   const ult=L.find(x=>!x.anulada);

@@ -59,6 +59,9 @@
    "js/econo/econo.js"
   ]
  },
+ "armazenamento": [
+  "js/inicio/sem-armazenamento.js"
+ ],
  "cabeca": [
   "js/inicio/cabeca.js"
  ],

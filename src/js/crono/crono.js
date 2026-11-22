@@ -14,7 +14,7 @@ function crJuntar(a,b){const del=Object.assign({},b.del||{},a.del||{}),m=new Map
   const ma=new Map();for(const p of(b.apl||[]).concat(a.apl||[]))if(p&&p.id){const q=ma.get(p.id);if(!q||(p.anulada||0)>=(q.anulada||0))ma.set(p.id,p)}
   return{t:Math.max(a.t||0,b.t||0),pontos:[...m.values()].sort((x,y)=>String(y.data).localeCompare(String(x.data))||(y.em||0)-(x.em||0)),del,apl:[...ma.values()].sort((x,y)=>(y.em||0)-(x.em||0)).slice(0,60)}}
 var crH=null;
-function crGuardar(){if(RO||LIMPAR)return;CR.t=Date.now();DB.put("kv","crono",CR);clearTimeout(crH);crH=setTimeout(()=>{try{if(NUVOK()&&!nuvDesl())nuvemPut("CR",CR,CR.t)}catch(e){}},3000);try{guidePubAgendar()}catch(e){}}
+function crGuardar(){if(RO||LIMPAR)return;CR.t=Date.now();DB.put("kv","crono",CR);clearTimeout(crH);nuvFila("crH",()=>{try{if(NUVOK()&&!nuvDesl())nuvemPut("CR",CR,CR.t)}catch(e){}},3000);try{guidePubAgendar()}catch(e){}}
 async function crTrazerNuvem(){try{await crPronto;if(RO||!NUVOK()||nuvDesl())return;const idx=(await(await nuvem("GET","")).json()).itens||{};
     if(idx.CR&&(idx.CR.t||0)>(CR.t||0)){const j=crNorm(await nuvemGet("CR")),n=crJuntar(CR,j);const mais=n.pontos.length>j.pontos.length;CR=n;DB.put("kv","crono",CR);if(mais)nuvemPut("CR",CR,Date.now());if(curTab&&curTab.startsWith("cr"))crRender(curTab)}
     else if((CR.t||0)>((idx.CR||{}).t||0)&&CR.pontos.length)await nuvemPut("CR",CR,CR.t)}

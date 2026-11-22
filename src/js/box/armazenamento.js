@@ -1,15 +1,22 @@
-/* ---------- armazenamento local grande (IndexedDB): textos dos documentos, listagens e contagens ---------- */
-const DB=(()=>{let p=null;
-  const open=()=>p||(p=new Promise((ok,ko)=>{try{if(!window.indexedDB){ko(new Error("sem IndexedDB"));return}
-    const r=indexedDB.open("boxcheck",1);
-    r.onupgradeneeded=()=>{const d=r.result;["textos","listagens","kv"].forEach(n=>{if(!d.objectStoreNames.contains(n))d.createObjectStore(n)})};
-    r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error);r.onblocked=()=>ko(new Error("bloqueado"))}catch(e){ko(e)}}));
-  const tx=async(store,mode,fn)=>{const d=await open();return new Promise((ok,ko)=>{const t=d.transaction(store,mode);const s=t.objectStore(store);let res;const rq=fn(s);if(rq)rq.onsuccess=()=>{res=rq.result};t.oncomplete=()=>ok(res);t.onerror=()=>ko(t.error);t.onabort=()=>ko(t.error||new Error("abortado"))})};
-  return{
-    get:(s,k)=>tx(s,"readonly",st=>st.get(k)).catch(()=>undefined),
-    put:(s,k,v)=>tx(s,"readwrite",st=>st.put(v,k)).then(()=>true).catch(e=>{console.warn("DB",e);return false}),
-    all:s=>tx(s,"readonly",st=>st.getAll()).catch(()=>[]),
-    del:(s,k)=>tx(s,"readwrite",st=>st.delete(k)).catch(()=>{})}})();
+/* ---------- 0.9.148: armazenamento grande só em memória (textos dos documentos, listagens, contagens, dados dos módulos) ----------
+   Nada fica no computador: estas cópias vivem enquanto a página está aberta e vêm do Supabase ao entrar.
+   Na primeira abertura depois da atualização, o que versões antigas deixaram no IndexedDB «boxcheck» deste computador passa
+   para a memória (para não se perder nada que ainda não esteja na nuvem); legadoLimpar() apaga-o depois de confirmado na nuvem.
+   As cópias são guardadas e devolvidas clonadas (como fazia o IndexedDB), para quem as lê não mexer na que está guardada. */
+const DB=(()=>{const S={textos:new Map(),listagens:new Map(),kv:new Map()};let L=null;
+  const clone=v=>{if(v===undefined||v===null||typeof v!=="object")return v;try{return structuredClone(v)}catch(e){return v}};
+  const legado=()=>L||(L=new Promise(async ok=>{try{if(!window.indexedDB)return ok();
+      if(indexedDB.databases){const D=await indexedDB.databases();if(!D.some(d=>d&&d.name==="boxcheck"))return ok()}
+      const r=indexedDB.open("boxcheck");let novo=false;r.onupgradeneeded=()=>{novo=true};
+      r.onsuccess=()=>{const d=r.result;const st=[...d.objectStoreNames].filter(n=>S[n]);if(novo||!st.length){d.close();return ok()}
+        const t=d.transaction(st,"readonly");st.forEach(n=>{const q=t.objectStore(n).openCursor();q.onsuccess=()=>{const c=q.result;if(c){if(!S[n].has(c.key)){S[n].set(c.key,c.value);DB.legado++}c.continue()}}});
+        t.oncomplete=()=>{d.close();ok()};t.onerror=t.onabort=()=>{try{d.close()}catch(e){}ok()}};
+      r.onerror=r.onblocked=()=>ok()}catch(e){ok()}}));
+  return{legado:0,carregarLegado:legado,
+    get:async(s,k)=>{await legado();return S[s]?clone(S[s].get(k)):undefined},
+    put:async(s,k,v)=>{await legado();if(!S[s])return false;S[s].set(k,clone(v));return true},
+    all:async s=>{await legado();return S[s]?[...S[s].values()].map(clone):[]},
+    del:async(s,k)=>{await legado();if(S[s])S[s].delete(k)}}})();
 // 0.9.35: ao abrir, se a cópia no IndexedDB for mais recente do que a do localStorage (por exemplo, porque o localStorage estava cheio), junta-se
 DB.get("kv","cfgCopia").then(c=>{if(!c||!c.s||RO||LIMPAR)return;const lt=+(localStorage.getItem(KEY+"_t")||0);
   if(c.t>lt+500&&c.s!==lastStored){try{const o=JSON.parse(c.s);cfg=juntarCfg(o,cfg);try{migrate()}catch(e){}lastJSON=JSON.stringify(cfg);cfgRev++;persist(lastJSON);try{refreshAll()}catch(e){}}catch(e){console.warn("cópia",e)}}}).catch(()=>{});

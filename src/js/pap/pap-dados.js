@@ -43,7 +43,7 @@ const papEd=()=>!RO&&podePublicar();
 // ---------- guardar e nuvem (como o Crono360: IndexedDB + peça «PAP» na base de dados) ----------
 var papH=null;
 function papGuardar(o){if(RO||LIMPAR)return;const t=Date.now();if(o)o.em=t;PAP.t=t;DB.put("kv","pap",PAP);clearTimeout(papH);
-  papH=setTimeout(()=>{try{if(NUVOK()&&!nuvDesl())nuvemPut("PAP",PAP,PAP.t)}catch(e){}},2500)}
+  nuvFila("papH",()=>{try{if(NUVOK()&&!nuvDesl())nuvemPut("PAP",PAP,PAP.t)}catch(e){}},2500)}
 function papJuntar(a,b){const del=Object.assign({},b.del||{},a.del||{});
   const pick=(L1,L2)=>{const m=new Map();for(const x of(L2||[]).concat(L1||[]))if(x&&x.id&&!del[x.id]){const q=m.get(x.id);if(!q||(x.em||0)>=(q.em||0))m.set(x.id,x)}return[...m.values()]};
   const def=a.def&&b.def?((b.def.em||0)>(a.def.em||0)?b.def:a.def):(a.def||b.def||null);

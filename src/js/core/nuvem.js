@@ -18,9 +18,15 @@ var SB_CFG_KEY="g360_sb",SB_SES_KEY="episj360.sb";
 var SB_PADRAO={url:"https://oovqekytlhkbinfdxjwf.supabase.co",key:"sb_publishable_-RFfe7R5-JQ6ok2Hfmdmmw_YTlcnYpr"};
 function sbCfg(){try{const c=JSON.parse(localStorage.getItem(SB_CFG_KEY)||"null");return c&&c.url&&c.key?c:SB_PADRAO}catch(e){return SB_PADRAO}}
 var SBC=null,SBSES=null,SBMEMBRO=null,SBERR="",SBEU=null,SBSID=Math.random().toString(36).slice(2,10),SBRT=null; // var: usadas cedo no arranque (sem TDZ)
+// 0.9.148: a sessão de entrada é a única coisa que fica no navegador, e só no sessionStorage verdadeiro (apaga-se ao fechar o navegador).
+// É preciso porque a entrada com a Microsoft sai da página e volta. A sessão das versões antigas (localStorage) passa para lá uma vez.
+function sbArmazem(){const R=(window.__g360Mem&&window.__g360Mem.real)||{},ss=R.ss,ls=R.ls;
+  if(!ss)return {getItem:k=>null,setItem:()=>{},removeItem:()=>{}};
+  try{if(ls)for(const k of [SB_SES_KEY,SB_SES_KEY+"-code-verifier",SB_SES_KEY+"-user"]){const v=ls.getItem(k);if(v!=null){if(ss.getItem(k)==null)ss.setItem(k,v);ls.removeItem(k)}}}catch(e){}
+  return {getItem:k=>{try{return ss.getItem(k)}catch(e){return null}},setItem:(k,v)=>{try{ss.setItem(k,v)}catch(e){}},removeItem:k=>{try{ss.removeItem(k)}catch(e){}}}}
 async function sbCliente(){if(SBC)return SBC;const c=sbCfg();if(!c)throw new Error("A base de dados (Supabase) ainda não está configurada.");
   const {createClient}=await import(new URL("../esm/supabase-2.117.3.min.js",location.href).href);
-  SBC=createClient(c.url,c.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:"pkce",storageKey:SB_SES_KEY}});
+  SBC=createClient(c.url,c.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:"pkce",storageKey:SB_SES_KEY,storage:sbArmazem()}});
   SBC.auth.onAuthStateChange((ev,ses)=>{SBSES=ses||null;if(!ses)SBMEMBRO=null;try{sbUI()}catch(e){}});return SBC}
 const SB_PRONTO=(async()=>{if(!sbCfg())return;try{const sb=await sbCliente();const {data}=await sb.auth.getSession();SBSES=data&&data.session||null;
   if(SBSES){try{await sb.rpc("g360_reclamar_admin")}catch(e){} // o primeiro a entrar, sem administradores, fica administrador
@@ -50,9 +56,10 @@ async function sbNuvem(method,name,body,t){const sb=await sbCliente();
     const itens={};(data||[]).forEach(x=>{itens[x.nome]={t:+x.t||0}});return new Response(JSON.stringify({ok:true,itens}),{headers:{"Content-Type":"application/json"}})}
   if(method==="GET"){const {data,error}=await sb.from("g360_estado").select("dados").eq("nome",name).maybeSingle();if(error)throw new Error(sbErroMsg(error));
     if(!data)return new Response(null,{status:404});return new Response(bufDeB64(data.dados))}
+  NUV_VOO=(NUV_VOO||0)+1;try{
   const buf=body instanceof ArrayBuffer?body:await new Response(body).arrayBuffer();
   const {error}=await sb.from("g360_estado").upsert({nome:name,dados:b64DeBuf(buf),t:t||Date.now(),por:String(SBSES&&SBSES.user&&SBSES.user.email||"")+"#"+SBSID},{onConflict:"nome"});
-  if(error)throw new Error(sbErroMsg(error));return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json"}})}
+  if(error)throw new Error(sbErroMsg(error));return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json"}})}finally{NUV_VOO--}}
 async function sbEntrar(){const sb=await sbCliente();let hint="";try{hint=EU&&EU.email||""}catch(e){}
   const {error}=await sb.auth.signInWithOAuth({provider:"azure",options:{scopes:"email openid profile offline_access",redirectTo:location.origin+location.pathname,queryParams:hint?{login_hint:hint}:{}}});if(error)throw error}
 async function sbSair(){try{const sb=await sbCliente();await sb.auth.signOut()}catch(e){}SBSES=null;SBMEMBRO=null;sbUI()}
@@ -84,7 +91,7 @@ function nuvMS(){try{return !!(MSACC&&EU&&!EU.provisorio&&!RO&&(EU.admin||EU.per
 function nuvDesl(){try{return NUV.ativo===false&&!nuvSB()}catch(e){return false}}
 function NUVOK(){try{return nuvSB()||nuvMS()||!!(SES&&workerUrl())}catch(e){return false}}
 async function nuvemSincMS(){if(!nuvMS()&&!nuvSB())return;
-  try{await nuvemTrazer()}catch(e){}try{await avTrazerNuvem()}catch(e){}try{await rcTrazer(false)}catch(e){}try{await esTrazerNuvem()}catch(e){}try{await crTrazerNuvem()}catch(e){}try{await papTrazerNuvem()}catch(e){}try{await pwTrazerNuvem()}catch(e){}try{await foTrazerNuvem()}catch(e){}try{await ecoTrazerNuvem()}catch(e){}try{await h3TrazerNuvem()}catch(e){}
+  try{await nuvemTrazer()}catch(e){}try{await avTrazerNuvem()}catch(e){}try{await rcTrazer(false)}catch(e){}try{await esTrazerNuvem()}catch(e){}try{await crTrazerNuvem()}catch(e){}try{await papTrazerNuvem()}catch(e){}try{await pwTrazerNuvem()}catch(e){}try{await foTrazerNuvem()}catch(e){}try{await ecoTrazerNuvem()}catch(e){}try{await h3TrazerNuvem()}catch(e){}try{await cpAnularTrazer()}catch(e){}try{await rpTrazer()}catch(e){}
   try{guidePubAgendar()}catch(e){}nuvemUI()}
 async function nuvem(method,name,body,t){
   if(nuvSB()){const r=await sbNuvem(method,name,body,t);NUV.ativo=true;NUV.via="sb";if(method==="GET"&&!name)return nuvListaPos(r);return r}
@@ -99,18 +106,20 @@ async function nuvem(method,name,body,t){
   NUV.ativo=true;
   if(method==="GET"&&!name)return nuvListaPos(r);
   return r}
-async function nuvListaPos(r){{const j=await r.json(),it=j.itens||{},g=gerLocal();
+async function nuvListaPos(r){{const j=await r.json(),it=j.itens||{};let g=gerLocal();
+    // 0.9.148: com a memória vazia (nada guardado no computador) basta passar a contar a partir do último recomeço, sem recarregar
+    if(it.reset&&(it.reset.t||0)>g&&!g){try{localStorage.setItem("episj_ger",String(it.reset.t))}catch(e){}g=it.reset.t}
     if(it.reset&&(it.reset.t||0)>g){await limparLocal(it.reset.t);toast("Foi apagado tudo noutro computador — a recomeçar");setTimeout(()=>location.reload(),900);const x=new Error("recomeço");x.kind="nokv";throw x}
     if(g)for(const k in it)if(k!=="reset"&&(it[k].t||0)<g)delete it[k]; // o que ficou na nuvem de antes do recomeço já não conta
     return new Response(JSON.stringify(j),{headers:{"Content-Type":"application/json"}})}}
 /* ---------- 0.9.22: Apagar tudo e começar de novo (fica só a ligação à Box e ao Office 365) ---------- */
 const gerLocal=()=>+(localStorage.getItem("episj_ger")||0);
 const MANTER=k=>["boxdoc_ses","boxdoc_worker","guide_ms","episj_ger","boxcheck_letra","g360_sb","episj360.sb"].includes(k)||/^msal|login\.windows|login\.microsoftonline/i.test(k);
-async function limparLocal(ger){LIMPAR=true;
+async function limparLocal(ger){LIMPAR=true;try{await legadoApagar()}catch(e){}
   try{const ks=[];for(let i=0;i<localStorage.length;i++)ks.push(localStorage.key(i));ks.forEach(k=>{if(!MANTER(k))localStorage.removeItem(k)});localStorage.setItem("episj_ger",String(ger))}catch(e){}
   await new Promise(ok=>{try{const r=indexedDB.deleteDatabase("boxcheck");r.onsuccess=r.onerror=r.onblocked=()=>ok()}catch(e){ok()}setTimeout(ok,3000)})}
 async function apagarTudoRecomecar(){
-  try{download(`episj360_copia_antes_de_apagar_${hoje()}.json`,JSON.stringify({cfg,logos:LOGOS,roomcheck:RC,horarios:ESD,pontos:rpList(),modelos:TPL},null,1),"application/json")}catch(e){} // cópia de segurança, por precaução
+  try{if(NUVOK()&&!nuvDesl())await nuvem("PUT","copia_antes_de_apagar",await gz({cfg:JSON.stringify(cfg),logos:LOGOS,roomcheck:RC,horarios:ESD,pontos:rpList(),modelos:TPL,t:Date.now()}),Date.now())}catch(e){} // 0.9.148: cópia de segurança na base de dados (antes era um ficheiro descarregado para o computador)
   const ger=Date.now();
   if(NUVOK()&&!nuvDesl()){try{
     await nuvem("PUT","reset",await gz({ger}),ger);
@@ -119,6 +128,16 @@ async function apagarTudoRecomecar(){
     await nuvem("PUT","ES",await gz({t:ger,ger,porAno:{},copias:{},mapaT:{},mapaC:{},ligT:{},ligC:{},mapaA:{},ligA:{}}),ger)}
     catch(e){if(!confirm("Não foi possível apagar na nuvem ("+(e.message||e)+"). Apagar só neste computador? (noutro computador os dados voltariam a aparecer)"))return}}
   await limparLocal(ger);location.reload()}
+/* 0.9.148: nada fica no computador, por isso o que ainda não foi para a nuvem perde-se se a página fechar.
+   Os envios adiados (alguns segundos depois de cada alteração) ficam numa fila: ao esconder ou fechar a página saem logo,
+   e o navegador pergunta antes de fechar enquanto houver envios por acabar. */
+var NUV_FILA=NUV_FILA||new Map(),NUV_VOO=NUV_VOO||0; // var: podem ser usadas no arranque, antes de esta linha correr
+function nuvFila(nome,fn,ms){NUV_FILA=NUV_FILA||new Map();const x=NUV_FILA.get(nome);if(x)clearTimeout(x.h);const o={fn};o.h=setTimeout(()=>{NUV_FILA.delete(nome);try{fn()}catch(e){}},ms);NUV_FILA.set(nome,o);return o.h}
+function nuvFilaJa(){if(!NUV_FILA)return;for(const [n,o] of [...NUV_FILA]){clearTimeout(o.h);NUV_FILA.delete(n);try{o.fn()}catch(e){}}}
+function nuvPorEnviar(){return (NUV_FILA?NUV_FILA.size:0)+(NUV_VOO||0)}
+addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")nuvFilaJa()});
+addEventListener("pagehide",()=>{nuvFilaJa()});
+addEventListener("beforeunload",e=>{if(LIMPAR)return;nuvFilaJa();if(nuvPorEnviar()>0){e.preventDefault();e.returnValue="A EPISJ 360 ainda está a guardar na nuvem. Se sair agora, as últimas alterações perdem-se."}});
 async function nuvemPut(name,obj,t){if(nuvDesl()||LIMPAR)return;t=t||Date.now();
   try{await nuvem("PUT",name,await gz(obj),t);nuvSetT(name,t);NUV.ultimo=Date.now();NUV.erro=""}
   catch(e){if(e.kind!=="nokv")NUV.erro=e.message}
@@ -134,7 +153,7 @@ function estadoAtual(){lgDoNavegador();let root="";try{root=localStorage.getItem
   return{cfg:JSON.stringify(cfg),logos:LOGOS,pontos:(()=>{try{if(nuvSB())return[]}catch(e){}return rpList()})(),tpl:TPL,folder:curFolder,root,bases:basesIdx(),resumos:resumos()}} // 0.9.48: no Supabase os pontos de restauro não viajam (a base de dados guarda o histórico de versões)
 let nuvH=null;
 function nuvemAgendar(){try{NUV}catch(e){setTimeout(nuvemAgendar,0);return} // pode ser chamada ao arrancar, antes de NUV existir
-  if(nuvDesl()||!NUVOK()||NUV.ocupado)return;clearTimeout(nuvH);nuvH=setTimeout(()=>nuvemPut("estado",estadoAtual(),cfgT()||Date.now()),8000)}
+  if(nuvDesl()||!NUVOK()||NUV.ocupado)return;clearTimeout(nuvH);nuvFila("nuvH",()=>nuvemPut("estado",estadoAtual(),cfgT()||Date.now()),8000)}
 function nuvemListagem(j){if(!NUVOK())return;nuvemPut("L_"+j.rootId,j,j.t).then(()=>nuvemAgendar())}
 async function nuvemBases(rootId){if(!NUVOK()||nuvDesl())return;const l=basesIdx()[rootId]||[];const out=[];
   for(const b of l){const x=await lerBase(rootId,b.t);if(x)out.push(x)}

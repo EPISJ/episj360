@@ -14,6 +14,8 @@ saida['app/app.css']=`/* ${AVISO} */\n`+juntar(M.css,true);
 // o código da app corre todo no mesmo âmbito (um só ficheiro, como antes dentro de uma função): as funções continuam «içadas» de um ficheiro para o outro
 saida['app/app.js']=`/* ${AVISO} */\n"use strict";\n`+juntar(M.app);
 for(const [m,L] of Object.entries(M.modulos))saida[`app/m/${m}.js`]=`/* ${AVISO} — ecrã do módulo «${m}», carregado quando é aberto */\n"use strict";\n`+juntar(L);
+// 0.9.139: corre antes de tudo, também no Social360 e no Horários360 (nada fica no computador)
+saida['app/sem-armazenamento.js']=`/* ${AVISO} */\n`+juntar(M.armazenamento);
 saida['app/cabeca.js']=`/* ${AVISO} */\n`+juntar(M.cabeca);
 saida['app/rede.js']=`/* ${AVISO} */\n`+juntar(M.rede);
 saida['app/extra.js']=`/* ${AVISO} */\n`+juntar(M.extra);

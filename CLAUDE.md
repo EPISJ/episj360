@@ -35,4 +35,5 @@ Se alguém tiver mexido diretamente no `index.html` publicado, levar essas alter
 ## Segurança
 - `g360_email()` só aceita identidades do inquilino Office 365 da escola (`servidor/supabase-episj360-seguranca.sql`). Não remover essa verificação.
 - Tudo o que vai para `innerHTML` passa por `esc()`.
-- «Terminar e limpar este computador» (`sairLimpar` em `src/js/core/entrada.js`) só limpa depois de `sairVerificar` confirmar a nuvem. Uma peça nova guardada no aparelho tem de entrar em `sairLocais()`; nunca apagar a marca `episj_ger`.
+- **Nada fica no computador de quem usa a app (0.9.148).** `app/sem-armazenamento.js` corre primeiro (também no Social360 e no Horários360) e troca `localStorage`/`sessionStorage` por memória; `DB` (box/armazenamento.js) é só memória. Dados que têm de durar vão para o Supabase: peças em `g360_estado` (com `nuvemPut`, de preferência por `nuvFila` para sair logo ao fechar a página) e preferências de ecrã em `g360_prefs` (acrescentar a chave a `PREF_LS` em core/novidades.js). Nunca usar IndexedDB, cookies, Cache API ou o `localStorage` verdadeiro (`__g360Mem.real`), exceto a sessão do Supabase (`sbArmazem`).
+- Uma peça nova guardada em `DB.put("kv",…)` tem de entrar em `sairLocais()` (core/entrada.js), que confirma a nuvem antes de apagar o que versões antigas deixaram no computador (`legadoLimpar`). Nunca apagar a marca `episj_ger`.

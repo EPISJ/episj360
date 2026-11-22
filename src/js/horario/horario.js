@@ -9,7 +9,7 @@ const ES_URL=new URL("eduschedule.html",location.href).href;
 let ESD={t:0,porAno:{},copias:{},mapaT:{},mapaC:{},ligT:{},ligC:{},mapaA:{},ligA:{}};
 const esdPronto=DB.get("kv","esched").then(v=>{if(v&&typeof v==="object")ESD=Object.assign(ESD,v)}).catch(()=>{});
 let esdH=null;
-function esdGuardar(){if(RO||LIMPAR)return;guidePubAgendar();ESD.t=Date.now();DB.put("kv","esched",ESD);clearTimeout(esdH);esdH=setTimeout(()=>{if(NUVOK()&&!nuvDesl())nuvemPut("ES",ESD,ESD.t)},8000)}
+function esdGuardar(){if(RO||LIMPAR)return;guidePubAgendar();ESD.t=Date.now();DB.put("kv","esched",ESD);clearTimeout(esdH);nuvFila("esdH",()=>{if(NUVOK()&&!nuvDesl())nuvemPut("ES",ESD,ESD.t)},8000)}
 async function esTrazerNuvem(){try{await esdPronto;if(!NUVOK()||nuvDesl())return;
   const idx=(await (await nuvem("GET","")).json()).itens||{};
   if(idx.ES&&(idx.ES.t||0)>(ESD.t||0)){const j=await nuvemGet("ES");if(j&&typeof j==="object"){ESD=Object.assign({t:0,porAno:{},copias:{},mapaT:{},mapaC:{},ligT:{},ligC:{},mapaA:{},ligA:{}},j);DB.put("kv","esched",ESD);esRecarregar(true)}}

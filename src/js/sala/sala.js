@@ -33,7 +33,7 @@ let rcNuvH=null,rcNuvOk=0,rcNuvErr="";
 function rcJuntar(a,b){if((a.ger||0)!==(b.ger||0))return (a.ger||0)>(b.ger||0)?a:b;const o={ger:a.ger||0,esp:a.esp,cfg:a.cfg,et:a.et||0,res:{...(a.res||{})}};
   if((b.et||0)>(o.et||0)){o.esp=b.esp;o.cfg=Object.assign({abre:480,fecha:1140,sab:false},b.cfg||{});o.et=b.et}
   for(const k in (b.res||{})){const r=b.res[k];if(!r)continue;const l=o.res[k];if(!l||(r.u||0)>(l.u||0))o.res[k]=r}return o}
-function rcNuvemAgendar(){clearTimeout(rcNuvH);rcNuvH=setTimeout(()=>rcTrazer(true),1500)}
+function rcNuvemAgendar(){clearTimeout(rcNuvH);nuvFila("rcNuvH",()=>rcTrazer(true),1500)}
 async function rcTrazer(enviar){try{if(!NUVOK()||nuvDesl()){rcNuvUI();return}
     let rem=null;const idx=(await (await nuvem("GET","")).json()).itens||{};if(idx.rc)rem=await nuvemGet("rc");
     const antes=JSON.stringify(RC);if(rem)RC=rcJuntar(RC,rem);

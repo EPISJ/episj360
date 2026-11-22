@@ -197,7 +197,7 @@ function rcTurmaTxt(t){try{return dsdTurmaTxt(t)}catch(e){return t.cod+(t.nome?"
 function rcCamposHTML(sf,v){v=v||{};const P=(cfg.profs||[]).filter(p=>p.nome).slice().sort(cmpProf);
   let T=[];try{T=turmasDoAno().map(rcTurmaTxt)}catch(e){}
   const pIn=!v.p||P.some(p=>p.nome===v.p),tIn=!v.t||T.includes(v.t);
-  return `<label>Reservado por<select id="rcPs${sf}"><option value="">— escolha o formador —</option>${P.map(p=>`<option value="${esc(p.nome)}"${p.nome===v.p?" selected":""}>${esc(p.cod?p.cod+" - "+p.nome:p.nome)}</option>`).join("")}<option value="__o"${pIn?"":" selected"}>Outro (serviço ou pessoa de fora)…</option></select></label>
+  return `<label>Reservado por<select id="rcPs${sf}"><option value="">— escolha o formador —</option>${P.map(p=>`<option value="${esc(p.nome)}"${p.nome===v.p?" selected":""}>${esc(profRot(p))}</option>`).join("")}<option value="__o"${pIn?"":" selected"}>Outro (serviço ou pessoa de fora)…</option></select></label>
     <input type="text" id="rcP${sf}" value="${esc(v.p||"")}" maxlength="80" placeholder="Nome do serviço ou da pessoa" ${pIn?"hidden":""}>
     <label><span>Turma <span class="rc-mut">(opcional)</span></span><select id="rcTs${sf}"><option value="">— sem turma —</option>${T.map(t=>`<option value="${esc(t)}"${t===v.t?" selected":""}>${esc(t)}</option>`).join("")}${tIn?"":`<option value="${esc(v.t)}" selected>${esc(v.t)}</option>`}</select></label>
     <input type="hidden" id="rcT${sf}" value="${esc(v.t||"")}">

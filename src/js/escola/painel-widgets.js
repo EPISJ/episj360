@@ -93,7 +93,7 @@ const WIDGETS=[
  {id:"top",mod:"boxcheck",nome:"Quem mais falta entregar",desc:"Os 5 formadores com mais documentos em falta, com atalho para avisar",r(){
    const ev=wgEval();if(!ev)return wgSemBox();const T=byTeacher(ev).filter(t=>t.p.id!=="_"&&t.miss>0).slice(0,5);
    if(!T.length)return `<div class="wg-okm">✓ Ninguém tem documentos em falta.</div>`;
-   return `<div class="wg-lst">${T.map(t=>`<div class="wg-li"><span class="wg-el">${esc(t.p.nome)}</span><span class="wg-mini">${wgBarra(wgPct(t.ok,t.tot),"var(--ok,#16a34a)")}</span><b class="wg-bad">${t.miss}</b></div>`).join("")}</div>`+wgIr("env","Enviar avisos")}},
+   return `<div class="wg-lst">${T.map(t=>`<div class="wg-li"><span class="wg-el">${esc(profRot(t.p))}</span><span class="wg-mini">${wgBarra(wgPct(t.ok,t.tot),"var(--ok,#16a34a)")}</span><b class="wg-bad">${t.miss}</b></div>`).join("")}</div>`+wgIr("env","Enviar avisos")}},
  {id:"turmasbox",mod:"boxcheck",nome:"Turmas mais atrasadas",desc:"Percentagem de entregas por turma, da mais baixa para a mais alta",r(){
    const ev=wgEval();if(!ev)return wgSemBox();const G=new Map();ev.forEach(e=>{const k=e.mod.turma||"(sem turma)",g=G.get(k)||G.set(k,{ok:0,t:0}).get(k);e.items.forEach(i=>{g.t++;if(i.ok)g.ok++})});
    const L=[...G.entries()].filter(([,g])=>g.t).map(([k,g])=>({k,p:wgPct(g.ok,g.t),g})).sort((a,b)=>a.p-b.p).slice(0,8);if(!L.length)return wgVazio("Sem documentos atribuídos.");

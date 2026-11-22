@@ -1529,6 +1529,15 @@ select:disabled{-webkit-appearance:none;appearance:none;background-image:none!im
 .em-bar{display:grid;grid-template-columns:minmax(120px,1.2fr) 2fr 52px;gap:10px;align-items:center;font-size:13px;padding:4px 0}
 .em-bar .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.em-bar .b{height:9px;background:#eef1f6;border-radius:5px;overflow:hidden}.em-bar .b i{display:block;height:100%;border-radius:5px}.em-bar .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
 .em-falta div{font-size:13px;padding:4px 0;border-top:1px solid #f0f2f5}
+/* 0.9.215: «Em falta» do formador, por turma e módulo */
+.emf-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:22px 0 10px}.emf-h h3{margin:0}
+.emf{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px}
+.emf-g{border:1px solid var(--line,#e3e7ee);border-left:4px solid #e5484d;border-radius:10px;background:#fff;padding:10px 12px}
+.emf-t{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13.5px;padding-bottom:6px}
+.emf-dot{width:10px;height:10px;border-radius:50%;flex:none}.emf-mo{color:var(--muted,#5b6472)}
+.emf-i{display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 0;border-top:1px solid #f0f2f5}
+.emf-doc{flex:1;min-width:0}.emf-i .tag{flex:none}
+@media (max-width:640px){.emf{grid-template-columns:1fr}}
 /* 0.9.195: Crono360 › Ano inteiro com o aspeto do «Calendário do ano» (Calendário Escolar): sem linhas grossas, cada dia é uma
    pastilha de cantos redondos com cores suaves — dias de aulas a azul claro, feriados a rosa com o número a vermelho, interrupções
    a amarelo-claro (sem riscas), fins de semana a cinzento; hoje com contorno azul; início e fim de cada disciplina continuam fortes */

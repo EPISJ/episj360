@@ -52,7 +52,7 @@ function prazoItens(p,agora){agora=agora||Date.now();const fim=fimPrazo(p),ok=pr
 function prazoPorProf(L){const M=new Map();for(const x of L){if(!M.has(x.pid))M.set(x.pid,[]);M.get(x.pid).push(x)}
   return [...M.entries()].map(([pid,it])=>{const p=cfg.profs.find(q=>q.id===pid)||{id:"_",nome:"(sem formador atribuído)",email:""};
     const c={prazo:0,atraso:0,falta:0,pendente:0};for(const x of it)c[x.est]++;return{p,it,c,inc:c.falta+c.atraso}})
-    .sort((a,b)=>(b.c.falta+b.c.pendente)-(a.c.falta+a.c.pendente)||b.c.atraso-a.c.atraso||COLL_PT.compare(a.p.nome,b.p.nome))}
+    .sort((a,b)=>cmpProf(a.p,b.p))}
 const contar=L=>{const c={prazo:0,atraso:0,falta:0,pendente:0};for(const x of L)c[x.est]++;return c};
 
 /* registo dos avisos enviados (fora da configuração, para "anular" nunca fazer reenviar) */

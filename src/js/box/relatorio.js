@@ -79,7 +79,7 @@ function relMeuLista(){const el=$("#rmLista"),BM=boxMeu();if(!el||!BM||BM.vazio)
 function renderReport(){{let BM=null;try{BM=boxMeu()}catch(e){}if(BM){renderRelMeu(BM);return}const m=$("#relMeu");if(m){m.hidden=true;[...$("#rel").querySelectorAll(".cols,.tiles,.card,.blk")].forEach(x=>{if(!m.contains(x))x.hidden=false})}}
   const ev=evaluate(),T=byTeacher(ev);
   const fp=$("#fProf").value;
-  $("#fProf").innerHTML=`<option value="">Todos</option>`+T.map(t=>`<option value="${t.p.id}" ${t.p.id===fp?"selected":""}>${esc(t.p.nome)}</option>`).join("");
+  $("#fProf").innerHTML=`<option value="">Todos</option>`+T.slice().sort((a,b)=>cmpProf(a.p,b.p)).map(t=>`<option value="${t.p.id}" ${t.p.id===fp?"selected":""}>${esc(profRot(t.p))}</option>`).join("");
   const tot=T.reduce((a,t)=>a+t.tot,0),ok=T.reduce((a,t)=>a+t.ok,0),profsMiss=T.filter(t=>t.miss>0&&t.p.id!=="_").length;
   const all=ev.flatMap(e=>e.items);
   const nBlank=all.filter(i=>i.state==="blank").length,nWarn=all.filter(i=>i.state==="warn").length,nSince=all.filter(i=>i.since).length,nMod=all.filter(i=>i.state==="modelo").length;
@@ -266,7 +266,7 @@ let mailCache=[];
 function geralPrevUI(){const g=geralText(),L=g.split("\n");$("#geralPrev").textContent=L.length>300?L.slice(0,300).join("\n")+`\n\n… e mais ${L.length-300} linhas (o resumo completo vai no email e na cópia).`:g}
 function renderMails(){
   const all=byTeacher(evaluate()).filter(t=>t.miss&&t.p.id!=="_"),sel=$("#mProf"),v=sel.value;
-  sel.innerHTML=`<option value="">Todos os formadores com documentos em falta (${all.length})</option>`+all.slice().sort((a,b)=>COLL_PT.compare(a.p.nome,b.p.nome)).map(t=>`<option value="${t.p.id}">${esc(t.p.nome)} — ${t.miss} em falta</option>`).join("");
+  sel.innerHTML=`<option value="">Todos os formadores com documentos em falta (${all.length})</option>`+all.slice().sort((a,b)=>cmpProf(a.p,b.p)).map(t=>`<option value="${t.p.id}">${esc(profRot(t.p))} — ${t.miss} em falta</option>`).join("");
   sel.value=all.some(t=>t.p.id===v)?v:"";
   const T=sel.value?all.filter(t=>t.p.id===sel.value):all;mailCache=T;
   const ne=T.filter(t=>t.p.email).length;$("#sendAll").textContent=ENVIO_A?"Parar o envio":sel.value?"Enviar a este formador com PDF":`Enviar a todos com PDF (${ne})`;$("#sendAll").disabled=!ne&&!ENVIO_A;
@@ -465,7 +465,7 @@ async function renderAlt(){
   const ids=new Set([...Object.keys(d.entregues),...Object.keys(d.perdidos)]);
   const faltaAgora=new Map(byTeacher(evaluate()).map(t=>[t.p.id,t.miss]));
   const rowsF=[...ids].map(id=>({id,p:cfg.profs.find(p=>p.id===id)||{nome:id==="_"?"(sem formador atribuído)":"(formador removido)"},e:d.entregues[id]||[],x:d.perdidos[id]||[]}))
-    .sort((a,b)=>b.e.length-a.e.length).map(r=>`<details class="altp"><summary><span class="who2"><b>${esc(r.p.nome)}</b></span><span class="num ok">+${r.e.length}<small>entregues</small></span><span class="num bad">${r.x.length?"−"+r.x.length:"0"}<small>deixaram de estar</small></span><span class="num">${faltaAgora.get(r.id)??"—"}<small>ainda em falta</small></span><span></span><span></span><span></span></summary>
+    .sort((a,b)=>cmpProf(a.p,b.p)).map(r=>`<details class="altp"><summary><span class="who2"><b>${esc(profRot(r.p))}</b></span><span class="num ok">+${r.e.length}<small>entregues</small></span><span class="num bad">${r.x.length?"−"+r.x.length:"0"}<small>deixaram de estar</small></span><span class="num">${faltaAgora.get(r.id)??"—"}<small>ainda em falta</small></span><span></span><span></span><span></span></summary>
       <div style="padding:6px 14px 12px">${r.e.map(x=>`<div class="files" style="color:var(--ok)">✓ ${esc(x.t)} — ${esc(x.d)}</div>`).join("")}${r.x.map(x=>`<div class="files" style="color:var(--bad)">✗ ${esc(x.t)} — ${esc(x.d)}</div>`).join("")}</div></details>`).join("");
   const igual=BASEC&&BASEC.b&&lastListing&&BASEC.b.t>=(lastListing.t||0)&&!altSel.startsWith("L|");
   el.innerHTML=(igual?`<div class="msg info" style="margin-bottom:14px">A contagem foi feita a partir da última leitura da Box (${esc(lastListing.quando)}), por isso ainda não há nada para comparar. Carregue em <b>↻ Atualizar agora a partir da Box</b> para ver o que mudou desde então.</div>`:"")+`<div class="card"><h2>Quem fez o quê</h2><p class="hint">Entre ${esc(d.desde)} e ${esc(d.ate)}. Clique numa pessoa para ver os ficheiros. “Vazios / falsos” = documentos colocados ou substituídos que não contam (em branco, texto de enchimento ou modelo por preencher).${nQ?` Há ${nQ} documento(s) ainda por ler — a leitura corre em segundo plano.`:""}</p>${rowsP||`<p class="hint">Nenhum documento colocado, alterado ou apagado.</p>`}</div>

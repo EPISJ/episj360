@@ -468,7 +468,7 @@ function cpAvisos(C,M){const porP=new Map();
         for(const t of tsDe(a0.concat(b0)))add(t,{m:1,t:txt})}
       ant=F.itens}
     for(const [k,x] of r.fimK||new Map()){if(x>=r.E)continue;const its=r.base.concat(...r.fases.map(F=>F.itens)).filter(it=>it.ks.includes(k)&&it.ed);for(const t of tsDe(its))add(t,{m:0,t:`Turma ${T.t.cod} — ${nm(k)}: com este horário, o plano fica cumprido a ${calDMA(x)} (a última aula é nesse dia).`})}}
-  return [...porP].map(([pid,L])=>{const p=cfg.profs.find(q=>q.id===pid)||{},vis=new Set(),linhas=L.filter(x=>!vis.has(x.t)&&vis.add(x.t)).sort((a,b)=>b.m-a.m);return{pid,nome:p.nome||"",email:String(p.email||"").trim(),muda:linhas.some(x=>x.m),linhas:linhas.map(x=>x.t)}}).sort((p,q)=>(q.muda-p.muda)||COLL_PT.compare(p.nome,q.nome))}
+  return [...porP].map(([pid,L])=>{const p=cfg.profs.find(q=>q.id===pid)||{},vis=new Set(),linhas=L.filter(x=>!vis.has(x.t)&&vis.add(x.t)).sort((a,b)=>b.m-a.m);return{pid,cod:p.cod||"",nome:p.nome||"",email:String(p.email||"").trim(),muda:linhas.some(x=>x.m),linhas:linhas.map(x=>x.t)}}).sort((p,q)=>(q.muda-p.muda)||cmpProf(p,q))}
 async function cpAvisar(id){const r=(CR.apl||[]).find(x=>x.id===id);if(!r||!r.avisos||!crPodeEditar())return;
   const ok=x=>/\S+@\S+\.\S+/.test(x.email||""),L=r.avisos.filter(ok),sem=r.avisos.filter(x=>!ok(x));if(!L.length){toast("Nenhum destes formadores tem email (Escola › Formadores)");return}
   if(!confirm(`Enviar a ${L.length} formador(es) o que muda no horário de cada um, a partir da sua conta do Office 365?${sem.length?`\n\nSem email: ${sem.map(x=>x.nome).join(", ")}.`:""}`))return;

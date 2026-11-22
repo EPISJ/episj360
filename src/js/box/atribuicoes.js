@@ -85,7 +85,7 @@ $("#profImport").onclick=()=>{
    Com 1000 formadores e 60 turmas, a página de Turmas passava de dezenas de milhares de opções para uma por linha. */
 const LZ={first:[],cache:{}};
 function lzLista(kind){const k=kind+":"+cfgRev+":"+(kind==="turma"||kind==="tcod"?(anoAtivo()||{}).id:"");const c=LZ.cache[kind];if(c&&c.k===k)return c.h;let h="";
-  if(kind==="prof")h=cfg.profs.slice().sort(cmpProf).map(p=>`<option value="${p.id}">${esc(p.nome||"(sem nome)")}${p.cod?` (${esc(p.cod)})`:""}</option>`).join("");
+  if(kind==="prof")h=cfg.profs.slice().sort(cmpProf).map(p=>`<option value="${p.id}">${esc(profRot(p))}</option>`).join("");
   else if(kind==="tcod")h=[...new Set(turmasDoAno().map(t=>t.cod))].map(c=>`<option>${esc(c)}</option>`).join("");
   else if(kind==="turma"){const a=anoAtivo();h=escData().turmas.slice().sort((x,y)=>COLL_PTN.compare(String(x.cod),String(y.cod))).map(t=>`<option value="${t.id}">${esc(t.cod)}${turmaNoAno(t,a)?"":" (outro ano)"}</option>`).join("")}
   LZ.cache[kind]={k,h};return h}
@@ -96,7 +96,7 @@ function lzEncher(sel){if(!sel||sel.dataset.lzok)return;const o=sel.querySelecto
   const v=sel.value,kind=o.dataset.lzk,f=LZ.first[+o.dataset.lzf]||"",lab=v?(sel.selectedOptions[0]||{}).textContent:"";sel.innerHTML=f+lzLista(kind);
   if(v&&![...sel.options].some(x=>x.value===v))sel.insertAdjacentHTML("beforeend",`<option value="${esc(v)}">${esc(lab||"(apagado)")}</option>`);sel.value=v}
 ["pointerdown","mousedown","touchstart","focusin","keydown"].forEach(ev=>document.addEventListener(ev,e=>{const t=e.target;if(t&&t.tagName==="SELECT"&&!t.dataset.lzok)lzEncher(t)},true));
-function profOpts(sel,first){return (first??`<option value="">— escolher —</option>`)+cfg.profs.slice().sort(cmpProf).map(p=>`<option value="${p.id}" ${p.id===sel?"selected":""}>${esc(p.nome||"(sem nome)")}${p.cod?` (${esc(p.cod)})`:""}</option>`).join("")}
+function profOpts(sel,first){return (first??`<option value="">— escolher —</option>`)+cfg.profs.slice().sort(cmpProf).map(p=>`<option value="${p.id}" ${p.id===sel?"selected":""}>${esc(profRot(p))}</option>`).join("")}
 
 /* ---------- módulos do(s) ano(s) letivo(s) da análise carregada ---------- */
 let _atv=null,_atvK="";

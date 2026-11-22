@@ -252,7 +252,7 @@ async function renderMeu(){const out=$("#meuOut");if(!EU)return;
   out.innerHTML=`<p class="hint"><span class="spin"></span> A carregar…</p>`;
   let j;try{j=await guideApi("/guide/entregas"+(MEU_SEL?"?email="+encodeURIComponent(MEU_SEL):""))}catch(e){out.innerHTML=`<div class="msg bad">${esc(e.message)}</div>`;return}
   const row=$("#meuSelRow");
-  if(j.professores&&j.professores.length){row.style.display="";$("#meuSel").innerHTML=`<option value="">${esc(EU.nome)} (a minha conta)</option>`+j.professores.slice().sort((a,b)=>COLL_PT.compare(a.nome,b.nome)).map(p=>`<option value="${esc(p.email)}"${p.email===MEU_SEL?" selected":""}>${esc(p.nome)}</option>`).join("")}else row.style.display="none";
+  if(j.professores&&j.professores.length){row.style.display="";$("#meuSel").innerHTML=`<option value="">${esc(EU.nome)} (a minha conta)</option>`+j.professores.map(p=>{const c=(cfg.profs||[]).find(q=>String(profEmail(q)||q.email||"").toLowerCase()===String(p.email||"").toLowerCase());return Object.assign({},p,{cod:c&&c.cod||""})}).sort(cmpProf).map(p=>`<option value="${esc(p.email)}"${p.email===MEU_SEL?" selected":""}>${esc(profRot(p))}</option>`).join("")}else row.style.display="none";
   $("#meuQuem").textContent=MEU_SEL&&j.prof?j.prof.nome:"lhe";
   if(j.semPlano){out.innerHTML=`<div class="msg info">Ainda não há prazos no serviço da EPISJ 360: a Direção tem de ligar o envio pelo servidor em <b>Box360 › Prazos</b>.</div>`;return}
   if(j.semProf){out.innerHTML=`<div class="msg info">${MEU_SEL?"Este formador":"A sua conta (<b>"+esc(EU.email)+"</b>)"} não aparece entre os formadores com prazos. O email em <b>Escola › Formadores</b> tem de ser o do Office 365.</div>`;return}

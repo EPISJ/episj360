@@ -37,11 +37,19 @@ function renderEstMeu(BM){const sec=$("#est");if(!sec)return;let box=$("#estMeu"
   const grp=(k)=>{const M=new Map();for(const x of it){const g=k(x)||"—";const o=M.get(g)||{t:0,e:0};o.t++;if(ok(x.st))o.e++;M.set(g,o)}return [...M].sort((a,b)=>(a[1].e/a[1].t)-(b[1].e/b[1].t)||COLL_PTN.compare(a[0],b[0]))};
   const barra=(L)=>L.map(([n,o])=>{const p=Math.round(o.e*100/o.t);return `<div class="em-bar"><span class="n">${esc(n)}</span><span class="b"><i style="width:${p}%;background:${p===100?"var(--ok)":p>=50?"#d99a18":"var(--bad)"}"></i></span><span class="v">${o.e}/${o.t}</span></div>`}).join("");
   const st=(l,v,c)=>`<div class="ay-st"><small>${esc(l)}</small><b${c?` style="color:${c}"`:""}>${v}</b></div>`;
-  const faltam=it.filter(x=>!ok(x.st)).slice(0,40);
+  const faltam=it.filter(x=>!ok(x.st)).slice(0,200);
   box.innerHTML=(SEL?`<div class="row" style="margin:0 0 12px">${SEL}</div>`:"")+`<div class="ay-stats" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">${st("documentação entregue",pct+"%")}${st("documentos entregues (de "+tot+")",ent)}${st("documentos em falta",falta,falta?"var(--bad)":"")}${st("módulos completos (de "+BM.m.length+")",modsOk)}${st("última entrega",ult?new Date(ult+"T12:00").toLocaleDateString("pt-PT"):"—")}</div>
    <div class="em-cols"><div><h3>Por turma</h3>${barra(grp(x=>x.m.tu))}</div><div><h3>Por tipo de documento</h3>${barra(grp(x=>x.tipo))}</div></div>
    <h3 style="margin-top:16px">Por módulo / UFCD</h3>${barra(BM.m.map(m=>[[m.tu,m.mo].filter(Boolean).join(" · "),{t:m.it.length,e:m.it.filter(x=>ok(x[1])).length}]).sort((a,b)=>(a[1].e/a[1].t||0)-(b[1].e/b[1].t||0)))}
-   ${faltam.length?`<h3 style="margin-top:16px">Em falta</h3><div class="em-falta">${faltam.map(x=>`<div><span class="tag bad">em falta</span> ${esc([x.m.tu,x.m.mo,x.pasta].filter(Boolean).join(" › "))}</div>`).join("")}</div>`:`<p class="msg ok" style="margin-top:14px">Tem tudo entregue.</p>`}`}
+   ${faltam.length?estMeuFalta(faltam,falta):`<p class="msg ok" style="margin-top:14px">Tem tudo entregue.</p>`}`}
+// 0.9.215: o que falta, agrupado por turma e módulo, com o documento em falta em cada linha
+function estMeuFalta(L,n){const G=new Map();for(const x of L){const k=x.m.tu+"\u0001"+x.m.mo;if(!G.has(k))G.set(k,{m:x.m,it:[]});G.get(k).it.push(x)}
+  const gs=[...G.values()].sort((a,b)=>COLL_PTN.compare(a.m.tu||"",b.m.tu||"")||COLL_PTN.compare(a.m.mo||"",b.m.mo||""));
+  return `<div class="emf-h"><h3>Em falta</h3><span class="tag bad">${n} documento(s) em ${gs.length} módulo(s)</span><span class="grow"></span><button class="b s" data-emf-rel>Ver o relatório completo</button></div>
+  <div class="emf">${gs.map(g=>`<div class="emf-g"><div class="emf-t"><span class="emf-dot" style="background:${esc(turCorNome(g.m.tu))}"></span><b>${esc(g.m.tu||"(sem turma)")}</b><span class="emf-mo">${esc(g.m.mo||"")}</span>${g.m.di?`<span class="hint">${esc(g.m.di)}</span>`:""}<span class="grow"></span><span class="tag bad">${g.it.length}</span></div>
+    ${g.it.map(x=>{const [cl,tx]=(typeof RELM_EST!=="undefined"&&RELM_EST[x.st])||["bad","em falta"];return `<div class="emf-i"><span class="emf-doc">${esc(x.tipo||"Documento")}</span>${x.pasta&&norm(x.pasta)!==norm(g.m.mo||"")?`<span class="hint">${esc(x.pasta)}</span>`:""}<span class="tag ${cl}">${esc(tx)}</span></div>`}).join("")}</div>`).join("")}</div>`}
+function turCorNome(cod){try{const t=(escData().turmas||[]).find(x=>x.cod===cod||norm(cod).startsWith(norm(x.cod)+" ")||norm(cod)===norm(x.cod));if(t)return turmaCor(t)}catch(e){}return "#9aa3b2"}
+document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest("[data-emf-rel]")){try{show("rel")}catch(x){}}});
 function renderEst(){{let BM=null;try{BM=boxMeu()}catch(e){}if(BM){renderEstMeu(BM);return}const m=$("#estMeu");if(m){m.hidden=true;[...$("#est").querySelectorAll(".cols,.tiles,.egrid,.blk")].forEach(x=>x.hidden=false)}}
   const ev=evaluate(),T=byTeacher(ev),all=ev.flatMap(e=>e.items);
   const tot=all.length,ok=all.filter(i=>i.ok).length,pct=pctTxt(ok,tot);

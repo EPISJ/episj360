@@ -138,7 +138,7 @@ function esRetorno(txt,a){clearTimeout(esRetH);esRetH=setTimeout(()=>{let st;try
   const c2t=new Map();for(const c of st.classes||[])c2t.set(c.id,tTodas.has(c.id)?c.id:ESD.mapaC[c.id]);
   for(const al of st.alunos||[]){if(fById.has(al.id)||ESD.mapaA[al.id]||ESD.ligA[al.id])continue;
     const f={id:uid(),num:String(al.num||""),nome:String(al.nome||"Formando").trim(),turmaId:c2t.get(al.classId)||""};F.push(f);ESD.mapaA[al.id]=f.id;ESD.ligA[al.id]=1;mud=1}
-  if(mud){P.sort((x,y)=>COLL_PT.compare(x.nome,y.nome));save();esdGuardar();ES_SIG=esSig();try{renderProfs()}catch(_){}escRender()}},1200)}
+  if(mud){P.sort(cmpProf);save();esdGuardar();ES_SIG=esSig();try{renderProfs()}catch(_){}escRender()}},1200)}
 
 window.__esched={
   equipa:false,_email:"",

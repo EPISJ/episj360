@@ -393,11 +393,11 @@ async function hsComRender(){await null;try{await esdPronto}catch(e){}await h3Ca
     <label class="h3lb">WhatsApp às turmas <small class="hint">— {turma}, {alteracoes}, {semana}, {ligacao}; um a um também {primeiro_nome}</small><textarea data-h3m2="waT" rows="6">${esc(H3.msg.waT)}</textarea></label>
     <div class="row" style="margin-top:6px"><button class="b s" id="h3MsgRep">Repor as mensagens originais</button></div></div>`;
   // contactos
-  const F=(st.teachers||[]).map(t=>({t,p:h3ProfDe(st,t.id)})).filter(x=>x.p).sort((a,b)=>COLL_PT.compare(a.p.nome,b.p.nome));
+  const F=(st.teachers||[]).map(t=>({t,p:h3ProfDe(st,t.id)})).filter(x=>x.p).sort((a,b)=>cmpProf(a.p,b.p));
   h+=`<div class="card"><h3 style="margin:0 0 4px">Contactos dos formadores</h3>
     <p class="hint" style="margin:0 0 8px">O email vem de Escola360 › Formadores. Os telemóveis servem para o SMS e o WhatsApp e ficam só com a Direção (não são publicados). O tópico é o que cada formador escreve na app ntfy para receber as notificações — também o vê em Horários360 › Semana.</p>
     <div class="tw"><table class="rt"><thead><tr><th>Formador</th><th>Email</th><th>Telemóvel</th><th>Tópico das notificações</th></tr></thead><tbody>`+
-    F.map(({p})=>{const tp=h3Topico(h3Email(p));return `<tr><td>${esc(p.nome)}</td><td>${esc(h3Email(p)||"—")}</td><td><input type="text" data-h3tel="${esc(p.id)}" value="${esc(H3.tel[p.id]||"")}" placeholder="9xx xxx xxx" inputmode="tel" style="width:140px"></td><td>${tp?`<code class="h3top">${esc(tp)}</code> <button class="b s" data-h3cp="${esc(tp)}" title="Copiar">Copiar</button>`:"—"}</td></tr>`}).join("")+`</tbody></table></div></div>`;
+    F.map(({p})=>{const tp=h3Topico(h3Email(p));return `<tr><td>${esc(profRot(p))}</td><td>${esc(h3Email(p)||"—")}</td><td><input type="text" data-h3tel="${esc(p.id)}" value="${esc(H3.tel[p.id]||"")}" placeholder="9xx xxx xxx" inputmode="tel" style="width:140px"></td><td>${tp?`<code class="h3top">${esc(tp)}</code> <button class="b s" data-h3cp="${esc(tp)}" title="Copiar">Copiar</button>`:"—"}</td></tr>`}).join("")+`</tbody></table></div></div>`;
   // como funciona
   h+=`<div class="card"><h3 style="margin:0 0 4px">Como chegam os avisos (tudo gratuito)</h3><ul class="hint" style="margin:0;padding-left:18px">
     <li><b>Email</b> — pela conta do Office 365 da escola de quem envia, como os outros envios da EPISJ 360.</li>

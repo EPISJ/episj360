@@ -206,7 +206,7 @@ function byTeacher(ev){
   for(const e of ev){const k=profOf(e.mod)||"_";if(!map.has(k))map.set(k,[]);map.get(k).push(e)}
   const arr=[...map.entries()].map(([pid,list])=>{const p=cfg.profs.find(x=>x.id===pid)||{id:"_",nome:"(sem formador atribuído)",email:""};
     const tot=list.reduce((a,e)=>a+e.items.length,0),ok=list.reduce((a,e)=>a+e.items.filter(i=>i.ok).length,0);return {p,list,tot,ok,miss:tot-ok}});
-  arr.sort((a,b)=>b.miss-a.miss||COLL_PT.compare(a.p.nome,b.p.nome));return arr;
+  arr.sort((a,b)=>cmpProf(a.p,b.p));return arr;
 }
 const motivoBad=i=>{const x=(i.q||[]).find(x=>x.q&&x.q.lvl==="bad");return x?x.q.txt:"sem conteúdo válido"};
 const obsOf=i=>[i.state==="blank"?"os ficheiros desta pasta não contam: "+i.reasons.join("; "):"",i.pastaObs,i.state==="warn"?"a confirmar: "+i.reasons.join("; "):"",i.state==="modelo"?"não segue o modelo oficial — "+i.reasons.join("; "):"",i.seg].filter(Boolean).join(" · ");

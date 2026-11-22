@@ -5,12 +5,14 @@
    As cópias são guardadas e devolvidas clonadas (como fazia o IndexedDB), para quem as lê não mexer na que está guardada. */
 const DB=(()=>{const S={textos:new Map(),listagens:new Map(),kv:new Map()};let L=null;
   const clone=v=>{if(v===undefined||v===null||typeof v!=="object")return v;try{return structuredClone(v)}catch(e){return v}};
-  const legado=()=>L||(L=new Promise(async ok=>{try{if(!window.indexedDB)return ok();
-      if(indexedDB.databases){const D=await indexedDB.databases();if(!D.some(d=>d&&d.name==="boxcheck"))return ok()}
+  // 0.9.152: nunca fica à espera para sempre — se o IndexedDB antigo não responder (por exemplo, apagado com outro separador
+  // ainda aberto, o que deixa o pedido parado), ao fim de 5 s segue sem ele (a nuvem tem o resto)
+  const legado=()=>L||(L=new Promise(async ok=>{setTimeout(()=>{if(!DB.legadoOk)console.warn("IndexedDB antigo sem resposta: segue sem ele");ok()},5000);try{if(!window.indexedDB)return ok();
+      if(indexedDB.databases){const D=await Promise.race([indexedDB.databases(),new Promise(r=>setTimeout(()=>r([{name:"boxcheck"}]),2500))]);if(!D.some(d=>d&&d.name==="boxcheck"))return ok()}
       const r=indexedDB.open("boxcheck");let novo=false;r.onupgradeneeded=()=>{novo=true};
       r.onsuccess=()=>{const d=r.result;const st=[...d.objectStoreNames].filter(n=>S[n]);if(novo||!st.length){d.close();return ok()}
         const t=d.transaction(st,"readonly");st.forEach(n=>{const q=t.objectStore(n).openCursor();q.onsuccess=()=>{const c=q.result;if(c){if(!S[n].has(c.key)){S[n].set(c.key,c.value);DB.legado++}c.continue()}}});
-        t.oncomplete=()=>{d.close();ok()};t.onerror=t.onabort=()=>{try{d.close()}catch(e){}ok()}};
+        t.oncomplete=()=>{d.close();DB.legadoOk=1;ok()};t.onerror=t.onabort=()=>{try{d.close()}catch(e){}ok()}};
       r.onerror=r.onblocked=()=>ok()}catch(e){ok()}}));
   return{legado:0,carregarLegado:legado,
     get:async(s,k)=>{await legado();return S[s]?clone(S[s].get(k)):undefined},

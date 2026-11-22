@@ -256,10 +256,12 @@ function connected(me){
   $("#boxBrowse").style.display="block";
   // ao entrar: procura sozinha o que mudou desde a última análise (poucos pedidos) e continua a leitura dos documentos
   nuvemUI();
-  const sinc=pronto.then(()=>{gpPasso(80,"Box360: a trazer análises e atribuições…");return nuvemTrazer()})
-    .then(()=>{gpPasso(85,"Box360: a trazer prazos e avisos…");return avTrazerNuvem()})
-    .then(()=>{gpPasso(89,"Sala360: a trazer as reservas…");return rcTrazer(false)})
-    .then(()=>{gpPasso(94,"A sincronizar a Escola e o Horários360…");return esTrazerNuvem()});
+  // 0.9.152: cada passo tem um limite de tempo — se um não responder, a entrada continua (o passo acaba em segundo plano)
+  const passo=(f,ms,nm)=>()=>gpAte(Promise.resolve().then(f),ms).catch(e=>{console.warn("entrada: "+nm,e&&e.message||e)});
+  const sinc=pronto.then(()=>gpPasso(80,"Box360: a trazer análises e atribuições…")).then(passo(nuvemTrazer,30000,"análises"))
+    .then(()=>gpPasso(85,"Box360: a trazer prazos e avisos…")).then(passo(avTrazerNuvem,15000,"prazos"))
+    .then(()=>gpPasso(89,"Sala360: a trazer as reservas…")).then(passo(()=>rcTrazer(false),15000,"reservas"))
+    .then(()=>gpPasso(94,"A sincronizar a Escola e o Horários360…")).then(passo(esTrazerNuvem,20000,"escola"));
   // 0.9.113: a atualização automática ao entrar só corre se a análise (feita aqui ou noutro computador) tiver mais de 30 minutos
   sinc.then(()=>{guidePubAgendar();return browse(curFolder.id,curFolder.path)}).then(()=>{if(lastListing&&lastListing.rootId===curFolder.id&&Date.now()-(lastListing.t||0)>30*60e3)runScan(false,true);else verificarFundo()});
   return sinc; // 0.9.13: o arranque espera por isto para chegar aos 100%

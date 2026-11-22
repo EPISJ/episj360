@@ -37,22 +37,35 @@ if(t==="esch"&&!h3EschOk())return false; // 0.9.136: o editor completo só na ve
   if(/^pw/.test(t))return pwPode()&&!(MODS_OFF.length&&modEscondido("pass"))&&!visNeg(t); // 0.9.98: Pass360 — só a Direção, sempre
   const v=visAtual();if(MODS_OFF.length&&modEscondido(modDeTab(t)))return false;if(!v||v.has(t))return true;
   if(v.has("!"+t))return false; // 0.9.182: desmarcado em Perfis › O que cada perfil vê — vale mais do que a regra por omissão dos separadores novos
-  if(TAB_PAI[t]&&!Object.keys(TAB_PAI).some(k=>v.has(k)))return v.has(TAB_PAI[t])||(t==="dsd"&&perfilAtual()==="prof");{const r=tabNovo(t,v);if(r!==null)return r}return false}
+  if(TAB_PAI[t]&&!Object.keys(TAB_PAI).some(k=>v.has(k))&&!tabSrv(t))return v.has(TAB_PAI[t])||(t==="dsd"&&perfilAtual()==="prof");{const r=tabNovo(t,v);if(r!==null)return r}return false} // 0.9.183: pc/dsd pelo «pai» só enquanto o servidor não os conhecer
 // 0.9.54: separadores novos (Calendário Escolar, Crono360) — enquanto o servidor não os conhecer, vê-os quem tem o perfil certo
 /* 0.9.182: em Perfis, desmarcar um separador grava «!separador» na lista do perfil: assim o desmarcado é respeitado mesmo nos
    separadores que o servidor ainda não conhece (que, sem marca, seguem a regra por omissão de tabNovo) */
+/* 0.9.183: separadores que o servidor (Supabase, g360_const().separadores) já conhece — para estes vale só o que está marcado
+   em Perfis. A lista vem de UTI quando há (administradores); para as outras contas usa-se esta cópia (o g360_eu não a devolve). */
+var TAB_SRV0=["esc","anos","cal","cur","tur","pc","prof","dsd","for","box","alt","pas","config","rel","est","env","pra","cop","meu","esch","mh","rcMapa","rcLista","rcEsp","crPs","crCron","crCump","crHist","crDef","ecoInicio","ecoMovs","ecoReq","ecoCompras","ecoInv","ecoCustos","ecoDef","def"];
+function tabSrv(t){let srv=null;try{srv=UTI&&UTI.separadores||(EU&&EU.separadores)}catch(e){}if(!Array.isArray(srv))srv=TAB_SRV0;return srv.includes(t)}
 function visNeg(t){const v=visAtual();return !!(v&&v.has("!"+t))}
-function tabNovo(t,v,pfX){const PF=()=>pfX||perfilAtual(),PUB=()=>pfX?(pfX==="dexec"||pfX==="dped"):podePublicar(),PW=()=>pfX?(pfX==="dexec"||pfX==="dped"):pwPode(),S3=()=>pfX?false:S3_OK;const R={cal:()=>true,crPs:()=>v.has("esc")||v.has("anos")||PF()==="prof",crCron:()=>v.has("esc")||v.has("anos")||PF()==="prof",crAno:()=>v.has("esc")||v.has("anos")||PF()==="prof",crCump:()=>v.has("esc")||v.has("anos"),crHist:()=>v.has("esc")||v.has("anos")||PF()==="prof",crDef:()=>v.has("esc")||v.has("anos")};
-  if(/^s3/.test(t))return v.has("esc")||v.has("anos")||S3();
-  if(/^pw/.test(t))return PW(); // 0.9.98: Pass360 — só a Direção (Direção Executiva, Direção Pedagógica, administradores)
-  if(/^fo[A-Z]/.test(t))return v.has("esc")||v.has("anos")||PUB(); // 0.9.107: Folder360 — só a Direção
-  if(/^eco[A-Z]/.test(t))return v.has("esc")||v.has("anos")||PUB()||PF()==="econ"||(t==="ecoReq"&&PF()==="prof"); // 0.9.117: perfil Economato só vê o Econo360; 0.9.116: Econo360 — Direção; os formadores só as suas requisições
-  if(/^pap/.test(t))return v.has("esc")||v.has("anos")||PUB();
-  if(t==="hsSem")return true;
-  if(t==="hsFor")return PF()!=="form"; // 0.9.142: Por formadores — formadores e Direção // 0.9.136: Horários360 › Semana — toda a gente vê o horário publicado
-  if(t==="hsCom")return v.has("esc")||v.has("anos")||PUB(); // 0.9.136: Comunicar — só a Direção
-  if(t==="mof")return false; // 0.9.101: Box360 › Modelos oficiais — quem vê o Relatório (a Direção) // 0.9.92: PAP360 — só a Direção // 0.9.73: Social360 — Direção, ou quem está num espaço de trabalho do Social360
-  if(!R[t])return null;let srv=null;try{srv=PREV&&UTI?UTI.separadores:(EU&&EU.separadores)}catch(e){}if(Array.isArray(srv)&&srv.includes(t))return null;return R[t]()}
+function tabNovo(t,v,pfX){
+  /* 0.9.183: revisto a pente fino. Antes, «v.has("esc")» servia para saber se era Direção — mas o Formador também pode ter
+     o Dashboard (esc) e passava a ver Comunicar, Folder360, PAP360, Social360 e o Cumprimento/Definições do Crono360.
+     Agora: se o servidor já conhece o separador, vale só o que está marcado em Perfis (null = não há regra extra);
+     para os separadores que o servidor ainda não conhece, a regra por omissão é pelo perfil (Direção = Executiva/Pedagógica/administrador). */
+  if(tabSrv(t))return null;
+  const PF=()=>pfX||perfilAtual(),DIR=()=>pfX?(pfX==="dexec"||pfX==="dped"):podePublicar(),PROF=()=>PF()==="prof";
+  if(t==="cal")return true;
+  if(t==="crPs"||t==="crCron"||t==="crHist"||t==="crAno")return DIR()||PROF();
+  if(t==="crCump"||t==="crDef")return DIR();
+  if(/^s3/.test(t))return DIR()||(!pfX&&(()=>{try{return !!S3_OK}catch(e){return false}})());
+  if(/^pw/.test(t))return DIR(); // Pass360 — só a Direção
+  if(/^fo[A-Z]/.test(t))return DIR(); // Folder360 — só a Direção
+  if(/^eco[A-Z]/.test(t))return DIR()||PF()==="econ"||(t==="ecoReq"&&PROF()); // Econo360 — Direção e Economato; os formadores só as suas requisições
+  if(/^pap/.test(t))return DIR();
+  if(t==="hsSem")return PF()!=="econ"; // Horários360 › Semana — toda a gente vê o horário publicado (menos o Economato)
+  if(t==="hsFor")return PF()!=="form"&&PF()!=="econ"; // Por formadores — formadores e Direção
+  if(t==="hsCom")return DIR(); // Comunicar — só a Direção
+  if(t==="mof")return false;
+  return null}
 $("#mods").addEventListener("click",e=>{const b=e.target.closest("button[data-m]");if(b)mostrarModulo(b.dataset.m,true)});
 mostrarModulo(curMod,false);
 

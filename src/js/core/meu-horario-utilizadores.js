@@ -109,9 +109,14 @@ $("#utiMods").addEventListener("change",e=>{const x=e.target.closest("[data-mod]
   UTI.loja.modsOff=MODULOS.map(M=>M.id).filter(m=>off.has(m));utiMods();utiSujo()});
 function utiVis(){if(!utiOk(1))return;const L=UTI.loja,P=Object.keys(UTI.perfis);let h=`<thead><tr><th>Separador</th>${P.map(k=>`<th>${esc(UTI.perfis[k])}</th>`).join("")}</tr></thead><tbody>`;
   document.querySelectorAll("#nav .mgrp").forEach(g=>{const bs=[...g.querySelectorAll("button[data-t]")].filter(b=>b.dataset.t!=="uti"&&b.dataset.t!=="per");if(!bs.length)return;
-    h+=`<tr class="grp"><td colspan="${P.length+1}">${esc(g.querySelector(".mh").childNodes[0].textContent.trim())}</td></tr>`;
-    for(const b of bs){const t=b.dataset.t;h+=`<tr><td>${esc(b.textContent.trim())}</td>${P.map(k=>`<td><input type="checkbox" data-vp="${k}" data-vt="${t}"${utiVisEf(k,t)?" checked":""}></td>`).join("")}</tr>`}});
-  $("#utiVis").innerHTML=h+"</tbody>"}
+    // 0.9.183: a linha do módulo liga/desliga o módulo inteiro para cada perfil (todos os separadores de uma vez)
+    const ts=bs.map(b=>b.dataset.t),nm=g.querySelector(".mh").childNodes[0].textContent.trim();
+    h+=`<tr class="grp"><td>${esc(nm)} <span class="hint" style="margin:0;font-weight:400">· módulo ligado</span></td>${P.map(k=>{const ok=ts.filter(t=>!utiVisFixo(k,t)),n=ok.filter(t=>utiVisEf(k,t)).length;
+      return `<td><input type="checkbox" data-vg="${k}" data-vts="${esc(ok.join(","))}" title="Ligar ou desligar ${esc(nm)} para ${esc(UTI.perfis[k])}"${n?" checked":""}${n&&n<ok.length?' data-meio="1"':""}${ok.length?"":" disabled"}></td>`}).join("")}</tr>`;
+    for(const b of bs){const t=b.dataset.t;h+=`<tr><td>${esc(b.textContent.trim())}</td>${P.map(k=>{const fx=utiVisFixo(k,t);return `<td><input type="checkbox" data-vp="${k}" data-vt="${t}"${!fx&&utiVisEf(k,t)?" checked":""}${fx?` disabled title="${esc(fx)}"`:""}></td>`}).join("")}</tr>`}});
+  $("#utiVis").innerHTML=h+"</tbody>";$("#utiVis").querySelectorAll("[data-meio]").forEach(x=>x.indeterminate=true)}
+// separadores que um perfil nunca pode ver, marque-se o que se marcar (devolve a razão)
+function utiVisFixo(k,t){if(/^pw/.test(t)&&k!=="dexec"&&k!=="dped")return "O Pass360 (palavras-passe da escola) é só para a Direção";return ""}
 {let h=null;$("#utiFiltro").oninput=()=>{clearTimeout(h);h=setTimeout(()=>{UTI_N=200;utiTabela()},120)}}
 $("#utiForm").onsubmit=e=>{e.preventDefault();if(!utiOk())return;const em=$("#utiEmail").value.trim().toLowerCase();if(!/@/.test(em)){toast("Email inválido");return}
   const pf=$("#utiPerfil").value;UTI.loja.utilizadores[em]={perfil:pf,turma:pf==="form"?$("#utiTurma").value:"",nome:""};$("#utiEmail").value="";utiTabela();utiSujo()};
@@ -129,8 +134,10 @@ $("#utiBulkGo").onclick=()=>{if(!utiOk())return;let n=0,mal=0;for(const l of $("
    desmarcar grava «!separador», que esconde mesmo os separadores dessa regra */
 function utiVisEf(k,t){const L=UTI.loja,l=L.vis[k]||UTI.visOmissao[k]||[];if(l.includes(t))return true;if(l.includes("!"+t))return false;
   try{const r=tabNovo(t,new Set(l),k);return r===true}catch(e){return false}}
-$("#utiVis").addEventListener("change",e=>{const x=e.target.closest("[data-vp]");if(!x||!utiOk())return;const L=UTI.loja,k=x.dataset.vp,t=x.dataset.vt;const v=new Set(L.vis[k]||UTI.visOmissao[k]);
-  if(x.checked){v.add(t);v.delete("!"+t)}else{v.delete(t);v.add("!"+t)}L.vis[k]=[...v];utiSujo()});
+$("#utiVis").addEventListener("change",e=>{const g=e.target.closest("[data-vg]");if(g&&utiOk()){const L=UTI.loja,k=g.dataset.vg,v=new Set(L.vis[k]||UTI.visOmissao[k]);
+    for(const t of g.dataset.vts.split(",").filter(Boolean)){if(g.checked){v.add(t);v.delete("!"+t)}else{v.delete(t);v.add("!"+t)}}L.vis[k]=[...v];utiVis();utiSujo();return}
+  const x=e.target.closest("[data-vp]");if(!x||!utiOk())return;const L=UTI.loja,k=x.dataset.vp,t=x.dataset.vt;const v=new Set(L.vis[k]||UTI.visOmissao[k]);
+  if(x.checked){v.add(t);v.delete("!"+t)}else{v.delete(t);v.add("!"+t)}L.vis[k]=[...v];utiVis();utiSujo()});
 $("#utiVisRepor").onclick=()=>{if(!utiOk())return;UTI.loja.vis={};utiVis();utiSujo()};
 ["#utiAdmins","#utiDom","#utiPad"].forEach(x=>$(x).addEventListener("input",utiSujo));
 $("#utiPrev").onchange=e=>{const v=e.target.value;if(!v)return;if(!utiOk()){e.target.value="";return}utiLerCampos();PREV=v;aplicarPerfil();toast("A pré-visualizar como "+PERFIL_CURTO[v]);e.target.value=""};

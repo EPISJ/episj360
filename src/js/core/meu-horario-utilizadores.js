@@ -2,11 +2,17 @@
 function mhEstado(){const a=anoAtivo(),x=a&&ESD.porAno&&ESD.porAno[a.id];if(!x||!x.estado)return null;try{const st=JSON.parse(x.estado);return st&&!st.example?st:null}catch(e){return null}}
 const corTexto=hex=>{const m=String(hex||"").match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i);if(!m)return"#fff";const [r,g,b]=m.slice(1).map(x=>parseInt(x,16)/255);return 0.2126*r+0.7152*g+0.0722*b>0.6?"#1d2433":"#fff"};
 async function renderMh(){try{await esdPronto}catch(e){}const st=mhEstado(),out=$("#mhOut"),pf=perfilAtual(),tipoEl=$("#mhTipo"),quemEl=$("#mhQuem");
-  $("#mhTit").textContent=pf==="form"?"Horário da turma":pf==="prof"?"O meu horário":"Horários publicados";
+  /* 0.9.191: «O meu horário» mostra só o horário de quem entrou (formador: o seu; formando: o da turma);
+     a procura (Ver por / Quem) passou para o separador «Horários», logo abaixo — para ver o horário dos outros formadores e turmas */
+  const ver=curTab==="hsVer",fixo=!ver&&(pf==="prof"||pf==="form");
+  $("#mhTit").textContent=ver?"Horários":pf==="form"?"Horário da turma":pf==="prof"?"O meu horário":"Horários publicados";
+  $("#mhHint").textContent=ver?"O horário publicado de qualquer formador ou turma — por exemplo, para preparar substituições. Só leitura.":"O horário publicado pela Direção para o ano letivo ativo. Só leitura.";
+  for(const el of [tipoEl,quemEl])el.closest("label").style.display=fixo?"none":"";
   if(!st){out.innerHTML=`<div class="msg info">${RO?"A Direção ainda não publicou o horário de "+esc(anoAtivo().nome)+".":"Ainda não há horário para "+esc(anoAtivo().nome)+" — faça-o no Horários360."}</div>`;quemEl.innerHTML="";return}
-  tipoEl.parentNode.style.display=pf==="form"?"none":"";
+  tipoEl.parentNode.style.display=(pf==="form"||fixo)?"none":"";
   if(pf==="form")tipoEl.value="c";
   const T=st.teachers||[],C=(st.classes||[]).slice().sort((a,b)=>COLL_PTN.compare(String(a.name),String(b.name)));
+  if(fixo||quemEl.dataset.modo!==(ver?"ver":"meu")){quemEl.dataset.modo=ver?"ver":"meu";delete quemEl.dataset.init;if(fixo)quemEl.dataset.v=""}
   if(!quemEl.dataset.init){quemEl.dataset.init="1";
     if(pf==="prof"){const me=cfg.profs.find(p=>String(p.email||"").toLowerCase()===String(EU&&EU.email||""));const t=me&&T.find(t=>t.id===me.id||(ESD.mapaT||{})[t.id]===me.id);if(t){tipoEl.value="t";quemEl.dataset.v=t.id}}
     if(pf==="form"){const tc=(EU&&EU.turma)||lsJ("guide_mh_turma","");const c=C.find(c=>norm(c.name)===norm(tc));if(c)quemEl.dataset.v=c.id}}

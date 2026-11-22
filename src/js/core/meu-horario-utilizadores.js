@@ -31,7 +31,7 @@ async function renderMh(){try{await esdPronto}catch(e){}const st=mhEstado(),out=
         const tur=(l.classIds||[]).map(id=>(CC.get(id)||{}).name).filter(Boolean).join(", "),prof=(TT.get(x.t)||{}).short||(TT.get(x.t)||{}).name||"";
         let cor;try{cor=tipo==="t"?h3Cor(st,{cid:(l.classIds||[])[0],sid:x.s},"t"):h3Cor(st,{cid:v,sid:x.s},"c")}catch(e){cor=s.color||"#2f5fb8"}
         const top=tipo==="t"?(tur||s.short||s.name||"—"):(s.short||s.name||"—"),sub=tipo==="t"?[s.short||s.name,sala&&sala.name].filter(Boolean).join(" · "):[prof,sala&&sala.name].filter(Boolean).join(" · ");
-        usadas.set(top,cor);(cel.get(key)||cel.set(key,[]).get(key)).push({top,sub,cor,tit:s.name||""})}}}
+        if(cd.day<(st.days||["","","","",""]).length&&cd.period+k<(st.periods||[]).length)usadas.set(top,cor);(cel.get(key)||cel.set(key,[]).get(key)).push({top,sub,cor,tit:s.name||""})}}}
   const D=st.days||["Seg","Ter","Qua","Qui","Sex"],P=st.periods||[];
   const sig=(di,pi)=>{const L=cel.get(di+"|"+pi);return L?L.map(e=>e.top+"|"+e.sub+"|"+e.cor).join("¦"):""};
   let h=`<div class="mzh mzh2" style="grid-template-columns:76px repeat(${D.length},minmax(104px,1fr))"><div class="h" style="grid-row:1;grid-column:1"></div>${D.map((d,di)=>`<div class="h" style="grid-row:1;grid-column:${di+2}">${esc(d)}</div>`).join("")}`;

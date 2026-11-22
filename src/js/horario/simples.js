@@ -120,11 +120,16 @@ async function hsRender(){await null;try{await esdPronto}catch(e){}try{await h3C
   hero.innerHTML=`<div class="ay-hero"><div class="ay-top"><div><h1>Semana de ${esc(tit)}</h1><div class="sub">${esc(rotT)} · ${esc(nomeQ)}${estaSem?" · esta semana":""}</div></div><span class="grow"></span><div class="ay-pct"><b>${n}</b>tempo${n===1?"":"s"} nesta semana</div></div></div>`;
   const muda=[...new Set(dias.filter(d=>d.V).map(d=>d.V))];
   let h=muda.length>1?`<div class="msg info" style="margin:0 0 10px">O horário muda nesta semana: a partir de <b>${esc(calDM(dias.find(d=>d.V===muda[1]).dt,{weekday:"long",day:"numeric",month:"long"}))}</b>.</div>`:"";
-  h+=`<div class="mzh hsw" style="grid-template-columns:76px repeat(${D.length},minmax(110px,1fr))"><div class="h"></div>`+dias.map(d=>`<div class="h${d.dt===hj?" hj":""}">${esc(d.nome)}<small>${esc(calDM(d.dt))}</small>${d.nl?`<em class="${d.nl.t}">${esc(d.nl.n)}</em>`:d.fora?`<em>fora do ano letivo</em>`:""}</div>`).join("");
-  P.forEach((p,pi)=>{h+=`<div class="p">${esc(p.label||pi+1)}<div class="hint" style="margin:0;font-weight:400">${esc(p.start||"")}${p.end?"–"+esc(p.end):""}</div></div>`;
-    for(const d of dias){const c=cel.get(d.i+"|"+pi),cl=d.nl?" nl "+d.nl.t:d.fora?" nl":"";
-      h+=`<div class="c${cl}${d.dt===hj?" hj":""}">${c?c.map(x=>{const cor=h3Cor(st,x,H3S.tipo),tit=H3S.tipo==="c"?x.disc:(x.tu||x.disc),sub=H3S.tipo==="t"?[x.tu?x.disc:"",x.sala]:H3S.tipo==="c"?[x.form,x.sala]:[x.tu?x.disc:"",x.form];
-        return `<div class="a h3a" style="background:${h3Tinta(cor,.16)};border-left-color:${esc(cor)};color:${h3Escuro(cor)}" title="${esc([x.nome,x.formN,x.tu,x.sala].filter(Boolean).join(" · "))}"><b>${esc(tit)}</b><span>${esc(sub.filter(Boolean).join(" · "))}</span></div>`}).join(""):""}</div>`}});
+  /* 0.9.189: igual a «O meu horário» — tempos seguidos da mesma aula num só bloco («2 tempos») e legenda das cores */
+  h+=`<div class="mzh mzh2 hsw" style="grid-template-columns:76px repeat(${D.length},minmax(110px,1fr))"><div class="h" style="grid-row:1;grid-column:1"></div>`+dias.map((d,di)=>`<div class="h${d.dt===hj?" hj":""}" style="grid-row:1;grid-column:${di+2}">${esc(d.nome)}<small>${esc(calDM(d.dt))}</small>${d.nl?`<em class="${d.nl.t}">${esc(d.nl.n)}</em>`:d.fora?`<em>fora do ano letivo</em>`:""}</div>`).join("");
+  P.forEach((p,pi)=>{h+=`<div class="p" style="grid-row:${pi+2};grid-column:1">${esc(p.label||pi+1)}<div class="hint" style="margin:0;font-weight:400">${esc(p.start||"")}${p.end?"–"+esc(p.end):""}</div></div>`});
+  const hsInfo=x=>{const cor=h3Cor(st,x,H3S.tipo),tit=H3S.tipo==="c"?x.disc:(x.tu||x.disc),sub=H3S.tipo==="t"?[x.tu?x.disc:"",x.sala]:H3S.tipo==="c"?[x.form,x.sala]:[x.tu?x.disc:"",x.form];return{cor,tit,sub:sub.filter(Boolean).join(" · "),dica:[x.nome,x.formN,x.tu,x.sala].filter(Boolean).join(" · ")}};
+  const hsSig=(d,pi)=>{const c=cel.get(d.i+"|"+pi);return c?c.map(x=>{const o=hsInfo(x);return o.tit+"|"+o.sub+"|"+o.cor}).join("¦"):""};
+  const usadasS=new Map();
+  dias.forEach((d,di)=>{const cl=d.nl?" nl "+d.nl.t:d.fora?" nl":"";for(let pi=0;pi<P.length;){const g=hsSig(d,pi);let k=1;if(g)while(pi+k<P.length&&hsSig(d,pi+k)===g)k++;const c=cel.get(d.i+"|"+pi);
+      h+=`<div class="c${cl}${d.dt===hj?" hj":""}" style="grid-row:${pi+2}/span ${k};grid-column:${di+2}">${c?c.map(x=>{const o=hsInfo(x);usadasS.set(o.tit,o.cor);
+        return `<div class="a" style="background:${h3Tinta(o.cor,.16)};border-left:4px solid ${esc(o.cor)};color:#1b2333" title="${esc(o.dica)}"><b style="color:${h3Escuro(o.cor)}">${esc(o.tit)}</b><span>${esc(o.sub)}</span>${k>1?`<em>${k} tempos</em>`:""}</div>`}).join(""):""}</div>`;pi+=k}});
+  h+=`</div>`+(usadasS.size?`<div class="mzleg">${[...usadasS].sort((x,y)=>COLL_PTN.compare(x[0],y[0])).map(([t,c])=>`<span><i style="background:${esc(c)}"></i>${esc(t)}</span>`).join("")}</div>`:"")+`<div>`;
   const x=ESD.porAno&&ESD.porAno[a.id];
   out.innerHTML=h+`</div>`+(n?"":`<p class="hint">Sem aulas nesta semana.</p>`)+`<p class="hint">${esc(st.name||"")} · ${esc(a.nome)}${x&&x.quando?" · horário atualizado a "+new Date(x.quando).toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"}):""}</p>`}
 function h3AvisosFormador(){const em=String(EU&&EU.email||"").toLowerCase(),tp=h3Topico(em);

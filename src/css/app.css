@@ -1563,3 +1563,6 @@ table.crano tr.r2 td.out,table.crano tr.r2 td.nx{background-image:none}
 
 /* 0.9.203: quadros só da Direção (ex.: Documentos vazios, falsos ou copiados) nunca aparecem aos outros perfis */
 body:not(.pf-dir) .so-dir,body:not(.pf-dir) .blk:has(> .so-dir){display:none!important}
+
+/* 0.9.204: estatísticas da Box no Dashboard do Formador */
+.ep-meu .em-cols2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}

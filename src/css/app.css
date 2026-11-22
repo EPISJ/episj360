@@ -1566,3 +1566,7 @@ body:not(.pf-dir) .so-dir,body:not(.pf-dir) .blk:has(> .so-dir){display:none!imp
 
 /* 0.9.204: estatísticas da Box no Dashboard do Formador */
 .ep-meu .em-cols2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+/* 0.9.206: relatório do Formador — estado à esquerda, na mesma linha do documento; cabeçalho alinhado */
+#relMeu .mit{display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-top:1px solid #f0f2f5}#relMeu .mit:first-of-type{border-top:0}
+#relMeu .mit .tag{min-width:96px;text-align:center;margin-top:1px}#relMeu .mit>div{min-width:0;line-height:1.35}
+#relMeu .rm-g h3{align-items:baseline}#relMeu .rm-g h3 .hint{font-size:13px;margin:0}#relMeu .rm-g h3 .tag{align-self:center}

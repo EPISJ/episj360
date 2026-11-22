@@ -263,7 +263,10 @@ function h3EmailHtml(x){const st=mhEstado();if(!st)return "";const hj=calHoje(),
   if(!x.novo&&x.menos.length)quadro+=`<p style="${F};font-size:13px;font-weight:700;color:#1b2333;margin:14px 0 4px">Deixam de existir</p><ul style="${F};font-size:12.5px;color:#6b7385;margin:0;padding-left:18px">${x.menos.map(l=>`<li style="text-decoration:line-through">${esc(l)}</li>`).join("")}</ul>`;
   /* 0.9.163: sem ligações no email — o filtro de correio do Office 365 retinha (sem avisar) os emails com ligações para o endereço da
      EPISJ 360, um domínio ainda recente; testado a 22/11/2026: o mesmo email sem ligações chega. O endereço fica escrito, em negrito. */
-  const lig=h3Lig(),txt=t=>esc(t).replace(/\n/g,"<br>").replace(/\{ligacao\}/g,`<b style="color:#163269">${esc(lig.replace(/^https?:\/\//,"").replace(/\/$/,""))}</b>`);
+  const lig=h3Lig(),txt0=t=>esc(t).replace(/\n/g,"<br>").replace(/\{ligacao\}/g,`<b style="color:#163269">${esc(lig.replace(/^https?:\/\//,"").replace(/\/$/,""))}</b>`);
+  /* 0.9.170: a despedida («Com os melhores cumprimentos, …» e a assinatura) fica alinhada à direita */
+  const txt=t=>{const m=String(t).match(/(^|\n)[ \t]*((com os )?(melhores |cordiais )?cumprimentos|atenciosamente|saudações)/i);if(!m)return txt0(t);const k=m.index+m[1].length;
+    return txt0(t.slice(0,k).replace(/\s+$/,""))+`<div style="text-align:right;margin-top:${k?14:0}px">${txt0(t.slice(k).replace(/^\s+/,""))}</div>`};
   const corpo=String(H3.msg.corpo||"").replace(/\{nome\}/g,(x.p&&x.p.nome)||x.t.name||"").replace(/\{semana\}/g,calDM(h3Seg(hj),{day:"numeric",month:"long"})).replace(/\{n\}/g,x.novo?"horário novo":String(x.mais.length+x.menos.length));
   const partes=corpo.split("{alteracoes}").map((t,i,a)=>a.length>1?(i===0?t.replace(/\s+$/,""):i===a.length-1?t.replace(/^\s+/,""):t.trim()):t),meio=`</div>${quadro}<div style="${F};font-size:14px;color:#1b2333;line-height:1.55;margin-top:16px">`;
   const btn="";
@@ -278,7 +281,10 @@ function h3LgImg(o,maxW,maxH,alt){if(!o||!o.src||!/^data:image\//.test(o.src))re
   return `<img src="${esc(o.src)}" width="${w}" height="${h}" alt="${esc(alt)}" style="display:block;border:0;width:${w}px;height:${h}px;max-width:100%">`}
 function h3EmailTopo(F){let m,r;try{m=lgGet("main");r=lgGet("right")}catch(e){}
   const a=h3LgImg(m,220,52,"Escola Profissional da Ilha de São Jorge"),b=h3LgImg(r,200,52,"");
-  const tit=`<div style="${F};font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7385;margin:0 0 12px">EPISJ 360 · Horários360</div>`;
+  // 0.9.170: cabeçalho com o nome da escola, o ano letivo e a data do horário (última importação/publicação do ano)
+  let ano="",dt="";try{const A=anoAtivo();if(A){ano=anoNomeChave(A.nome)||A.nome||"";const q=ESD.porAno&&ESD.porAno[A.id]&&ESD.porAno[A.id].quando;if(q)dt=new Date(q).toLocaleDateString("pt-PT",{day:"numeric",month:"long",year:"numeric"})}}catch(e){}
+  const sub=[ano?"Ano letivo "+ano:"",dt?"Horário de "+dt:""].filter(Boolean).join(" · ");
+  const tit=`<div style="${F};margin:0 0 16px"><div style="font-size:16px;font-weight:700;color:#163269;line-height:1.3">Escola Profissional da Ilha de São Jorge</div>${sub?`<div style="font-size:13px;color:#4a5262;margin-top:2px">${esc(sub)}</div>`:""}</div>`;
   if(!a&&!b)return tit;
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:760px;margin:0 0 14px;border-bottom:1px solid #e3e7ee"><tr><td style="padding:0 0 12px;vertical-align:middle">${a}</td><td style="padding:0 0 12px;vertical-align:middle" align="right">${b}</td></tr></table>`+tit}
 function h3EmailFundos(){let f;try{f=lgFootBarra()}catch(e){try{f=lgGet("foot")}catch(x){}}const im=h3LgImg(f,560,64,"Logótipos de financiamento do ano letivo");

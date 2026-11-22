@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.169 — ecrã do módulo «folder», carregado quando é aberto */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.170 — ecrã do módulo «folder», carregado quando é aberto */
 "use strict";
 // ===== src/js/folder/folder.js =====
 /* Folder360 — ecrã do módulo (carregado só quando o Folder360 é aberto; os dados estão em folder/folder-dados.js) */

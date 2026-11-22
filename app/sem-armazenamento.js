@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.169 */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.170 */
 // ===== src/js/inicio/sem-armazenamento.js =====
 /* EPISJ 360 0.9.148 — nada fica guardado no computador de quem usa a app: os dados vivem só no Supabase.
    Este ficheiro corre antes de tudo (na página principal, no Social360 e no Horários360) e troca o localStorage e o

@@ -56,6 +56,7 @@ const lsJ=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k)||"null");return
 const resumos=()=>lsJ("box_resumos",{});
 async function guardarListagem(j){
   const ok=await DB.put("listagens","L|"+j.rootId,j);
+  try{guidePubAgendar()}catch(e){} // 0.9.214
   const r=resumos();r[j.rootId]={pasta:j.pasta,quando:j.quando,t:j.t,tFull:j.tFull||j.t,pos:!!j.pos,n:j.nF,np:j.nP};
   try{localStorage.setItem("box_resumos",JSON.stringify(r));localStorage.setItem("box_last_root",j.rootId);
     if(ok)localStorage.removeItem("box_last_listing")}catch(e){}

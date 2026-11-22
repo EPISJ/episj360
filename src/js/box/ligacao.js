@@ -344,6 +344,7 @@ let lastListing=null;
 function useListing(j,quiet){
   lastListing=j;const t=toFF(semExcluidas(j));files=t.fs;folders=t.fo;rawRows=null;$("#colPick").style.display="none";
   dadosMudaram();
+  try{guidePubAgendar()}catch(e){} // 0.9.214: cada análise carregada ou acabada de ler é publicada para os formadores (pastas e estatísticas)
   if(!quiet)boxMsg(`${files.length} ficheiros e ${folders.length} pastas de “${j.pasta}” (${j.quando}).`,"ok");
   $("#dlList").style.display="";qualInit();
 }

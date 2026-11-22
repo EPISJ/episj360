@@ -103,7 +103,7 @@ const Act = {
     hist(p, `aprovou (${st.next.name})`);
     const st2 = apState(p, ws);
     if (st2.full) {
-      if (p.autoSchedule && p.date) { p.status = new Date(p.date) <= new Date() ? 'published' : 'scheduled'; p.autoSchedule = false; hist(p, 'agendou automaticamente após aprovação'); }
+      if (p.autoSchedule && p.date) { p.status = 'scheduled'; p.autoSchedule = false; hist(p, new Date(p.date) <= new Date() ? 'aprovada depois da hora: vai sair já' : 'agendou automaticamente após aprovação'); } // 0.9.167: se a hora já passou fica «Agendado» e o servidor publica-a no minuto seguinte (antes ficava «Publicado» sem sair nas redes)
       else p.status = 'approved';
       notify(ws, `Publicação aprovada: "${(p.text || '').slice(0, 60)}"`, p.id, p.createdBy || '*');
     } else {

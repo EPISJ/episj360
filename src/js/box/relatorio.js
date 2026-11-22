@@ -20,12 +20,42 @@ function relMeuDados(BM){const okS=s=>s==="ok"||s==="warn"||s==="modelo",q=norm(
     .sort((a,b)=>COLL_PTN.compare(a.m.tu+" "+a.m.mo,b.m.tu+" "+b.m.mo))}
 function relMeuTexto(BM){const L=relMeuDados(BM);return `RELATÓRIO DE ENTREGAS — ${(BM.me&&BM.me.nome)||""}\nAnálise: ${BM.nome||""}${BM.t?" ("+new Date(BM.t).toLocaleDateString("pt-PT")+")":""}\n${RELM.so==="falta"?"Só o que falta":"Todos os documentos"}\n\n`+
   L.map(g=>`${[g.m.tu,g.m.di,g.m.mo].filter(Boolean).join(" · ")}\n`+g.it.map(x=>`  [${(RELM_EST[x.st]||["",x.st])[1]}] ${[x.tipo,x.pasta].filter(Boolean).join(" › ")}${x.d?" — "+new Date(x.d+"T12:00").toLocaleDateString("pt-PT"):""}`).join("\n")).join("\n\n")}
+/* 0.9.208: relatório de entregas para imprimir / guardar em PDF — A4, com os logótipos da escola e do ano letivo, resumo e
+   uma tabela por turma e módulo com o estado de cada documento a cores */
+function relMeuImprimir(BM){const w=window.open("","_blank");if(!w){toast("O navegador bloqueou a janela — permita janelas deste site");return}
+  const abs=u=>new URL(u,location.href).href;let lm=null,lr=null,lf=null;try{lm=lgGet("main");lr=lgGet("right")}catch(e){}try{lf=lgFootBarra()}catch(e){}
+  const main=lm&&lm.src||abs("img/logo-episj.png"),right=lr&&lr.src||"",foot=lf&&lf.src||abs("img/fundos-2026-2027.png");
+  const okS=s=>s==="ok"||s==="warn"||s==="modelo",it=BM.m.flatMap(m=>m.it),tot=it.length,ent=it.filter(x=>okS(x[1])).length,pct=tot?Math.round(ent*100/tot):0;
+  const L=relMeuDados(BM),cor={ok:"#0f7b3f",warn:"#a15c00",modelo:"#a15c00",blank:"#b42318",missing:"#b42318"},fundo={ok:"#e6f4ea",warn:"#fff4e0",modelo:"#fff4e0",blank:"#fdecec",missing:"#fdecec"};
+  const hoje=new Date().toLocaleDateString("pt-PT",{day:"numeric",month:"long",year:"numeric"}),nome=(BM.me&&BM.me.nome)||"";
+  const caixa=(l,v,c)=>`<div class="bx"><small>${esc(l)}</small><b style="color:${c||"#1b2333"}">${v}</b></div>`;
+  const tabelas=L.map(g=>{const f=g.it.filter(x=>!okS(x.st)).length;return `<section class="g"><h3>${esc([g.m.tu,g.m.mo].filter(Boolean).join(" · "))}<span class="di">${esc(g.m.di||"")}</span><span class="pl" style="background:${f?"#fdecec":"#e6f4ea"};color:${f?"#b42318":"#0f7b3f"}">${f?f+" em falta":"completo"}</span></h3>
+    <table><thead><tr><th style="width:150px">Estado</th><th>Documento</th><th>Pasta</th><th style="width:90px">Entregue a</th></tr></thead><tbody>${g.it.map(x=>`<tr><td><span class="st" style="background:${fundo[x.st]||"#eef1f6"};color:${cor[x.st]||"#333"}">${esc((RELM_EST[x.st]||["",x.st])[1])}</span></td><td>${esc(x.tipo||"")}</td><td class="mu">${esc(x.pasta||"")}</td><td class="mu">${x.d?esc(new Date(x.d+"T12:00").toLocaleDateString("pt-PT")):"—"}</td></tr>`).join("")}</tbody></table></section>`}).join("")||`<p class="ok">${RELM.so==="falta"?"Não falta entregar nenhum documento nesta análise.":"Sem documentos."}</p>`;
+  w.document.write(`<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><title>Relatório de entregas — ${esc(nome)}</title><style>
+    @page{size:A4;margin:14mm 12mm 16mm}*{box-sizing:border-box}body{font:11.5px/1.45 "Segoe UI",Helvetica,Arial,sans-serif;color:#1b2333;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    header{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #163269;padding-bottom:10px;margin-bottom:14px}header img{max-height:52px;max-width:200px}
+    .tit{text-align:center;flex:1}.tit h1{font-size:18px;margin:0;color:#163269}.tit div{font-size:12px;color:#4a5262;margin-top:2px}
+    .meta{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:12px;margin:0 0 12px}.meta b{color:#163269}
+    .bxs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 16px}.bx{border:1px solid #e3e7ee;border-radius:8px;padding:8px 10px}.bx small{display:block;font-size:10.5px;color:#6b7385}.bx b{font-size:18px}
+    .barra{height:8px;border-radius:4px;background:#eef1f6;overflow:hidden;margin:-6px 0 16px}.barra i{display:block;height:100%;background:${pct===100?"#1f9d55":pct>=50?"#d99a18":"#d64545"}}
+    section.g{break-inside:avoid;margin:0 0 14px}h3{font-size:13px;margin:0 0 6px;display:flex;align-items:center;gap:8px;color:#163269}h3 .di{font-weight:400;color:#6b7385;font-size:11.5px}h3 .pl{margin-left:auto;font-size:10.5px;border-radius:10px;padding:2px 9px}
+    table{width:100%;border-collapse:collapse}th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#6b7385;border-bottom:1px solid #d6dbe4;padding:4px 6px}td{border-bottom:1px solid #eef1f6;padding:5px 6px;vertical-align:top}td.mu{color:#4a5262}
+    .st{display:inline-block;border-radius:10px;padding:1px 8px;font-size:10.5px;font-weight:600;white-space:nowrap}.ok{color:#0f7b3f;font-weight:600}
+    footer{margin-top:18px;border-top:1px solid #e3e7ee;padding-top:10px;text-align:center}footer img{max-width:520px;max-height:56px}footer div{font-size:10px;color:#8a92a3;margin-top:6px}
+    @media screen{body{max-width:820px;margin:20px auto;padding:0 16px}}</style></head><body>
+    <header><img src="${esc(main)}" alt=""><div class="tit"><h1>Relatório de entregas</h1><div>Escola Profissional da Ilha de São Jorge</div></div>${right?`<img src="${esc(right)}" alt="">`:`<span style="width:120px"></span>`}</header>
+    <div class="meta"><span>Formador: <b>${esc(nome)}</b></span><span>Análise da Box: <b>${esc(BM.nome||"")}</b>${BM.t?" ("+esc(new Date(BM.t).toLocaleDateString("pt-PT"))+")":""}</span><span>${RELM.so==="falta"?"Só os documentos em falta":"Todos os documentos"}</span><span>Emitido a ${esc(hoje)}</span></div>
+    <div class="bxs">${caixa("Documentação entregue",pct+"%")}${caixa("Documentos em falta",tot-ent,tot-ent?"#b42318":"")}${caixa("Entregues",ent+" de "+tot)}${caixa("Módulos completos",BM.m.filter(m=>m.it.length&&m.it.every(x=>okS(x[1]))).length+" de "+BM.m.length)}</div>
+    <div class="barra"><i style="width:${pct}%"></i></div>${tabelas}
+    <footer><img src="${esc(foot)}" alt=""><div>EPISJ 360 · Box360 — relatório gerado a partir da análise da Box feita pela Direção</div></footer>
+    </body></html>`);w.document.close();w.focus();
+  const imgs=[...w.document.images];Promise.all(imgs.map(i=>i.complete?1:new Promise(r=>{i.onload=i.onerror=r;setTimeout(r,2500)}))).then(()=>setTimeout(()=>{try{w.print()}catch(e){}},200))}
 function renderRelMeu(BM){const sec=$("#rel");if(!sec)return;let box=$("#relMeu");
   if(!box){box=document.createElement("div");box.id="relMeu";sec.insertAdjacentElement("afterbegin",box);
     box.addEventListener("input",e=>{if(e.target.id==="rmQ"){RELM.q=e.target.value;relMeuLista()}});
     box.addEventListener("change",e=>{if(e.target.id==="rmSo"){RELM.so=e.target.value;relMeuLista()}});
     box.addEventListener("click",e=>{const b=e.target.closest("[data-rm]");if(!b)return;const BM2=boxMeu();if(!BM2||BM2.vazio)return;
-      if(b.dataset.rm==="cp")copy(relMeuTexto(BM2));else printText("Relatório de entregas",relMeuTexto(BM2))})}
+      if(b.dataset.rm==="cp")copy(relMeuTexto(BM2));else relMeuImprimir(BM2)})}
   [...sec.querySelectorAll(".cols,.tiles,.card,.blk")].forEach(x=>{if(!x.contains(box)&&!box.contains(x))x.hidden=true});box.hidden=false;
   const SEL=boxSelHTML();
   if(BM.vazio||!(BM.m||[]).length){box.innerHTML=`<div class="card"><h2>O meu relatório de entregas</h2>${SEL?`<div class="row">${SEL}</div>`:""}<p class="hint">Ainda não há dados seus publicados pela Direção (a Direção tem de analisar a Box e ter módulos atribuídos a si).</p></div>`;return}

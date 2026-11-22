@@ -319,3 +319,11 @@ html[data-tema="cobalto"] nav.side .h3modo button+button{border-left-color:rgba(
   body.ecom .ecf-btns #ecfTot{flex-basis:100%}body.ecom .ecf-btns .grow{display:none}body.ecom .ecf-btns .b{flex:1 1 auto}
 }
 .ecf-novo[hidden]{display:none!important}
+/* 0.9.186: logótipo principal da app (menu lateral) no Cobalto — quadrado branco com o logótipo da escola a azul e a barra verde,
+   como os ícones dos módulos na barra de cima. Usa uma segunda imagem já azul (o filtro CSS sobre <image> não funciona no Safari). */
+.sblogo .lgaz{display:none}
+@media (min-width:821px){
+  html[data-tema="cobalto"] body:not(.esch) nav.side .sblogo>path:first-child,html[data-tema="cobalto"] #esBrand .sblogo>path:first-child{fill:#fff}
+  html[data-tema="cobalto"] body:not(.esch) nav.side .sblogo image:not(.lgaz),html[data-tema="cobalto"] #esBrand .sblogo image:not(.lgaz){display:none}
+  html[data-tema="cobalto"] body:not(.esch) nav.side .sblogo .lgaz,html[data-tema="cobalto"] #esBrand .sblogo .lgaz{display:inline}
+}

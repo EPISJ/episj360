@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.185 */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.186 */
 /* ===== src/css/fontes.css ===== */
 @font-face{font-family:Poppins;font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/poppins-latin-400.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:Poppins;font-style:normal;font-weight:500;font-display:swap;src:url(../fonts/poppins-latin-500.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -2107,3 +2107,11 @@ html[data-tema="cobalto"] nav.side .h3modo button+button{border-left-color:rgba(
   body.ecom .ecf-btns #ecfTot{flex-basis:100%}body.ecom .ecf-btns .grow{display:none}body.ecom .ecf-btns .b{flex:1 1 auto}
 }
 .ecf-novo[hidden]{display:none!important}
+/* 0.9.186: logótipo principal da app (menu lateral) no Cobalto — quadrado branco com o logótipo da escola a azul e a barra verde,
+   como os ícones dos módulos na barra de cima. Usa uma segunda imagem já azul (o filtro CSS sobre <image> não funciona no Safari). */
+.sblogo .lgaz{display:none}
+@media (min-width:821px){
+  html[data-tema="cobalto"] body:not(.esch) nav.side .sblogo>path:first-child,html[data-tema="cobalto"] #esBrand .sblogo>path:first-child{fill:#fff}
+  html[data-tema="cobalto"] body:not(.esch) nav.side .sblogo image:not(.lgaz),html[data-tema="cobalto"] #esBrand .sblogo image:not(.lgaz){display:none}
+  html[data-tema="cobalto"] body:not(.esch) nav.side .sblogo .lgaz,html[data-tema="cobalto"] #esBrand .sblogo .lgaz{display:inline}
+}

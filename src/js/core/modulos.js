@@ -34,19 +34,23 @@ function modEscondido(m){return !!m&&MODS_OFF.includes(m)&&!!EU&&(!EU.admin||!!P
 const TAB_PAI={pc:"tur",dsd:"prof"};
 function podeVer(t){if(t==="per")return podeVer("uti"); // 0.9.176: «Perfis» saiu de «Utilizadores e perfis» — vê-o quem vê Utilizadores
 if(t==="esch"&&!h3EschOk())return false; // 0.9.136: o editor completo só na versão completa do Horários360 (ou a importar do Untis)
-  if(/^pw/.test(t))return pwPode()&&!(MODS_OFF.length&&modEscondido("pass")); // 0.9.98: Pass360 — só a Direção, sempre
+  if(/^pw/.test(t))return pwPode()&&!(MODS_OFF.length&&modEscondido("pass"))&&!visNeg(t); // 0.9.98: Pass360 — só a Direção, sempre
   const v=visAtual();if(MODS_OFF.length&&modEscondido(modDeTab(t)))return false;if(!v||v.has(t))return true;
+  if(v.has("!"+t))return false; // 0.9.182: desmarcado em Perfis › O que cada perfil vê — vale mais do que a regra por omissão dos separadores novos
   if(TAB_PAI[t]&&!Object.keys(TAB_PAI).some(k=>v.has(k)))return v.has(TAB_PAI[t])||(t==="dsd"&&perfilAtual()==="prof");{const r=tabNovo(t,v);if(r!==null)return r}return false}
 // 0.9.54: separadores novos (Calendário Escolar, Crono360) — enquanto o servidor não os conhecer, vê-os quem tem o perfil certo
-function tabNovo(t,v){const R={cal:()=>true,crPs:()=>v.has("esc")||v.has("anos")||perfilAtual()==="prof",crCron:()=>v.has("esc")||v.has("anos")||perfilAtual()==="prof",crAno:()=>v.has("esc")||v.has("anos")||perfilAtual()==="prof",crCump:()=>v.has("esc")||v.has("anos"),crHist:()=>v.has("esc")||v.has("anos")||perfilAtual()==="prof",crDef:()=>v.has("esc")||v.has("anos")};
-  if(/^s3/.test(t))return v.has("esc")||v.has("anos")||S3_OK;
-  if(/^pw/.test(t))return pwPode(); // 0.9.98: Pass360 — só a Direção (Direção Executiva, Direção Pedagógica, administradores)
-  if(/^fo[A-Z]/.test(t))return v.has("esc")||v.has("anos")||podePublicar(); // 0.9.107: Folder360 — só a Direção
-  if(/^eco[A-Z]/.test(t))return v.has("esc")||v.has("anos")||podePublicar()||perfilAtual()==="econ"||(t==="ecoReq"&&perfilAtual()==="prof"); // 0.9.117: perfil Economato só vê o Econo360; 0.9.116: Econo360 — Direção; os formadores só as suas requisições
-  if(/^pap/.test(t))return v.has("esc")||v.has("anos")||podePublicar();
+/* 0.9.182: em Perfis, desmarcar um separador grava «!separador» na lista do perfil: assim o desmarcado é respeitado mesmo nos
+   separadores que o servidor ainda não conhece (que, sem marca, seguem a regra por omissão de tabNovo) */
+function visNeg(t){const v=visAtual();return !!(v&&v.has("!"+t))}
+function tabNovo(t,v,pfX){const PF=()=>pfX||perfilAtual(),PUB=()=>pfX?(pfX==="dexec"||pfX==="dped"):podePublicar(),PW=()=>pfX?(pfX==="dexec"||pfX==="dped"):pwPode(),S3=()=>pfX?false:S3_OK;const R={cal:()=>true,crPs:()=>v.has("esc")||v.has("anos")||PF()==="prof",crCron:()=>v.has("esc")||v.has("anos")||PF()==="prof",crAno:()=>v.has("esc")||v.has("anos")||PF()==="prof",crCump:()=>v.has("esc")||v.has("anos"),crHist:()=>v.has("esc")||v.has("anos")||PF()==="prof",crDef:()=>v.has("esc")||v.has("anos")};
+  if(/^s3/.test(t))return v.has("esc")||v.has("anos")||S3();
+  if(/^pw/.test(t))return PW(); // 0.9.98: Pass360 — só a Direção (Direção Executiva, Direção Pedagógica, administradores)
+  if(/^fo[A-Z]/.test(t))return v.has("esc")||v.has("anos")||PUB(); // 0.9.107: Folder360 — só a Direção
+  if(/^eco[A-Z]/.test(t))return v.has("esc")||v.has("anos")||PUB()||PF()==="econ"||(t==="ecoReq"&&PF()==="prof"); // 0.9.117: perfil Economato só vê o Econo360; 0.9.116: Econo360 — Direção; os formadores só as suas requisições
+  if(/^pap/.test(t))return v.has("esc")||v.has("anos")||PUB();
   if(t==="hsSem")return true;
-  if(t==="hsFor")return perfilAtual()!=="form"; // 0.9.142: Por formadores — formadores e Direção // 0.9.136: Horários360 › Semana — toda a gente vê o horário publicado
-  if(t==="hsCom")return v.has("esc")||v.has("anos")||podePublicar(); // 0.9.136: Comunicar — só a Direção
+  if(t==="hsFor")return PF()!=="form"; // 0.9.142: Por formadores — formadores e Direção // 0.9.136: Horários360 › Semana — toda a gente vê o horário publicado
+  if(t==="hsCom")return v.has("esc")||v.has("anos")||PUB(); // 0.9.136: Comunicar — só a Direção
   if(t==="mof")return false; // 0.9.101: Box360 › Modelos oficiais — quem vê o Relatório (a Direção) // 0.9.92: PAP360 — só a Direção // 0.9.73: Social360 — Direção, ou quem está num espaço de trabalho do Social360
   if(!R[t])return null;let srv=null;try{srv=PREV&&UTI?UTI.separadores:(EU&&EU.separadores)}catch(e){}if(Array.isArray(srv)&&srv.includes(t))return null;return R[t]()}
 $("#mods").addEventListener("click",e=>{const b=e.target.closest("button[data-m]");if(b)mostrarModulo(b.dataset.m,true)});

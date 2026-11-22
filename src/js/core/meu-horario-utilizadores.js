@@ -110,7 +110,7 @@ $("#utiMods").addEventListener("change",e=>{const x=e.target.closest("[data-mod]
 function utiVis(){if(!utiOk(1))return;const L=UTI.loja,P=Object.keys(UTI.perfis);let h=`<thead><tr><th>Separador</th>${P.map(k=>`<th>${esc(UTI.perfis[k])}</th>`).join("")}</tr></thead><tbody>`;
   document.querySelectorAll("#nav .mgrp").forEach(g=>{const bs=[...g.querySelectorAll("button[data-t]")].filter(b=>b.dataset.t!=="uti"&&b.dataset.t!=="per");if(!bs.length)return;
     h+=`<tr class="grp"><td colspan="${P.length+1}">${esc(g.querySelector(".mh").childNodes[0].textContent.trim())}</td></tr>`;
-    for(const b of bs){const t=b.dataset.t;h+=`<tr><td>${esc(b.textContent.trim())}</td>${P.map(k=>`<td><input type="checkbox" data-vp="${k}" data-vt="${t}"${(L.vis[k]||UTI.visOmissao[k]).includes(t)?" checked":""}></td>`).join("")}</tr>`}});
+    for(const b of bs){const t=b.dataset.t;h+=`<tr><td>${esc(b.textContent.trim())}</td>${P.map(k=>`<td><input type="checkbox" data-vp="${k}" data-vt="${t}"${utiVisEf(k,t)?" checked":""}></td>`).join("")}</tr>`}});
   $("#utiVis").innerHTML=h+"</tbody>"}
 {let h=null;$("#utiFiltro").oninput=()=>{clearTimeout(h);h=setTimeout(()=>{UTI_N=200;utiTabela()},120)}}
 $("#utiForm").onsubmit=e=>{e.preventDefault();if(!utiOk())return;const em=$("#utiEmail").value.trim().toLowerCase();if(!/@/.test(em)){toast("Email inválido");return}
@@ -125,7 +125,12 @@ $("#tbUti").addEventListener("click",e=>{const b=e.target.closest("[data-udel]")
 $("#utiBulkGo").onclick=()=>{if(!utiOk())return;let n=0,mal=0;for(const l of $("#utiBulk").value.split(/\n/)){const c=l.split(/[;\t,]/).map(x=>x.trim());if(!c[0])continue;const em=c[0].toLowerCase(),pf=utiPerfilDe(c[1]||"");
     if(!/@/.test(em)||!pf){mal++;continue}UTI.loja.utilizadores[em]={perfil:pf,turma:pf==="form"?(c[2]||"").toUpperCase():"",nome:""};n++}
   utiTabela();if(n){utiSujo();$("#utiBulk").value=""}toast(`${n} conta(s) juntada(s)${mal?` · ${mal} linha(s) não percebida(s)`:""}`)};
-$("#utiVis").addEventListener("change",e=>{const x=e.target.closest("[data-vp]");if(!x||!utiOk())return;const L=UTI.loja,k=x.dataset.vp;const v=new Set(L.vis[k]||UTI.visOmissao[k]);if(x.checked)v.add(x.dataset.vt);else v.delete(x.dataset.vt);L.vis[k]=[...v];utiSujo()});
+/* 0.9.182: a tabela mostra o que cada perfil vê de facto (também os separadores novos, que seguem uma regra por omissão);
+   desmarcar grava «!separador», que esconde mesmo os separadores dessa regra */
+function utiVisEf(k,t){const L=UTI.loja,l=L.vis[k]||UTI.visOmissao[k]||[];if(l.includes(t))return true;if(l.includes("!"+t))return false;
+  try{const r=tabNovo(t,new Set(l),k);return r===true}catch(e){return false}}
+$("#utiVis").addEventListener("change",e=>{const x=e.target.closest("[data-vp]");if(!x||!utiOk())return;const L=UTI.loja,k=x.dataset.vp,t=x.dataset.vt;const v=new Set(L.vis[k]||UTI.visOmissao[k]);
+  if(x.checked){v.add(t);v.delete("!"+t)}else{v.delete(t);v.add("!"+t)}L.vis[k]=[...v];utiSujo()});
 $("#utiVisRepor").onclick=()=>{if(!utiOk())return;UTI.loja.vis={};utiVis();utiSujo()};
 ["#utiAdmins","#utiDom","#utiPad"].forEach(x=>$(x).addEventListener("input",utiSujo));
 $("#utiPrev").onchange=e=>{const v=e.target.value;if(!v)return;if(!utiOk()){e.target.value="";return}utiLerCampos();PREV=v;aplicarPerfil();toast("A pré-visualizar como "+PERFIL_CURTO[v]);e.target.value=""};

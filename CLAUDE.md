@@ -32,6 +32,9 @@ Se alguém tiver mexido diretamente no `index.html` publicado, levar essas alter
 - `eduschedule.html` (e as letras em `fontes/`) está na raiz deste repositório e abre na mesma origem (`ES_URL` em `src/js/horario/horario.js`). Já não vem de eduspruce.github.io: melhorias ao Horários360 fazem-se aqui.
 - Não passa pela montagem. Tem política de segurança própria com «hashes» dos scripts embutidos: se mudar um `<script>` embutido, atualize o hash correspondente no `<meta http-equiv="Content-Security-Policy">`, senão o Horários360 fica em branco.
 
+## Emails (0.9.163)
+- Os emails enviados pela app (`msEnviar`) **não levam ligações (`<a href>`) para episj360.episj.com**: o filtro do Office 365 da escola retinha-os sem avisar (Graph responde 202, mas não chegam). Testado a 22/11/2026: o mesmo email sem ligações chega. Escrever o endereço como texto.
+
 ## Segurança
 - `g360_email()` só aceita identidades do inquilino Office 365 da escola (`servidor/supabase-episj360-seguranca.sql`). Não remover essa verificação.
 - Tudo o que vai para `innerHTML` passa por `esc()`.

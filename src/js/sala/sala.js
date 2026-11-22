@@ -288,7 +288,7 @@ $("#rcCsv").onclick=()=>{const L=rcFiltradas(),q=v=>'"'+String(v??"").replace(/"
   download("reservas-"+rcHoje()+".csv","﻿"+[["Dia","Início","Fim","Espaço","Reservado por","Turma","Motivo"].map(q).join(";")].concat(L.map(r=>[r.d,rcHm(r.h0),rcHm(r.h1),rcE(r.e).n,r.p,r.t,r.m].map(q).join(";"))).join("\r\n"),"text/csv;charset=utf-8")};
 $("#rcPdf").onclick=async()=>{try{const J=await loadPDF(),doc=new J({orientation:"landscape"}),L=rcFiltradas();
     doc.setFontSize(15);doc.text("Reservas de espaços — Escola Profissional da Ilha de São Jorge",14,16);doc.setFontSize(10);
-    doc.text(`EPISJ 360 · Sala360 · ${$("#rcFE").value?rcE($("#rcFE").value).n:"todos os espaços"}${$("#rcFDe").value?" · de "+dataPT($("#rcFDe").value):""}${$("#rcFAte").value?" até "+dataPT($("#rcFAte").value):""} · emitido em ${new Date().toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"})}`,14,23);
+    pdfTxt360(doc,`EPISJ 360 · Sala360 · ${$("#rcFE").value?rcE($("#rcFE").value).n:"todos os espaços"}${$("#rcFDe").value?" · de "+dataPT($("#rcFDe").value):""}${$("#rcFAte").value?" até "+dataPT($("#rcFAte").value):""} · emitido em ${new Date().toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"})}`,14,23);
     doc.autoTable({startY:28,head:[["Dia","Horas","Espaço","Reservado por","Turma","Motivo"]],body:L.map(r=>[rcDia(r.d,{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"}),rcHm(r.h0)+"–"+rcHm(r.h1),rcE(r.e).n,r.p,r.t||"",r.m||""]),theme:"grid",styles:{fontSize:9},headStyles:{fillColor:[22,50,105]}});
     doc.save("reservas-"+rcHoje()+".pdf")}catch(e){toast("Não foi possível criar o PDF: "+(e.message||e))}};
 

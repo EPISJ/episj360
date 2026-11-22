@@ -122,7 +122,7 @@ function pdfMoldura(doc,rodape,fse){const n=doc.getNumberOfPages(),{m,r,f:f0}=pd
     doc.setDrawColor(222,226,231);doc.setLineWidth(.2);if(m||r)doc.line(14,31,W-14,31);doc.line(14,H-PDF_BOT+3,W-14,H-PDF_BOT+3);
     if(f){const[w,h]=lgFit(f,120,13);doc.addImage(f.src,lgFmt(f),(W-w)/2,H-PDF_BOT+5+(13-h)/2,w,h,f===f0?"lgFoot":"lgFoot_"+lgProjK(pf))}
     doc.setFont("helvetica","normal");doc.setFontSize(7.5);doc.setTextColor(130);
-    doc.text(pdfTxt(rodape),14,H-7);doc.text(`Página ${i} de ${n}`,W-14,H-7,{align:"right"})}}
+    pdfTxt360(doc,pdfTxt(rodape),14,H-7);doc.text(`Página ${i} de ${n}`,W-14,H-7,{align:"right"})}}
 function pdfTitulo(doc,titulo,sub){doc.setFont("helvetica","bold");doc.setFontSize(16);doc.setTextColor(22,40,80);doc.text(pdfTxt(titulo),14,PDF_TOP+6);
   doc.setFont("helvetica","normal");doc.setFontSize(9.5);doc.setTextColor(95);doc.text(pdfTxt(sub),14,PDF_TOP+12);return PDF_TOP+22}
 const pdfData=()=>new Date().toLocaleDateString("pt-PT");

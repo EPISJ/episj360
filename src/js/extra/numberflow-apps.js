@@ -7,7 +7,7 @@
   const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const COR={escola:"#1d4ed8",boxcheck:"#0b72d9",eduschedule:"#7c3aed",roomcheck:"#16a34a",crono:"#0f8b8d",social:"#c13584",pap:"#a21caf",pass:"#475569",folder:"#8a5a2b",econo:"#a16207"};
   const ICON=btn.querySelector("svg").outerHTML;
-  const nome360=t=>esc(t).replace(/360$/,"<i>360</i>");
+  const nome360=t=>esc(t).replace(/360$/,'<i class="sup360">360</i>');
   const vis=el=>el&&getComputedStyle(el).display!=="none"&&!el.hidden;
   const LIG=[
     {n:"Box",d:"Gestão Documental da escola (só leitura na EPISJ 360)",u:"https://app.box.com",c:"#0061d5",t:"box"},

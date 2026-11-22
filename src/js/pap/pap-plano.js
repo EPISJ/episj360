@@ -38,6 +38,16 @@ function papPlSobre(L){const S=new Set();for(let i=0;i<L.length;i++)for(let j=i+
   if(ai!=null&&bi!=null&&af!=null&&bf!=null&&ai<bf&&bi<af){S.add(a.id);S.add(b.id)}}return S}
 function papPlDiaNome(d,longo){const x=calD(d);if(!longo)return PAP_PL_DS[x.getDay()]+" "+calDM(d);const t=x.toLocaleDateString("pt-PT",{weekday:"long",day:"numeric",month:"long"});return t.charAt(0).toUpperCase()+t.slice(1)}
 
+// quantas provas cabem num dia com os acertos por omissão (início, duração, pausa) — por omissão, as horas das Definições
+function papPlCap(){const n=(papDef().horas||[]).length;return n||8}
+// substitui as datas de todas as provas pelas datas da PAP do Calendário Escolar (pela ordem atual: dia, hora, nome)
+function papPlCalendario(P,modo){const C=papDatasCal(P);if(!C.length)return;const L=papInc(P).slice().sort(papOrdHora);if(!L.length)return;
+  papPlFoto(P);const pl=papPl(P),cap=papPlCap(),G=C.map(()=>[]);
+  if(modo==="igual"){const n=C.length,base=Math.floor(L.length/n),r=L.length%n;let k=0;C.forEach((d,i)=>{const q=base+(i<r?1:0);for(let j=0;j<q;j++)G[i].push(L[k++])})}
+  else{let i=0;L.forEach(c=>{if(G[i].length>=cap&&i<C.length-1)i++;G[i].push(c)})}
+  C.forEach((d,i)=>papPlRefazer(P,d,G[i]));
+  Object.keys(pl.dias).forEach(d=>{if(!C.includes(d)&&pl.dias[d])delete pl.dias[d].manual});C.forEach(d=>{delete pl.ocultos[d]});
+  const usados=C.filter((d,i)=>G[i].length).length;papPlFim(P,`Datas do Calendário Escolar aplicadas: ${L.length} prova(s) em ${usados} dia(s).`)}
 function papPlanoUI(P){const box=document.getElementById("papPlano");if(!box)return;P=P||papProva();if(!P){box.innerHTML="";return}
   const ed=papEd(),I=papInc(P),dias=papPlDias(P),sem=I.filter(c=>!c.data),cal=new Set(papDatasCal(P)),pl=papPl(P);
   const marc=I.filter(c=>c.data&&papHIni(c.hora)!=null).sort(papOrdHora),pri=marc[0],ult=marc[marc.length-1];
@@ -50,7 +60,7 @@ function papPlanoUI(P){const box=document.getElementById("papPlano");if(!box)ret
     return `<div class="pl-c${PAP_PL_SEL===c.id?" sel":""}${sob.has(c.id)?" sob":""}" data-plc="${esc(c.id)}" style="--pc:${cor}" ${ed?'tabindex="0"':""} title="${esc(c.nome)}${c.tema?" — "+esc(c.tema):""}">
       ${ed?`<span class="pl-pega" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/></svg></span>`:""}
       <span class="pl-h">${hi!=null?`<b>${papHM(hi)}</b><small>${hf!=null?papHM(hf):""}</small>`:`<b>—</b>`}</span>
-      <span class="pl-t"><b>${esc(c.nome)}</b><small>${c.num?"n.º "+esc(c.num):""}${j.length?(c.num?" · ":"")+"júri: "+esc(j.join(", ")):(c.num?" · ":"")+'<i class="pl-sj">sem júri</i>'}</small></span>
+      <span class="pl-t"><b>${esc(c.nome)}</b>${String(c.tema||"").trim()?`<em class="pl-tema">${esc(c.tema)}</em>`:""}<small>${c.num?"n.º "+esc(c.num):""}${j.length?(c.num?" · ":"")+"júri: "+esc(j.join(", ")):(c.num?" · ":"")+'<i class="pl-sj">sem júri</i>'}</small></span>
       ${e.k!=="mu"?`<span class="pp-chip ${e.k} pl-e">${e.f!=null?e.f:e.txt.replace(/ \(.*/,"")}</span>`:""}</div>`};
   const col=(d,i)=>{const L=d?papPlDoDia(P,d):sem,cor=d?papPlCor(P,d,i):"#9aa3b2",sob=papPlSobre(L),X=d?papPlDia(P,d):null,f=L.filter(c=>papHIni(c.hora)!=null);
     const ab=d&&PAP_PL_ARR&&PAP_PL_ARR.cfg===d;
@@ -66,7 +76,12 @@ function papPlanoUI(P){const box=document.getElementById("papPlano");if(!box)ret
     </section>`};
   const nU=(PAP_PL_UNDO[P.id]||[]).length;
   box.innerHTML=`<div class="pp-head"><div><h2>Organizar os dias da PAP</h2><p class="hint">${ed?"Arraste cada prova para a mudar de hora ou de dia (no telemóvel, pela pega à esquerda): as horas do dia são refeitas. Largue em cima de outra prova para as <b>trocar</b> — ou toque numa prova e depois noutra.":"Dias e horas das provas desta turma."}</p></div>
-    ${ed?`<div class="pp-acts"><label class="pl-add">Acrescentar dia<input type="date" id="plNovoDia"></label><button type="button" class="b s" id="plAnular"${nU?"":" disabled"} title="Desfaz a última mudança feita aqui">Anular</button></div>`:""}</div>
+    ${ed?`<div class="pp-acts"><label class="pl-add">Acrescentar dia<input type="date" id="plNovoDia"></label>
+      <button type="button" class="b s" id="plTema" title="Em cada dia, põe as provas por ordem do tema (as do mesmo tema ficam seguidas) e refaz as horas">Ordenar por tema</button>
+      ${cal.size?`<button type="button" class="b s" id="plCal" aria-expanded="${PAP_PL_ARR&&PAP_PL_ARR.cal?"true":"false"}" title="Passa as provas para os dias da PAP marcados no Calendário Escolar">Usar as datas do Calendário</button>`:""}
+      <button type="button" class="b s" id="plAnular"${nU?"":" disabled"} title="Desfaz a última mudança feita aqui">Anular</button></div>`:""}</div>
+    ${ed&&cal.size&&PAP_PL_ARR&&PAP_PL_ARR.cal?`<div class="pl-calp"><div><b>Usar as datas do Calendário Escolar</b><span>${[...cal].sort().map(d=>esc(papPlDiaNome(d))).join(" · ")} — substitui as datas de todas as provas (pela ordem atual) e tira os dias que não estão no Calendário.</span></div>
+      <div class="pl-calb"><button type="button" class="b s" data-plcal="encher">Encher os dias por ordem (até ${papPlCap()} por dia)</button><button type="button" class="b s" data-plcal="igual">Repartir por igual pelos ${cal.size} dias</button><button type="button" class="b s" data-plcal="x">Cancelar</button></div></div>`:""}
     <div class="pl-res">${resumo}</div>
     ${PAP_PL_SEL?`<div class="pl-selb">A trocar <b>${esc((P.cands.find(x=>x.id===PAP_PL_SEL)||{}).nome||"")}</b>: toque noutra prova para as trocar, ou em «Mover para aqui» num dia. <button type="button" class="b s" data-plcanc>Cancelar</button></div>`:""}
     <div class="pl-g">${dias.map(col).join("")}${col("",dias.length)}</div>`;
@@ -78,6 +93,9 @@ function papPlanoUI(P){const box=document.getElementById("papPlano");if(!box)ret
 function papPlLigar(){const box=document.getElementById("papPlano");if(!box||box.__pl)return;box.__pl=1;
   box.addEventListener("click",e=>{const P=papProva();if(!P||!papEd())return;const t=e.target;
     if(t.closest("#plAnular")){papPlAnular(P);return}
+    if(t.closest("#plTema")){papPlFoto(P);papPlDias(P).forEach(d=>papPlRefazer(P,d,papPlDoDia(P,d).sort((a,b)=>{const x=String(a.tema||"").trim(),y=String(b.tema||"").trim();return (!x)-(!y)||COLL_PT.compare(x,y)||papOrdNome(a,b)})));papPlFim(P,"Provas ordenadas por tema em cada dia.");return}
+    if(t.closest("#plCal")){PAP_PL_ARR=PAP_PL_ARR&&PAP_PL_ARR.cal?null:{cal:1};papPlanoUI(P);return}
+    const pc=t.closest("[data-plcal]");if(pc){const m=pc.dataset.plcal;PAP_PL_ARR=null;if(m==="x"){papPlanoUI(P);return}papPlCalendario(P,m);return}
     if(t.closest("[data-plcanc]")){PAP_PL_SEL=null;papPlanoUI(P);return}
     const cor=t.closest("[data-plcor]");if(cor){const d=cor.dataset.plcor,pl=papPl(P),i=papPlDias(P).indexOf(d),x=pl.dias[d]=pl.dias[d]||{};x.cor=((x.cor!=null?x.cor:i)+1)%PAP_PL_COR.length;papGuardar(P);papCandsUI(P);return}
     const cfg=t.closest("[data-plcfg]");if(cfg){const d=cfg.dataset.plcfg;PAP_PL_ARR=PAP_PL_ARR&&PAP_PL_ARR.cfg===d?null:{cfg:d};papPlanoUI(P);return}
@@ -96,10 +114,11 @@ function papPlLigar(){const box=document.getElementById("papPlano");if(!box||box
   // arrastar: rato (em qualquer sítio do cartão) ou toque (só pela pega, para a página continuar a deslizar)
   box.addEventListener("pointerdown",e=>{if(e.button>0||!papEd())return;const cd=e.target.closest("[data-plc]");if(!cd)return;
     if(e.pointerType!=="mouse"&&!e.target.closest(".pl-pega"))return;
+    if(e.pointerType==="mouse")e.preventDefault(); // sem selecionar texto ao arrastar
     const P=papProva(),c=P&&P.cands.find(x=>x.id===cd.dataset.plc);if(!c)return;
     const x0=e.clientX,y0=e.clientY;let ativo=false,fan=null,ind=null,alvo=null,raf=0,auto=0;box.__arrastou=false;
     const pid=e.pointerId;try{cd.setPointerCapture(pid)}catch(x){}
-    const comecar=()=>{ativo=true;box.__arrastou=true;const r=cd.getBoundingClientRect();fan=cd.cloneNode(true);fan.classList.add("pl-fan");fan.style.width=r.width+"px";
+    const comecar=()=>{ativo=true;try{getSelection().removeAllRanges()}catch(x){}box.__arrastou=true;const r=cd.getBoundingClientRect();fan=cd.cloneNode(true);fan.classList.add("pl-fan");fan.style.width=r.width+"px";
       document.body.appendChild(fan);cd.classList.add("pl-orig");ind=document.createElement("div");ind.className="pl-ind";document.body.classList.add("pl-arrastar")};
     const onde=(x,y)=>{fan.style.transform=`translate(${x-fan.offsetWidth/2}px,${y-18}px) rotate(1.5deg)`;
       const el=document.elementFromPoint(x,y);box.querySelectorAll(".pl-troca").forEach(z=>z.classList.remove("pl-troca"));box.querySelectorAll(".pl-sobre").forEach(z=>z.classList.remove("pl-sobre"));ind.remove();alvo=null;

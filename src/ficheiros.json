@@ -46,7 +46,8 @@
   "js/social/social.js",
   "js/core/arranque.js",
   "js/core/gaveta-tabelas.js",
-  "js/core/movel.js"
+  "js/core/movel.js",
+  "js/core/sup360.js"
  ],
  "modulos": {
   "pap": [

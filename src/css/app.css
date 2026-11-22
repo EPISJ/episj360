@@ -1622,3 +1622,11 @@ table.pp-ct tr.pl-tem td.pp-d{box-shadow:inset 4px 0 0 var(--pd)}
 table.pp-ct tr.pl-tem td.pp-d input{background:color-mix(in srgb,var(--pd) 10%,#fff)}
 html.mv .pl-g{grid-template-columns:1fr}
 html.mv .pl-c{padding:9px 8px 9px 2px}html.mv .pl-pega{width:30px}html.mv .pl-pega svg{width:20px;height:20px}
+
+/* 0.9.223: «360» sobrescrito em toda a app (core/sup360.js) */
+.sup360{font-size:.6em;vertical-align:super;line-height:0;position:relative;top:-.05em;margin-left:.04em;letter-spacing:.01em}
+b.sup360,i.sup360{font-style:normal}
+.pl-tema{font-style:normal;font-size:12px;color:var(--brand);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-calp{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border:1px solid var(--line);background:var(--brandbg);border-radius:10px;padding:10px 12px;margin:0 0 10px}
+.pl-calp>div:first-child{display:flex;flex-direction:column;gap:2px;font-size:13px;flex:1 1 320px}.pl-calp span{color:var(--muted);font-size:12.5px}
+.pl-calb{display:flex;gap:6px;flex-wrap:wrap}

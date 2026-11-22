@@ -147,7 +147,7 @@ function mvFolhaMais(){const m=curMod,vis=mvTabsDoMod(m);
   const f=mvFolha(mvModNome(m),`<div class="mv-lista">${lin||'<p class="hint">Este módulo não tem separadores para o seu perfil.</p>'}</div>${mvGrelhaMods()}`,"mv-fmais");
   mvLigarFolha(f)}
 function mvGrelhaMods(){const L=mvModsVis();if(L.length<2)return "";
-  return `<div class="mv-sec">Módulos</div><div class="mv-mods">${L.map(m=>`<button type="button" class="mv-ma${m===curMod?" on":""}" data-mvm="${m}" aria-label="${esc(mvModNome(m))}"><span class="mv-mai">${mvModSvg(m)}</span><span class="mv-mal">${esc(mvModNome(m).replace(/360$/,""))}<i>360</i></span></button>`).join("")}</div>`}
+  return `<div class="mv-sec">Módulos</div><div class="mv-mods">${L.map(m=>`<button type="button" class="mv-ma${m===curMod?" on":""}" data-mvm="${m}" aria-label="${esc(mvModNome(m))}"><span class="mv-mai">${mvModSvg(m)}</span><span class="mv-mal">${esc(mvModNome(m).replace(/360$/,""))}<i class="sup360">360</i></span></button>`).join("")}</div>`}
 function mvFolhaModulos(){const f=mvFolha("Módulos",mvGrelhaMods().replace('<div class="mv-sec">Módulos</div>',"")||'<p class="hint">Não há outros módulos para o seu perfil.</p>',"mv-fmods");mvLigarFolha(f)}
 function mvLigarFolha(f){f.addEventListener("click",e=>{const t=e.target.closest("[data-mvt]"),m=e.target.closest("[data-mvm]"),a=e.target.closest("[data-mvacao]");
   if(t){mvFolhaFechar(true);try{history.replaceState({mv:curTab},"")}catch(x){}show(t.dataset.mvt);return}

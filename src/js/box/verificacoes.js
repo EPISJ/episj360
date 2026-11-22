@@ -90,7 +90,10 @@ function qualCtx(idx,slotOf,mods){
 const fpKey=f=>(f.fid||f.name)+"|"+(f.sha1||"");
 function marcarFP(keys,on,txt){cfg.fp=cfg.fp||{};for(const k of keys){if(on)cfg.fp[k]={t:Date.now(),txt:txt||""};else delete cfg.fp[k]}save();renderAll();if(curTab==="rel")renderReport();if(curTab==="alt")renderAlt();
   toast(on?"Assinalado como falso positivo — passa a contar como entregue (pode anular)":"Anulado — o aviso volta a aparecer")}
+// 0.9.218: ficheiros de sistema, temporários e atalhos não são documentos (ex.: .DS_Store, Thumbs.db, desktop.ini, «~$Relatório.docx», atalhos .lnk/.url)
+function fichSistema(nome){const n=String(nome||"").trim(),l=n.toLowerCase();return /^(\.ds_store|thumbs\.db|desktop\.ini|ehthumbs\.db|icon\r?)$/.test(l)||l.startsWith("~$")||l.startsWith("._")||/\.(tmp|lnk|url|webloc|crdownload|part|boxnote~)$/.test(l)||/^~.*\.tmp$/.test(l)}
 function qualOf(f,slot,X){
+  if(fichSistema(f.name))return{lvl:"bad",txt:"ficheiro de sistema, temporário ou atalho — não é um documento"};
   if(f.size===0)return{lvl:"bad",txt:"ficheiro vazio (0 bytes)"};
   if(f.sha1&&X.tplSha.has(f.sha1))return{lvl:"bad",txt:`é o modelo «${X.tplSha.get(f.sha1)}» por preencher (ficheiro igual ao modelo)`};
   const t0=f.sha1?TX.get(f.sha1):null,t=t0&&t0.w!=null?t0:null,w=t?t.w:palavras(f.sha1),W=[];
@@ -160,8 +163,16 @@ function evalCore(idx,mods){
       const T={cont:[],d:{id:"sec:"+norm(secDe(rec.r)),nome:secDe(rec.r),min:1,subpasta:""}};
       if(own.length){const slot={m,T:{...T,d:{...T.d,nome:nome}},hits:own,sg:sgm+p};for(const f of own)if(!slotOf.has(f))slotOf.set(f,slot);pastas.push({rec,p,nome,T,own,slot})}
       else if(!tot&&!PAIS.has(p))pastas.push({rec,p,nome,T,own:[],vazia:true})} // 0.9.203: só a última pasta de cada ramo (sem subpastas) conta como vazia
-    out.push({mod:m,pastas,modFolders,nFiles:modFolders.reduce((a,r)=>a+(C.own.get(r.r.join("/"))||[]).length,0),folder:ms.join(" / "),ms,flexNome});
+    // 0.9.218: as secções onde o módulo tem a sua pasta (a pasta acima da pasta do módulo, ex.: «…/012.2 - Mecanismos…/1400 - TIC»)
+    // a chave ignora diferenças de escrita no nome da disciplina (fica só o código, ex.: «1400»), para não acusar falta por «1400 - TIC» vs «1400 - Tecnologias…»
+    const mk=modKey(m.cod),pre=new Map(),pk=r=>r.slice(0,-1).map(c=>isDisc(c)?"#"+discCode(c):norm(c)).join("/");
+    for(const rec of modFolders){const c=rec.n[rec.n.length-1];if(isModLike(c)&&modKey(c)===mk){const k=pk(rec.r);if(!pre.has(k))pre.set(k,{raw:rec.r.slice(0,-1),nome:rec.r[rec.r.length-1]})}}
+    out.push({mod:m,pastas,modFolders,pre,nFiles:modFolders.reduce((a,r)=>a+(C.own.get(r.r.join("/"))||[]).length,0),folder:ms.join(" / "),ms,flexNome});
   }
+  // 0.9.218: pasta do módulo que NÃO EXISTE numa secção onde os outros módulos da mesma turma e disciplina a têm (antes só se viam as pastas vazias)
+  {const G=new Map();for(const e of out){const k=norm(e.mod.turma||"")+"|"+discCode(e.mod.disc);let s=G.get(k);if(!s)G.set(k,s=new Map());for(const [p,v] of e.pre)if(!s.has(p))s.set(p,v.raw)}
+    for(const e of out){e.semPasta=[];if(!e.pre.size)continue;const nm=[...e.pre.values()][0].nome;
+      for(const [p,raw] of G.get(norm(e.mod.turma||"")+"|"+discCode(e.mod.disc))||[])if(!e.pre.has(p))e.semPasta.push({r:raw.concat(nm),nome:nm})}}
   const ck=cfgEvalKey();if(MENTK!==ck){MENT=new Map();MENTK=ck}
   const X=qualCtx(idx,slotOf,mods);
   // 2.ª passagem: estado de cada pasta
@@ -185,12 +196,17 @@ function evalCore(idx,mods){
         if(state==="ok"||state==="warn"||state==="modelo"){if(was)seg="entregue desde o envio de "+dataPT(ref.t)}
         else seg=was?"pedido a "+dataPT(ref.t)+" — continua em falta":"novo (não constava do envio de "+dataPT(ref.t)+")"}
       items.push({doc:x.T.d,key,ok:state==="ok"||state==="warn"||state==="modelo",state,reasons,hits:x.own,q,loc,falta:x.nome,pastaObs,seg,since:!!(ref&&seg.startsWith("entregue desde")),fora:false,fpi})}
+    for(const x of e.semPasta||[]){const esp=x.r.map(norm);if(EXR.length&&cobre(EXR,esp))continue;
+      const key=m.id+"|p:"+relTurma(x.r);let state="missing",pastaObs="a pasta deste módulo não existe nesta secção (os outros módulos da disciplina têm-na) — crie-a e ponha lá o documento",seg="",fpi=null;const fpI=FP["i:"+key];
+      if(fpI){fpi={era:fpI.txt||pastaObs,t:fpI.t};state="ok";pastaObs="falso positivo — conta como entregue"}
+      if(ref&&state==="missing")seg=refSet.has(key)?"pedido a "+dataPT(ref.t)+" — continua em falta":"novo (não constava do envio de "+dataPT(ref.t)+")";
+      items.push({doc:{id:"sec:"+norm(secDe(x.r)),nome:secDe(x.r),min:1,subpasta:""},key,ok:state==="ok",state,reasons:[],hits:[],q:[],loc:locReal(x.r.slice(0,-1)),falta:x.nome,pastaObs,seg,since:false,fora:false,fpi,semPasta:true})}
     if(!e.modFolders.length)items.push({doc:{id:"sec:modulo",nome:"Pasta do módulo",min:1,subpasta:""},key:m.id+"|p:",ok:false,state:"missing",reasons:[],hits:[],q:[],
       loc:[m.turma,m.disc].filter(Boolean).join(" > "),falta:m.cod,pastaObs:"não há nenhuma pasta deste módulo na análise",seg:"",since:false,fora:false});
     if(!e.modFolders.length&&FP["i:"+m.id+"|p:"]){const it=items[items.length-1],v=FP["i:"+m.id+"|p:"];Object.assign(it,{ok:true,state:"ok",fpi:{era:v.txt||it.pastaObs,t:v.t},pastaObs:"falso positivo — conta como entregue"})}
     // as faltas primeiro, pela ordem das pastas
     e.items=items.sort((a,b)=>(a.ok-b.ok)||COLL_PTN.compare(a.loc+" > "+a.falta,b.loc+" > "+b.falta));
-    delete e.pastas;delete e.modFolders;delete e.ms}
+    delete e.pastas;delete e.modFolders;delete e.ms;delete e.pre;delete e.semPasta}
   return out;
 }
 // o resultado fica guardado enquanto nada mudar (ficheiros, textos lidos, módulos, documentos exigidos, opções)

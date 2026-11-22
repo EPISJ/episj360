@@ -192,3 +192,4 @@ table.hsf tbody td:not(.nm):not(.tt),table.hsf thead tr+tr th{min-width:46px;wid
 .wg-aniv-p .wg-ir{white-space:nowrap}
 .hsimpg{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px;padding:0 0 12px;border-bottom:1px solid var(--line)}.hsimpg .hint{margin:0 4px 0 0}
 .h3via{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;border:1px dashed var(--line2,#d3d9e3);color:var(--muted);white-space:nowrap}.h3via.ok{border-style:solid;border-color:#c5d5f3;background:var(--brandbg,#eef3fc);color:var(--brand)}
+.mzh .a.h3a{border-left:3px solid;border-radius:6px}.mzh .a.h3a b{font-weight:700}.mzh .a.h3a span{color:#4a5262;opacity:1}

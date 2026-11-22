@@ -68,9 +68,22 @@ function h3Celulas(st,V,tipo,id){const T=new Map((st.teachers||[]).map(t=>[t.id,
     const lin=(l.linhas||[]).map((x,i)=>Object.assign({i},x));
     for(let k=0;k<(cd.len||1);k++){const rr=(cd.rx&&cd.rx[k])||cd.r||[];
       const sel=tipo==="t"?lin.filter(x=>x.t===id):tipo==="c"?((l.classIds||[]).includes(id)?lin.filter(x=>!x.cls||x.cls.includes(id)):[]):lin.filter(x=>(rr[x.i]||x.r)===id);
-      for(const x of sel){const s=S.get(x.s)||{},sala=R.get(rr[x.i])||R.get(x.r),tu=(x.cls&&x.cls.length?x.cls:(l.classIds||[])).map(c=>(C.get(c)||{}).name).filter(Boolean).join(", "),f=T.get(x.t)||{};
-        const key=cd.day+"|"+(cd.period+k);(out.get(key)||out.set(key,[]).get(key)).push({s,disc:s.short||s.name||"—",nome:s.name||"",tu,form:f.short||f.name||"",formN:f.name||"",sala:sala?sala.name:""})}}}
+      for(const x of sel){const s=S.get(x.s)||{},sala=R.get(rr[x.i])||R.get(x.r),cids=(x.cls&&x.cls.length?x.cls:(l.classIds||[])),tu=cids.map(c=>(C.get(c)||{}).name).filter(Boolean).join(", "),f=T.get(x.t)||{};
+        const key=cd.day+"|"+(cd.period+k);(out.get(key)||out.set(key,[]).get(key)).push({s,cid:cids[0]||"",sid:x.s||"",disc:s.short||s.name||"—",nome:s.name||"",tu,form:f.short||f.name||"",formN:f.name||"",sala:sala?sala.name:""})}}}
   return out}
+
+/* ---------- 0.9.153: cores consistentes ----------
+   Uma paleta só (a das cores dos módulos da EPISJ 360, sem verde — o verde é dos botões de importar), igual na Semana, em
+   Por formadores e no email: no horário de um formador e de uma sala a cor é a da TURMA (sempre a mesma em todo o lado);
+   no horário de uma turma a cor é a da DISCIPLINA. Fundo claro, barra de cor à esquerda e texto escuro (lê-se sempre bem). */
+const H3_PAL=["#2f5fb8","#e8743b","#7c6cf0","#d99a18","#0a8fb0","#e0507e","#b24ccf","#a8714d","#3949ab","#d64545","#3b9be6","#5b6b8c","#c2410c","#8b5cf6","#0e7490","#be185d"];
+var H3_CORC={k:"",m:null};
+function h3CorMapa(st){const k=(st.classes||[]).length+":"+(st.subjects||[]).length+":"+(st.name||"");if(H3_CORC.k===k&&H3_CORC.m)return H3_CORC.m;
+  const m={c:new Map(),s:new Map()};(st.classes||[]).slice().sort((a,b)=>COLL_PTN.compare(String(a.name),String(b.name))).forEach((c,i)=>m.c.set(c.id,H3_PAL[i%H3_PAL.length]));
+  (st.subjects||[]).slice().sort((a,b)=>COLL_PTN.compare(String(a.short||a.name),String(b.short||b.name))).forEach((x,i)=>m.s.set(x.id,H3_PAL[(i*5)%H3_PAL.length]));H3_CORC={k,m};return m}
+function h3Cor(st,x,tipo){const m=h3CorMapa(st);return (tipo==="c"?m.s.get(x.sid):m.c.get(x.cid))||m.s.get(x.sid)||H3_PAL[0]}
+function h3Tinta(hex,a){const m=/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(hex||"");if(!m)return "#eef3fc";return "#"+[1,2,3].map(i=>Math.round(parseInt(m[i],16)*a+255*(1-a)).toString(16).padStart(2,"0")).join("")}
+function h3Escuro(hex){const m=/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(hex||"");if(!m)return "#163269";return "#"+[1,2,3].map(i=>Math.round(parseInt(m[i],16)*.62).toString(16).padStart(2,"0")).join("")}
 
 /* ---------- Semana ---------- */
 async function hsRender(){await null;try{await esdPronto}catch(e){}try{await h3Carregar()}catch(e){}
@@ -103,8 +116,8 @@ async function hsRender(){await null;try{await esdPronto}catch(e){}try{await h3C
   h+=`<div class="mzh hsw" style="grid-template-columns:76px repeat(${D.length},minmax(110px,1fr))"><div class="h"></div>`+dias.map(d=>`<div class="h${d.dt===hj?" hj":""}">${esc(d.nome)}<small>${esc(calDM(d.dt))}</small>${d.nl?`<em class="${d.nl.t}">${esc(d.nl.n)}</em>`:d.fora?`<em>fora do ano letivo</em>`:""}</div>`).join("");
   P.forEach((p,pi)=>{h+=`<div class="p">${esc(p.label||pi+1)}<div class="hint" style="margin:0;font-weight:400">${esc(p.start||"")}${p.end?"–"+esc(p.end):""}</div></div>`;
     for(const d of dias){const c=cel.get(d.i+"|"+pi),cl=d.nl?" nl "+d.nl.t:d.fora?" nl":"";
-      h+=`<div class="c${cl}${d.dt===hj?" hj":""}">${c?c.map(x=>{const cor=x.s.color||"#2f5fb8",sub=H3S.tipo==="t"?[x.tu,x.sala]:H3S.tipo==="c"?[x.form,x.sala]:[x.tu,x.form];
-        return `<div class="a" style="background:${esc(cor)};color:${corTexto(cor)}" title="${esc([x.nome,x.formN,x.tu,x.sala].filter(Boolean).join(" · "))}"><b>${esc(x.disc)}</b><span>${esc(sub.filter(Boolean).join(" · "))}</span></div>`}).join(""):""}</div>`}});
+      h+=`<div class="c${cl}${d.dt===hj?" hj":""}">${c?c.map(x=>{const cor=h3Cor(st,x,H3S.tipo),tit=H3S.tipo==="c"?x.disc:(x.tu||x.disc),sub=H3S.tipo==="t"?[x.tu?x.disc:"",x.sala]:H3S.tipo==="c"?[x.form,x.sala]:[x.tu?x.disc:"",x.form];
+        return `<div class="a h3a" style="background:${h3Tinta(cor,.16)};border-left-color:${esc(cor)};color:${h3Escuro(cor)}" title="${esc([x.nome,x.formN,x.tu,x.sala].filter(Boolean).join(" · "))}"><b>${esc(tit)}</b><span>${esc(sub.filter(Boolean).join(" · "))}</span></div>`}).join(""):""}</div>`}});
   const x=ESD.porAno&&ESD.porAno[a.id];
   out.innerHTML=h+`</div>`+(n?"":`<p class="hint">Sem aulas nesta semana.</p>`)+`<p class="hint">${esc(st.name||"")} · ${esc(a.nome)}${x&&x.quando?" · horário atualizado a "+new Date(x.quando).toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"}):""}</p>`}
 function h3AvisosFormador(){const em=String(EU&&EU.email||"").toLowerCase(),tp=h3Topico(em);
@@ -137,7 +150,7 @@ async function hsForRender(){await null;try{await esdPronto}catch(e){}try{await 
   let h=`<div class="tw hsfw"><table class="hsf"><thead><tr><th class="nm" rowspan="2">Formador</th>${dias.map(d=>`<th colspan="${P.length}" class="dsep${d.dt===hj?" hj":""}${d.nl||d.fora?" nl":""}">${esc(d.nome)} <small>${esc(calDM(d.dt))}</small>${d.nl?`<em>${esc(d.nl.n)}</em>`:""}</th>`).join("")}<th rowspan="2" class="tt">Tempos</th></tr><tr>${dias.map(d=>P.map((p,pi)=>`<th class="${pi===0?"dsep":""}" title="${esc((p.start||"")+(p.end?"–"+p.end:""))}">${esc(p.label||pi+1)}</th>`).join("")).join("")}</tr></thead><tbody>`;
   for(const t of T){let n=0;let r=`<td class="nm"><a href="#" data-hsver="${esc(t.id)}" title="Ver a semana de ${esc(t.name||"")}">${esc(t.name||t.short||"—")}</a>${t.short&&t.short!==t.name?` <span class="hint">${esc(t.short)}</span>`:""}</td>`;
     for(const d of dias){const m=cel(t,d);P.forEach((p,pi)=>{const L=m&&m.get(d.i+"|"+pi),cl=(pi===0?"dsep":"")+(d.nl||d.fora?" nl":"")+(d.dt===hj?" hj":"");
-      if(!L){r+=`<td class="${cl}"></td>`;return}n+=L.length;const x=L[0],cor=x.s.color||"#2f5fb8";
+      if(!L){r+=`<td class="${cl}"></td>`;return}n+=L.length;const x=L[0],cor=h3Cor(st,x,"t");
       r+=`<td class="${cl} on" style="--sc:${esc(cor)}" title="${esc(L.map(y=>[y.nome||y.disc,y.tu,y.sala].filter(Boolean).join(" · ")).join("\n"))}"><b>${esc(x.tu||x.disc)}</b><span>${esc(x.tu?x.disc:x.sala)}</span></td>`})}
     tot+=n;h+=`<tr class="${eu(t)?"eu":""}">${r}<td class="tt">${n}</td></tr>`}
   h+=`</tbody></table></div>`;
@@ -192,9 +205,10 @@ function h3Linhas(st,tid){const VL=cpVersoes(st),hj=calHoje(),D=st.days||["Seg",
 function h3Pendentes(){const st=mhEstado();if(!st||!H3)return[];const r=[];
   for(const t of st.teachers||[]){const cur=h3Linhas(st,t.id),h=esHash(cur.join("\n")),ant=H3.ult[t.id],p=h3ProfDe(st,t.id);
     if(!ant&&!cur.length)continue;
-    const base=ant&&ant.c,A=new Set(base||[]),B=new Set(cur),mais=base?cur.filter(x=>!A.has(x)):cur,menos=base?base.filter(x=>!B.has(x)):[],igual=!!base&&!mais.length&&!menos.length;
+    // 0.9.153: as linhas «?» (aulas por colocar, antes da 0.9.151) deixam de contar
+    const base=ant&&ant.c&&ant.c.filter(l=>!/^\? /.test(l)),hb=ant&&ant.c?esHash(ant.c.join("\n")):"",A=new Set(base||[]),B=new Set(cur),mais=base?cur.filter(x=>!A.has(x)):cur,menos=base?base.filter(x=>!B.has(x)):[],igual=!!base&&!mais.length&&!menos.length;
     const antigo=!!ant&&ant.em===undefined&&ant.tl===undefined; // avisos de antes da 0.9.149: contam para as duas vias se nada mudou
-    const emOk=!!ant&&(ant.em===h||(antigo&&igual)),tlOk=!!ant&&(ant.tl===h||(antigo&&igual));
+    const emOk=!!ant&&(ant.em===h||(igual&&(antigo||ant.em===hb))),tlOk=!!ant&&(ant.tl===h||(igual&&(antigo||ant.tl===hb)));
     if(emOk&&tlOk)continue;
     r.push({t,p,cur,h,novo:!base,mais,menos,emOk,tlOk})}
   return r.sort((a,b)=>COLL_PT.compare(String(a.t.name),String(b.t.name)))}
@@ -216,16 +230,22 @@ async function h3Email1(x){const to=h3Email(x.p);if(!to)throw new Error("sem ema
 // Estilos todos embutidos e tabelas simples, para o Outlook e o Gmail mostrarem igual; o texto simples continua como alternativa.
 function h3EmailHtml(x){const st=mhEstado();if(!st)return "";const hj=calHoje(),D=st.days||["Seg","Ter","Qua","Qui","Sex"],P=st.periods||[],novo=new Set(x.novo?[]:x.mais),F="font-family:Segoe UI,Helvetica,Arial,sans-serif";
   const VL=cpVersoes(st).slice().sort((p,q)=>String(p.de||"").localeCompare(String(q.de||""))).filter(V=>!(V.ate&&V.ate<hj));
+  const usadas=new Map();
   const grelha=V=>{const m=h3Celulas(st,V,"t",x.t.id),pre=V.de&&V.de>hj?"A partir de "+calDM(V.de)+" · ":"";let n=0;
-    let h=`<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;border-spacing:3px;width:100%;max-width:760px;table-layout:fixed;${F};font-size:12px"><tr><td style="width:58px"></td>${D.map(d=>`<td style="width:${Math.floor(100/D.length)}%;padding:6px 4px;text-align:center;font-weight:700;color:#163269">${esc(d)}</td>`).join("")}</tr>`;
-    P.forEach((p,pi)=>{h+=`<tr><td style="padding:4px 6px 4px 0;text-align:right;color:#6b7385;white-space:nowrap;vertical-align:top"><b style="color:#1b2333">${esc(p.label||pi+1)}</b><br>${esc(p.start||"")}${p.end?"<br>"+esc(p.end):""}</td>`;
-      D.forEach((d,di)=>{const L=m.get(di+"|"+pi);if(!L){h+=`<td style="background:#f3f5f9;border-radius:6px;height:44px"></td>`;return}
-        h+=`<td style="vertical-align:top;padding:0">`+L.map(c=>{n++;const cor=c.s.color||"#2f5fb8",tx=corTexto(cor),nv=novo.has(h3Frase(pre,d,p,pi,c));
-          return `<div style="background:${esc(cor)};color:${tx};border-radius:6px;padding:5px 7px;margin:0 0 2px;${nv?"border:2px solid #1b2333;":"border:2px solid "+esc(cor)+";"}line-height:1.3"><b style="font-size:12.5px">${esc(c.disc)}</b>${nv?` <span style="font-size:10px;font-weight:700;background:#fff;color:#1b2333;border-radius:4px;padding:0 4px">NOVO</span>`:""}<br><span style="font-size:11px">${esc([c.tu,c.sala].filter(Boolean).join(" · "))}</span></div>`}).join("")+`</td>`});h+=`</tr>`});
+    // tempos seguidos com a mesma aula juntam-se num só bloco (rowspan)
+    const sig=(di,pi)=>{const L=m.get(di+"|"+pi);return L?L.map(c=>c.disc+"|"+c.tu+"|"+c.sala+"|"+(novo.has(h3Frase(pre,D[di],P[pi]||{},pi,c))?1:0)).join("¦"):""};
+    const tapa=new Set(),span={};D.forEach((d,di)=>{for(let pi=0;pi<P.length;pi++){const g=sig(di,pi);if(!g)continue;let k=1;while(pi+k<P.length&&sig(di,pi+k)===g){tapa.add(di+"|"+(pi+k));k++}span[di+"|"+pi]=k;pi+=k-1}});
+    let h=`<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;border-spacing:4px;width:100%;max-width:760px;table-layout:fixed;${F};font-size:12px"><tr><td style="width:62px"></td>${D.map(d=>`<td style="width:${Math.floor(100/D.length)}%;padding:6px 4px 4px;text-align:center;font-weight:700;font-size:12.5px;color:#163269;border-bottom:2px solid #e3e7ee">${esc(d)}</td>`).join("")}</tr>`;
+    P.forEach((p,pi)=>{h+=`<tr><td style="padding:6px 8px 4px 0;text-align:right;color:#8a92a3;white-space:nowrap;vertical-align:top;font-size:11px;line-height:1.35"><b style="color:#1b2333;font-size:12px">${esc(p.start||p.label||pi+1)}</b><br>${esc(p.end||"")}</td>`;
+      D.forEach((d,di)=>{if(tapa.has(di+"|"+pi))return;const L=m.get(di+"|"+pi);if(!L){h+=`<td style="background:#f6f8fb;border-radius:8px;height:46px"></td>`;return}
+        const k=span[di+"|"+pi]||1;
+        h+=`<td rowspan="${k}" style="vertical-align:top;padding:0;height:${46*k}px">`+L.map(c=>{n+=k;const cor=h3Cor(st,c,"t"),nv=novo.has(h3Frase(pre,d,p,pi,c));usadas.set(c.tu||c.disc,cor);
+          return `<div style="background:${h3Tinta(cor,.16)};border-left:4px solid ${esc(cor)};${nv?"outline:2px solid #1b2333;":""}border-radius:8px;padding:6px 8px;margin:0 0 3px;line-height:1.3;min-height:${46*k-14}px;color:#1b2333"><b style="font-size:13px;color:${h3Escuro(cor)}">${esc(c.tu||c.disc)}</b>${nv?` <span style="font-size:9.5px;font-weight:700;letter-spacing:.04em;background:#1b2333;color:#fff;border-radius:4px;padding:1px 5px;vertical-align:1px">NOVO</span>`:""}<br><span style="font-size:11px;color:#4a5262">${esc([c.tu?c.disc:"",c.sala].filter(Boolean).join(" · "))}</span>${k>1?`<br><span style="font-size:10.5px;color:#8a92a3">${k} tempos</span>`:""}</div>`}).join("")+`</td>`});h+=`</tr>`});
     return {h:h+`</table>`,n}};
   let quadro="";for(const V of VL){const g=grelha(V);if(!g.n&&VL.length>1)continue;
     quadro+=`<p style="${F};font-size:14px;font-weight:700;color:#163269;margin:18px 0 6px">${VL.length>1?(V.de&&V.de>hj?"A partir de "+esc(calDMA(V.de)):"Horário em vigor"+(V.de?" desde "+esc(calDMA(V.de)):"")):"O seu horário"} <span style="font-weight:400;color:#6b7385">· ${g.n} tempo${g.n===1?"":"s"} por semana</span></p>`+g.h}
-  if(!x.novo&&x.mais.length)quadro+=`<p style="${F};font-size:12px;color:#6b7385;margin:6px 0 0"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;border:2px solid #1b2333;vertical-align:middle"></span>&nbsp; aulas novas ou mudadas</p>`;
+  {const leg=[...usadas].sort((a,b)=>COLL_PTN.compare(a[0],b[0])).map(([t,c])=>`<span style="display:inline-block;margin:0 10px 4px 0;white-space:nowrap"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${esc(c)};vertical-align:-1px"></span>&nbsp;${esc(t)}</span>`).join("");
+    quadro+=`<p style="${F};font-size:12px;color:#4a5262;margin:8px 0 0">${leg}${!x.novo&&x.mais.length?`<span style="display:inline-block;white-space:nowrap"><span style="font-size:9.5px;font-weight:700;background:#1b2333;color:#fff;border-radius:4px;padding:1px 5px">NOVO</span>&nbsp;aula nova ou mudada</span>`:""}</p>`}
   if(!x.novo&&x.menos.length)quadro+=`<p style="${F};font-size:13px;font-weight:700;color:#1b2333;margin:14px 0 4px">Deixam de existir</p><ul style="${F};font-size:12.5px;color:#6b7385;margin:0;padding-left:18px">${x.menos.map(l=>`<li style="text-decoration:line-through">${esc(l)}</li>`).join("")}</ul>`;
   const lig=h3Lig(),txt=t=>esc(t).replace(/\n/g,"<br>").replace(/\{ligacao\}/g,`<a href="${esc(lig)}" style="color:#2f5fb8">${esc(lig.replace(/^https?:\/\//,"").replace(/\/$/,""))}</a>`);
   const corpo=String(H3.msg.corpo||"").replace(/\{nome\}/g,(x.p&&x.p.nome)||x.t.name||"").replace(/\{semana\}/g,calDM(h3Seg(hj),{day:"numeric",month:"long"})).replace(/\{n\}/g,x.novo?"horário novo":String(x.mais.length+x.menos.length));

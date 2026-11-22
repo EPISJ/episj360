@@ -31,14 +31,15 @@ html[data-tema="cobalto"] input[type=search],html[data-tema="cobalto"] input[typ
 @media (max-width:820px){html[data-tema="cobalto"] nav.side{background:var(--side)!important}}
 /* 0.9.95: ícones por tema — no Cobalto a barra de cima é azul (como o menu): os monogramas ficam brancos com a letra
    azul-cobalto (a barra de cor de cada módulo mantém-se); fora da barra azul (Apps, entrada, Definições) ficam
-   azul-cobalto com letra branca. O logótipo da app segue o mesmo: quadrado branco com o logótipo da escola a azul. */
+   azul-cobalto com letra branca. O logótipo da app segue o mesmo: quadrado branco com o logótipo da escola a azul.
+   0.9.178–0.9.181: revisto — os monogramas e o logótipo da app ficam em toda a app como os originais (fundo azul #163269,
+   letra / logótipo branco e barra de cor). O filtro CSS que pintava o logótipo de azul não funciona no Safari (ficava branco
+   sobre branco), por isso saiu. */
 /* 0.9.178: os ícones dos módulos voltam ao original — fundo azul da app (#163269), letra branca e a barra de cor do módulo */
 html[data-tema="cobalto"] .top{background:var(--side)!important;-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom-color:var(--side2)}
 html[data-tema="cobalto"] .top .brand{color:#fff}
 html[data-tema="cobalto"] .top .brand b{color:#d8e4ff}
 html[data-tema="cobalto"] .top .brand svg{filter:none}
-html[data-tema="cobalto"] .top .brand svg>path:first-child{fill:#fff}
-html[data-tema="cobalto"] .top .brand svg image{filter:brightness(0) saturate(100%) invert(33%) sepia(30%) saturate(1300%) hue-rotate(190deg) brightness(92%)}
 html[data-tema="cobalto"] .top .ver{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.25)}
 html[data-tema="cobalto"] .top .mods button{color:rgba(255,255,255,.88)}
 html[data-tema="cobalto"] .top .mods button b{color:#d8e4ff!important}
@@ -78,8 +79,6 @@ nav.side .sbrand{display:none}
   html[data-tema="cobalto"] body:not(.esch) nav.side .sbrand{flex-direction:column;gap:10px}
   html[data-tema="cobalto"] body:not(.esch) nav.side .sbnome{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
   html[data-tema="cobalto"] body:not(.esch) nav.side .sblogo{display:block;width:76px;height:76px;filter:drop-shadow(0 4px 10px rgba(8,20,50,.28))}
-  html[data-tema="cobalto"] body:not(.esch) nav.side .sblogo>path:first-child{fill:#fff}
-  html[data-tema="cobalto"] body:not(.esch) nav.side .sblogo image{filter:brightness(0) saturate(100%) invert(33%) sepia(30%) saturate(1300%) hue-rotate(190deg) brightness(92%)}
 }
 /* 0.9.95: modo de privacidade — ecrã de bloqueio por cima de tudo, com o conteúdo desfocado por trás */
 #privLock{display:none;position:fixed;inset:0;z-index:2147483000;align-items:center;justify-content:center;padding:20px;background:rgba(15,28,58,.42);-webkit-backdrop-filter:blur(22px) saturate(.8);backdrop-filter:blur(22px) saturate(.8)}

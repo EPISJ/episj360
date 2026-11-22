@@ -831,8 +831,6 @@ body.esch.temfundos #esFr{height:calc(100vh - 116px);height:calc(100dvh - 116px)
   #esBrand .sbrand b{color:#d8e4ff;font-weight:800}
   #esBrand .sbnome{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
   #esBrand .sblogo{display:block;width:76px;height:76px;filter:drop-shadow(0 4px 10px rgba(8,20,50,.28))}
-  #esBrand .sblogo>path:first-child{fill:#fff}
-  #esBrand .sblogo image{filter:brightness(0) saturate(100%) invert(33%) sepia(30%) saturate(1300%) hue-rotate(190deg) brightness(92%)}
   #esBrand .ver{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:11px;font-weight:600;padding:2px 8px;margin:0;cursor:pointer;letter-spacing:.02em}
   #esBrand .ver:hover{background:rgba(255,255,255,.24)}
 }

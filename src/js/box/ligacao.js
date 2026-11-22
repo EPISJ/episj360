@@ -167,7 +167,10 @@ async function boxGet(path,params,hdr){
       if(SES&&SES.mode==="oauth")boxSessaoMorta("a Box recusou o acesso (401)");else logout(false,"O acesso à Box expirou. Volte a entrar.");const er=new Error("O acesso à Box expirou. Volte a entrar.");er.kind="auth";throw er}
     if(r.status>=500){await sleep(Math.min(20,0.5*2**t)*1000);continue}
     if(r.status===400&&hdr&&hdr.__rep){const er=new Error("rep");er.kind="rep";throw er} // 0.9.113: a Box não aceitou as representações na listagem
-    const er=new Error("A Box respondeu "+r.status+(r.status===403?" (sem permissão para esta pasta)":"")+".");er.kind="http";er.status=r.status;throw er;
+    // 0.9.207: a resposta da Box diz o motivo (code/message) — mostra-o; um 403 ao confirmar a conta (users/me) não é falta de permissão numa pasta
+    let det="";try{const j=await r.json();det=[j.code,j.message].filter(Boolean).join(": ")}catch(x){}
+    if(tipo==="me"&&(r.status===403||r.status===400)){const er=new Error("A Box recusou a ligação desta conta ("+r.status+(det?" — "+det:"")+"). Carregue em «Entrar com a Box» e volte a entrar. Se repetir, confirme em box.com que a conta não está bloqueada (por exemplo, à espera da verificação em dois passos) e que a aplicação da EPISJ 360 continua autorizada para esta conta.");er.kind="auth";er.status=r.status;try{if(SES&&SES.mode==="oauth")boxSessaoMorta("a Box recusou a ligação ("+r.status+")")}catch(x){}throw er}
+    const er=new Error("A Box respondeu "+r.status+(r.status===403?" (sem permissão para esta pasta)":"")+(det?" — "+det:"")+".");er.kind="http";er.status=r.status;throw er;
   }
   const er=new Error("A Box está a limitar os pedidos. Tente daqui a pouco.");er.kind="net";throw er;
 }

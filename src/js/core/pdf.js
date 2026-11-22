@@ -8,7 +8,8 @@ function lgAnoId(){try{return anoAtivo().id}catch(e){return""}}
 // 0.9.19: a barra de baixo mostra os logótipos do ano ativo; se esse ano ainda não tiver, usa os do ano mais recente que tiver (só um "Remover" explícito a esconde)
 function lgFootBarra(){const f=lgGet("foot");if(f||f===null)return f;const A=(LOGOS.anos||{}),ini=(anoAtivo()||{}).ini||9999;
   const anos=escData().anos.filter(a=>A[a.id]&&A[a.id].foot).sort((a,b)=>(b.ini<=ini)-(a.ini<=ini)||b.ini-a.ini);return anos.length?A[anos[0].id].foot:undefined}
-function lgGet(k){if(k!=="foot")return LOGOS[k];const a=LOGOS.anos&&LOGOS.anos[lgAnoId()];return a?a.foot:undefined}
+function lgGet(k){const P=(typeof RO!=="undefined"&&RO&&typeof PUB!=="undefined"&&PUB&&PUB.logos)||null; // 0.9.217: formadores e formandos usam os logótipos publicados pela Direção
+  if(k!=="foot")return LOGOS[k]||(P&&P[k])||undefined;const a=LOGOS.anos&&LOGOS.anos[lgAnoId()];if(a&&a.foot!==undefined)return a.foot;return P&&P.foot||undefined}
 function lgSet(k,v){if(k!=="foot"){if(v)LOGOS[k]=v;else delete LOGOS[k];return}const id=lgAnoId();if(!id)return;LOGOS.anos=LOGOS.anos||{};const a=LOGOS.anos[id]=LOGOS.anos[id]||{};if(v)a.foot=v;else{a.foot=null}}
 /* 0.9.140: o logótipo do rodapé também pode ser de cada n.º de projeto (código FSE da turma): LOGOS.proj[código].foot.
    Nos documentos de uma turma (ou de uma prova, de um dossier) usa-se o do projeto; se não houver, o do ano letivo. */

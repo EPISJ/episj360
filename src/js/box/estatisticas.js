@@ -32,7 +32,7 @@ function renderEstMeu(BM){const sec=$("#est");if(!sec)return;let box=$("#estMeu"
   const sub=$("#eSub");if(sub)sub.textContent=BM.vazio?"":"As suas estatísticas"+(BM.nome?" em "+BM.nome:"")+" — atualizadas quando a Direção analisa a Box"+(BM.t?" (análise de "+new Date(BM.t).toLocaleDateString("pt-PT")+")":"")+".";
   const SEL=boxSelHTML();
   if(BM.vazio||!(BM.m||[]).length){box.innerHTML=(SEL?`<div class="row" style="margin:0 0 10px">${SEL}</div>`:"")+`<p class="hint" style="margin:0">Ainda não há estatísticas suas: a Direção tem de analisar a Box e ter módulos atribuídos a si.</p>`;return}
-  const it=BM.m.flatMap(m=>m.it.map(x=>({m,tipo:x[0],st:x[1],pasta:x[2],d:x[3]}))),ok=s=>s==="ok"||s==="warn"||s==="modelo",tot=it.length,ent=it.filter(x=>ok(x.st)).length,falta=tot-ent;
+  const it=BM.m.flatMap(m=>m.it.map(x=>({m,tipo:docNome(x[0]),st:x[1],pasta:x[2],d:x[3]}))),ok=s=>s==="ok"||s==="warn"||s==="modelo",tot=it.length,ent=it.filter(x=>ok(x.st)).length,falta=tot-ent;
   const modsOk=BM.m.filter(m=>m.it.length&&m.it.every(x=>ok(x[1]))).length,pct=tot?Math.round(ent*100/tot):0,ult=it.map(x=>x.d).filter(Boolean).sort().pop()||"";
   const grp=(k)=>{const M=new Map();for(const x of it){const g=k(x)||"—";const o=M.get(g)||{t:0,e:0};o.t++;if(ok(x.st))o.e++;M.set(g,o)}return [...M].sort((a,b)=>(a[1].e/a[1].t)-(b[1].e/b[1].t)||COLL_PTN.compare(a[0],b[0]))};
   const barra=(L)=>L.map(([n,o])=>{const p=Math.round(o.e*100/o.t);return `<div class="em-bar"><span class="n">${esc(n)}</span><span class="b"><i style="width:${p}%;background:${p===100?"var(--ok)":p>=50?"#d99a18":"var(--bad)"}"></i></span><span class="v">${o.e}/${o.t}</span></div>`}).join("");
@@ -80,7 +80,7 @@ function renderEst(){{let BM=null;try{BM=boxMeu()}catch(e){}if(BM){renderEstMeu(
   // por formador (os que têm mais em falta primeiro)
   barras($("#eProf"),T.map(t=>({nome:t.p.nome,ok:t.ok,tot:t.tot})).filter(r=>r.tot).sort((a,b)=>(b.tot-b.ok)-(a.tot-a.ok)||a.ok/a.tot-b.ok/b.tot),"Ainda sem formadores com módulos atribuídos.");
   barras($("#eTurma"),agrupar(ev,e=>e.mod.turma||"(sem turma)").sort((a,b)=>a.ok/a.tot-b.ok/b.tot||COLL_PT.compare(a.nome,b.nome)),"Sem turmas.");
-  barras($("#eDoc"),(()=>{const m=new Map();for(const e of ev)for(const i of e.items){const k=i.doc&&i.doc.nome||i.falta;const o=m.get(k)||{nome:k,ok:0,tot:0};o.tot++;if(i.ok)o.ok++;m.set(k,o)}return[...m.values()].sort((a,b)=>a.ok/a.tot-b.ok/b.tot)})(),"Sem documentos exigidos.");
+  barras($("#eDoc"),(()=>{const m=new Map();for(const e of ev)for(const i of e.items){const k=docNome(i.doc&&i.doc.nome||i.falta);const o=m.get(k)||{nome:k,ok:0,tot:0};o.tot++;if(i.ok)o.ok++;m.set(k,o)}return[...m.values()].sort((a,b)=>a.ok/a.tot-b.ok/b.tot)})(),"Sem documentos exigidos.");
   // análises guardadas: n.º de ficheiros
   const r=resumos(),ids=Object.keys(r).sort((a,b)=>COLL_PT.compare(String(r[a].pasta),String(r[b].pasta)));
   const mx=Math.max(1,...ids.map(id=>r[id].n||0));
@@ -130,9 +130,9 @@ function renderEst(){{let BM=null;try{BM=boxMeu()}catch(e){}if(BM){renderEstMeu(
     const turmas=[...new Set(ev.map(e=>e.mod.turma||"(sem turma)"))].sort((a,b)=>COLL_PTN.compare(a,b));
     if(!turmas.length||!docs.length){el.innerHTML=`<p class="eempty">Sem dados.</p>`;return}
     const cor=p=>p==null?"#f3f4f6":`hsl(${Math.round(p*1.2)},70%,${88-Math.round(p*0.1)}%)`;
-    el.innerHTML=`<div style="overflow-x:auto"><table class="heat"><thead><tr><th></th>${docs.map(d=>`<th title="${esc(d.nome)}">${esc(d.nome)}</th>`).join("")}<th>Total</th></tr></thead><tbody>${turmas.map(t=>{let a=0,b=0;
+    el.innerHTML=`<div style="overflow-x:auto"><table class="heat"><thead><tr><th></th>${docs.map(d=>`<th title="${esc(docNome(d.nome))}">${esc(docNome(d.nome))}</th>`).join("")}<th>Total</th></tr></thead><tbody>${turmas.map(t=>{let a=0,b=0;
       return`<tr><th title="${esc(t)}">${esc(t)}</th>${docs.map(d=>{const o=m.get(t+"\u0001"+d.id);if(!o)return`<td style="background:${cor(null)}">—</td>`;a+=o.ok;b+=o.tot;const p=pctTxt(o.ok,o.tot);
-        return`<td style="background:${cor(p)}" data-tip="${esc(`<b>${esc(t)}</b><br>${esc(d.nome)}: ${o.ok} de ${o.tot} entregues (${p}%)`)}">${p}%</td>`}).join("")}<td class="tot" style="background:${cor(b?pctTxt(a,b):null)}">${b?pctTxt(a,b)+"%":"—"}</td></tr>`}).join("")}</tbody></table></div>`})();
+        return`<td style="background:${cor(p)}" data-tip="${esc(`<b>${esc(t)}</b><br>${esc(docNome(d.nome))}: ${o.ok} de ${o.tot} entregues (${p}%)`)}">${p}%</td>`}).join("")}<td class="tot" style="background:${cor(b?pctTxt(a,b):null)}">${b?pctTxt(a,b)+"%":"—"}</td></tr>`}).join("")}</tbody></table></div>`})();
   linhaTempo($("#eTime"));
 }
 let eLembSel="";

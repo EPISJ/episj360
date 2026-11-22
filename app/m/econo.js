@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.216 — ecrã do módulo «econo», carregado quando é aberto */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.217 — ecrã do módulo «econo», carregado quando é aberto */
 "use strict";
 // ===== src/js/econo/econo.js =====
 /* Econo360 — ecrã do módulo (carregado só quando o Econo360 é aberto; os dados estão em econo/econo-dados.js) */
@@ -257,9 +257,35 @@ function ecoReqEntregar(r){const d=r.dados||{},E=ecoDef();
     feito:async novos=>{const g=novos[0]&&novos[0].g;r.estado="entregue";r.resp=Object.assign({},r.resp,{por:String(EU&&EU.email||""),t:Date.now(),g,mov:novos.map(m=>m.id)});
       try{await ecoReqGravar(r,false)}catch(x){toast("Saída registada, mas a requisição não ficou marcada: "+(x.message||x))}
       if(E.avisar)ecoReqAvisar(r,"entregue");ecoReqUI();if(confirm("Imprimir a guia de saída (para o formador assinar)?"))ecoPdfGuia(g)}})}
-async function ecoReqAvisar(r,estado,msg){try{const d=r.dados||{},L=(d.linhas||[]).map(l=>`- ${ecoN(l.q)} ${l.un||""} ${l.nome}`).join("\n");
-  const txt=estado==="entregue"?`O material da sua requisição${d.turma?" para a turma "+d.turma:""} está entregue e pode ser levantado no economato.`:estado==="aprovada"?`A sua requisição${d.turma?" para a turma "+d.turma:""} foi aprovada. Avisamos quando estiver pronta.`:`A sua requisição${d.turma?" para a turma "+d.turma:""} não foi aprovada.${msg?"\n\nMotivo: "+msg:""}`;
-  await msEnviar({to:r.email,subject:"Econo360 — requisição "+(ECO_RE[estado]||{t:estado}).t,body:`Olá ${r.nome||""},\n\n${txt}\n\n${L}\n\nEPISJ 360 · Econo360`});toast("Formador avisado por email")}catch(e){toast("Não foi possível avisar por email: "+(e.message||e))}}
+async function ecoReqAvisar(r,estado,msg){try{const d=r.dados||{},L=(d.linhas||[]).map(l=>`- ${ecoN(l.q)} ${l.un||""} ${l.nome}`.replace(/\s+/g," ")).join("\n");
+  const tu=d.turma?" para a turma "+d.turma:"";
+  const txt=estado==="entregue"?`O material da sua requisição${tu} está pronto e pode ser levantado no economato.`:estado==="aprovada"?`A sua requisição${tu} foi aprovada. Voltamos a avisar quando o material estiver pronto para levantar.`:`A sua requisição${tu} não foi aprovada.`;
+  const pn=String(r.nome||"").trim().split(/\s+/)[0]||"";
+  const body=`Olá${pn?" "+pn:""},\n\n${txt}${estado==="recusada"&&msg?"\n\nMotivo: "+msg:""}\n\n${L}\n\nCom os melhores cumprimentos,\nEconomato da EPISJ`;
+  let html="";try{html=ecoReqEmailHtml(r,estado,msg,pn,txt)}catch(e){console.warn("email requisição",e)}
+  await msEnviar({to:r.email,subject:"Requisição "+(ECO_RE[estado]||{t:estado}).t+(d.turma?" · "+d.turma:"")+" — Econo360",body,html});toast("Formador avisado por email")}catch(e){toast("Não foi possível avisar por email: "+(e.message||e))}}
+/* 0.9.217: email da requisição com os logótipos, o estado a cores, os dados do pedido e a tabela do material (sem ligações: ver CLAUDE.md › Emails) */
+function ecoReqEmailHtml(r,estado,msg,pn,txt){const d=r.dados||{},F="font-family:Segoe UI,Helvetica,Arial,sans-serif";
+  const C={aprovada:["#1d4ed8","#e8efff","Aprovada"],entregue:["#15803d","#e7f6ec","Pronta a levantar"],recusada:["#b91c1c","#fdecec","Não aprovada"]}[estado]||["#4a5262","#f0f2f5",estado];
+  let m,rt,ft;try{m=lgGet("main");rt=lgGet("right")}catch(e){}try{ft=lgFootBarra()}catch(e){try{ft=lgGet("foot")}catch(x){}}
+  const a=h3LgImg(m,220,52,"Escola Profissional da Ilha de São Jorge"),b=h3LgImg(rt,200,52,""),fi=h3LgImg(ft,560,64,"Logótipos de financiamento");
+  const dt=x=>{try{return calDM(x,{day:"numeric",month:"long",year:"numeric"})}catch(e){return x}};
+  const info=[["Turma",d.turma],["UFCD / módulo",d.ufcd],["Projeto",d.fse],["Para quando",d.para?dt(d.para):""],["Pedida a",r.criado?new Date(r.criado).toLocaleDateString("pt-PT",{day:"numeric",month:"long",year:"numeric"}):""]].filter(x=>x[1]);
+  const td="padding:8px 10px;border-bottom:1px solid #eef0f4;font-size:14px;color:#1f2633";
+  const lin=(d.linhas||[]).map((l,i)=>`<tr style="background:${i%2?"#fafbfc":"#fff"}"><td style="${td};text-align:right;width:70px;font-weight:600">${esc(ecoN(l.q))}</td><td style="${td};width:70px;color:#5b6472">${esc(l.un||"")}</td><td style="${td}">${esc(l.nome||"")}</td></tr>`).join("");
+  return `<div style="${F};color:#1f2633;max-width:760px">
+  ${a||b?`<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:0 0 14px;border-bottom:1px solid #e3e7ee"><tr><td style="padding:0 0 12px;vertical-align:middle">${a}</td><td style="padding:0 0 12px;vertical-align:middle" align="right">${b}</td></tr></table>`:""}
+  <div style="text-align:center;margin:0 0 18px"><div style="font-size:16px;font-weight:700;color:#163269">Escola Profissional da Ilha de São Jorge</div><div style="font-size:13px;color:#4a5262;margin-top:2px">Econo360 · Requisição de material</div></div>
+  <p style="font-size:14px;margin:0 0 12px">Olá${pn?" "+esc(pn):""},</p>
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:0 0 16px"><tr><td style="background:${C[1]};border-left:4px solid ${C[0]};border-radius:6px;padding:12px 14px">
+    <div style="font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:${C[0]}">${esc(C[2])}</div>
+    <div style="font-size:14px;margin-top:4px">${esc(txt)}</div>${estado==="recusada"&&msg?`<div style="font-size:14px;margin-top:8px"><b>Motivo:</b> ${esc(msg)}</div>`:""}</td></tr></table>
+  ${info.length?`<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;font-size:14px">${info.map(([k,v])=>`<tr><td style="padding:3px 16px 3px 0;color:#5b6472;white-space:nowrap">${esc(k)}</td><td style="padding:3px 0;font-weight:600">${esc(v)}</td></tr>`).join("")}</table>`:""}
+  ${lin?`<table cellpadding="0" cellspacing="0" border="0" style="width:100%;border:1px solid #e3e7ee;border-radius:6px;border-collapse:separate;margin:0 0 14px"><tr style="background:#f3f5f9"><th style="${td};text-align:right;font-size:12px;color:#5b6472">Qtd.</th><th style="${td};text-align:left;font-size:12px;color:#5b6472">Un.</th><th style="${td};text-align:left;font-size:12px;color:#5b6472">Material</th></tr>${lin}</table>`:""}
+  ${d.obs?`<p style="font-size:13px;color:#4a5262;margin:0 0 14px"><b>Observações:</b> ${esc(d.obs)}</p>`:""}
+  <p style="font-size:14px;margin:22px 0 0;text-align:right">Com os melhores cumprimentos,<br><b>Economato da EPISJ</b></p>
+  ${fi?`<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:22px 0 0;border-top:1px solid #e3e7ee"><tr><td align="center" style="padding:14px 0 0">${fi}</td></tr></table>`:""}
+  <p style="font-size:11px;color:#8a93a3;text-align:center;margin:14px 0 0">Enviado pela EPISJ 360 · Econo360 (episj360.episj.com)</p></div>`}
 (function(){const S=document.getElementById("ecoReq");if(!S)return;
   S.addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;
     if(b.matches("[data-ecoratual]")){ECO_REQ=null;ECO_REQERR="";ecoReqUI();return}if(b.matches("[data-econova]")){ecoReqForm(null);return}

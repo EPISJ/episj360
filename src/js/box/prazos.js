@@ -82,7 +82,7 @@ const proxima=(p,a,agora)=>ocorrencias(p,a).find(t=>t>agora)||null;
 function destinatarios(p,a,L){const G=prazoPorProf(L).filter(g=>g.p.id!=="_");
   return G.map(g=>{const it=g.it.filter(x=>a.dest==="incumpriu"?(x.est==="falta"||x.est==="atraso"):(x.est==="falta"||x.est==="pendente"));return{...g,alvo:it}}).filter(g=>g.alvo.length)}
 // 0.9.97: nome de um item = a pasta (e a secção onde está), ex.: «Módulo 002 (012.1.3 - Pautas de Avaliação)»
-function itemNome(i){const d=i&&i.doc&&i.doc.nome||"";return (i&&i.falta||d)+(d&&i.falta&&d!==i.falta?` (${d})`:"")}
+function itemNome(i){const d=docNome(i&&i.doc&&i.doc.nome||"");return (docNome(i&&i.falta)||d)+(d&&i.falta&&d!==i.falta?` (${d})`:"")}
 function linhaItem(x){const r=`• ${x.m.turma} | ${discShort(x.m.disc)} | ${modTitle(x.m)} → ${itemNome(x.i)}`;
   if(x.est==="atraso")return r+` — entregue a ${dataPT(x.ent)}, ${x.atraso} dia(s) depois do prazo`;
   return r+(x.i.state==="blank"?" — o ficheiro entregue não conta: "+motivoBad(x.i):x.i.loc?` (${x.i.loc})`:"")}

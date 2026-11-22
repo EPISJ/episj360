@@ -186,7 +186,6 @@
         <label class="grow">Nome da escola<input type="text" id="escNome"></label>
         <button class="b s imp" id="escImport" style="align-self:flex-end" title="Traz as turmas das pastas A01 - Curso (25/28) da análise do Box360">Importar turmas e cursos da Box</button>
       </div></details>
-    <div id="pubBox" class="row" style="display:none;margin-top:12px;align-items:center"><button class="b s" id="pubGo" title="Envia as turmas, os formadores e os horários para os perfis Formador e Formando verem (só leitura)">Publicar para formadores e formandos</button><span id="pubMsg" class="hint" style="margin:0"></span></div>
   </div>
   <div class="card ep-meu" id="epMeu" hidden></div>
   <div class="card wg-card" id="wgCard">
@@ -997,6 +996,7 @@
     <h2>Análises guardadas</h2>
     <p class="hint">Cada pasta analisada fica guardada à parte, com a data e a hora da análise (por exemplo, um ano letivo em cada pasta). Escolha qual quer usar (também pode trocar no topo da página, em “Análise”) ou apague as que já não precisa — os documentos na Box não são tocados.</p>
     <div style="overflow-x:auto"><table class="rt anatab"><thead><tr><th>Pasta analisada</th><th>Data e hora da análise</th><th>Conteúdo</th><th></th></tr></thead><tbody id="anaList"></tbody></table></div>
+    <div id="pubBox" class="row" style="display:none;margin-top:12px;align-items:center"><button class="b s" id="pubGo" title="Envia para os perfis Formador e Formando (só leitura) as análises guardadas, as turmas, os formadores e os horários">Publicar para formadores e formandos</button><span id="pubMsg" class="hint" style="margin:0"></span></div>
   </div>
   <div id="boxMsg" style="margin-bottom:18px"></div>
   <div class="card" id="csvCard">

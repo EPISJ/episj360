@@ -16,7 +16,7 @@ $("#report").addEventListener("click",e=>{const b=e.target.closest(".fpb");if(!b
 var RELM={so:"falta",q:""};
 const RELM_EST={ok:["ok","entregue"],warn:["warn","entregue — a confirmar"],modelo:["warn","entregue — não segue o modelo"],blank:["bad","não conta (vazio ou falso)"],missing:["bad","em falta"]};
 function relMeuDados(BM){const okS=s=>s==="ok"||s==="warn"||s==="modelo",q=norm(RELM.q||"");
-  return BM.m.map(m=>({m,it:m.it.map(x=>({tipo:x[0],st:x[1],pasta:x[2],d:x[3]})).filter(x=>(RELM.so!=="falta"||!okS(x.st))&&(!q||norm([m.tu,m.di,m.mo,x.tipo,x.pasta].join(" ")).includes(q)))})).filter(g=>g.it.length)
+  return BM.m.map(m=>({m,it:m.it.map(x=>({tipo:docNome(x[0]),st:x[1],pasta:x[2],d:x[3]})).filter(x=>(RELM.so!=="falta"||!okS(x.st))&&(!q||norm([m.tu,m.di,m.mo,x.tipo,x.pasta].join(" ")).includes(q)))})).filter(g=>g.it.length)
     .sort((a,b)=>COLL_PTN.compare(a.m.tu+" "+a.m.mo,b.m.tu+" "+b.m.mo))}
 function relMeuTexto(BM){const L=relMeuDados(BM);return `DOCUMENTOS EM FALTA — ${(BM.me&&BM.me.nome)||""}\nAnálise: ${BM.nome||""}${BM.t?" ("+new Date(BM.t).toLocaleDateString("pt-PT")+")":""}\n${RELM.so==="falta"?"Só o que falta":"Todos os documentos"}\n\n`+
   L.map(g=>`${[g.m.tu,g.m.di,g.m.mo].filter(Boolean).join(" · ")}\n`+g.it.map(x=>`  [${(RELM_EST[x.st]||["",x.st])[1]}] ${[x.tipo,x.pasta].filter(Boolean).join(" › ")}${x.d?" — "+new Date(x.d+"T12:00").toLocaleDateString("pt-PT"):""}`).join("\n")).join("\n\n")}

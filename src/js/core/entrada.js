@@ -212,7 +212,7 @@ async function publicoLer(){if(!sbAtivo())return guideApi("/guide/publico");
   catch(e){if(c&&c.j){toast("Sem ligação: a mostrar o que foi publicado da última vez");return c.j}throw e}}
 async function carregarPublico(){
   let j={};try{j=await publicoLer()}catch(e){toast("Não foi possível trazer os dados da escola: "+e.message)}
-  RO=true;PUB=j||{};
+  RO=true;PUB=j||{};try{aplicarLogos()}catch(e){}
   cfg=Object.assign(defaultCfg(),j&&j.escola?{escola:j.escola,profs:Array.isArray(j.profs)?j.profs:[]}:{});lastJSON=JSON.stringify(cfg);undoS=[];redoS=[];undoUI();
   try{await esdPronto}catch(e){}
   ESD=Object.assign({t:0,porAno:{},copias:{},mapaT:{},mapaC:{},ligT:{},ligC:{}},j&&j.es||{});try{CR=crNorm(j&&j.cr);CR_CACHE.k=""}catch(e){}
@@ -233,7 +233,8 @@ async function guidePublicar(manual){if(!podePublicar()||RO)return;
   // cada análise guardada (ex.: DTP 2025.2026, DTP 2026.2027) fica publicada à parte, para o formador poder ver as dos anos anteriores
   try{const old=await guideApi("/guide/publico").catch(()=>null),A=Object.assign({},old&&old.box&&old.box.anal||{}),L=await boxPublicoTodas();for(const bx of L)A[bx.id]=bx.d;if(Object.keys(A).length)body.box={anal:A}}catch(e){console.warn("box publicado",e)}
   // 0.9.210: logótipos dos documentos (principal e canto direito) — os formadores usam-nos nos seus relatórios
-  try{const lg={};for(const k of ["main","right"]){const o=lgGet(k);if(o&&o.src)lg[k]={src:o.src,w:o.w||0,h:o.h||0}}if(Object.keys(lg).length)body.logos=lg}catch(e){}
+  try{const lg={};for(const k of ["main","right"]){const o=lgGet(k);if(o&&o.src)lg[k]={src:o.src,w:o.w||0,h:o.h||0}}try{const f=lgFootBarra();if(f&&f.src)lg.foot={src:f.src,w:f.w||0,h:f.h||0}}catch(e){} // 0.9.217: logótipos de financiamento do ano (barra de baixo e documentos dos formadores)
+    if(Object.keys(lg).length)body.logos=lg}catch(e){}
   // 0.9.50: o que já está publicado não volta a ser enviado (com o tempo real, cada computador da Direção publicaria o mesmo)
   const sx=JSON.stringify({...body,t:0,por:""}),sig=sx.length+":"+esHash(sx);let sig0="";try{sig0=localStorage.getItem("guide_pub_sig")||""}catch(e){}
   if(!manual&&sig===sig0&&PUBT&&!PUBERR){pubUI();return}

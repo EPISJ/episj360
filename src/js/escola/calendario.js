@@ -391,7 +391,7 @@ function calTiposJanela(){if(!calPodeEditar())return;const e=escData();if(!Array
   const gravar=()=>{CAL_TIPOS_K="";calTiposSync();save();renderCal()};
   const desenhar=()=>{const U=calTiposUsos(),uso=k=>U[k]?`${U[k]} marco${U[k]===1?"":"s"}`:"sem marcos";
     box.innerHTML=`<div class="card fd-mcard"><h2 id="ctT">Tipos de marcos</h2>
-      <p class="hint" style="margin-top:0">Os tipos servem para filtrar e dar cor aos marcos no calendário, na linha do tempo e no Painel. Os da EPISJ 360 não se mudam; os que você acrescentar podem mudar de nome e de cor.</p>
+      <p class="hint" style="margin-top:0">Os tipos servem para filtrar e dar cor aos marcos no calendário, na linha do tempo e no Dashboard. Os da EPISJ 360 não se mudam; os que você acrescentar podem mudar de nome e de cor.</p>
       <div class="ct-l">${Object.entries(CAL_TIPOS_BASE).map(([k,v])=>`<div class="ct-i fixo"><i class="ct-sw" style="background:${v[1]}"></i><span class="ct-n">${esc(v[0])}</span><span class="ct-c">${uso(k)}</span><span class="tag">da app</span></div>`).join("")}
         ${e.calTipos.map(t=>`<div class="ct-i" data-ctk="${esc(t.k)}"><input type="color" value="${esc(t.cor||"#64748b")}" data-ctc aria-label="Cor de ${esc(t.nome)}"><input type="text" value="${esc(t.nome)}" data-ctn aria-label="Nome do tipo"><span class="ct-c">${uso(t.k)}</span>
           <button class="x" data-ctdel title="${U[t.k]?`Não se pode tirar: há ${uso(t.k)} deste tipo (mude-lhes o tipo primeiro)`:`Tirar o tipo ${esc(t.nome)}`}" ${U[t.k]?"disabled":""}>×</button></div>`).join("")}</div>

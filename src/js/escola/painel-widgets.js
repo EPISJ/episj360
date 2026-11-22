@@ -1,9 +1,11 @@
 /* ===================== EPISJ 360 0.9.21: widgets do Painel da escola ===================== */
 // 20 widgets; cada um só aparece se o seu módulo estiver ligado. Cada pessoa escolhe os que vê (fica guardado neste navegador).
-const WG_KEY="guide_widgets",WG_PADRAO=["ano","cal","incompletas","profs","entregas","prazo","top","horario","agora","esphoje","proxres","meudia"];
+const WG_KEY="guide_widgets",WG_PADRAO=["aniv","ano","cal","incompletas","profs","entregas","prazo","top","horario","agora","esphoje","proxres","meudia"];
 const WG_MOD={escola:{l:"E",c:"#ff8a5c",n:"Escola360"},boxcheck:{l:"B",c:"#4da3ff",n:"Box360"},eduschedule:{l:"H",c:"#9b8cff",n:"Horários360"},roomcheck:{l:"S",c:"#ffb547",n:"Sala360"}};
 let WG_SEL=(()=>{try{const v=JSON.parse(localStorage.getItem(WG_KEY)||"null");return Array.isArray(v)?v:WG_PADRAO.slice()}catch(e){return WG_PADRAO.slice()}})();
 const wgGuardar=()=>{try{localStorage.setItem(WG_KEY,JSON.stringify(WG_SEL))}catch(e){}prefsAgendar()};
+// 0.9.146: o widget «Aniversários» aparece uma vez a quem já tinha escolhido os seus widgets (depois pode tirá-lo)
+function wgAnivMig(){try{if(localStorage.getItem("g360_wg_aniv"))return;localStorage.setItem("g360_wg_aniv","1");const b=typeof WG_SEL2!=="undefined"&&Array.isArray(WG_SEL2)?WG_SEL2:[];if(!WG_SEL.includes("aniv")&&!b.includes("aniv")){WG_SEL.unshift("aniv");wgGuardar()}}catch(e){}}
 const modOn=m=>!MODS_OFF.includes(m)&&!!primeiroPermitido(m);
 const wgAgora=()=>{const n=new Date();return n.getHours()*60+n.getMinutes()};
 const wgPct=(a,b)=>b?Math.round(a*100/b):0;
@@ -33,6 +35,22 @@ const WIDGETS=[
    return `<div class="wg-big">${h<ini?"—":p+"%"}</div>${wgBarra(h<ini?0:p)}
      <p class="wg-t">${h<ini?`Começa a <b>${wgDM(ini)}</b> (daqui a ${wgDias(ini)} dias).`:h>fim?`Terminou a ${wgDM(fim)}.`:`Faltam <b>${sem}</b> semana${sem===1?"":"s"} — termina a ${wgDM(fim)}.`}</p>
      <p class="wg-t">${ag?`${ico("cal")} Agora: <b>${esc(ag.nome||"interrupção")}</b>, até ${wgDM(ag.ate)}.`:px?`Próxima interrupção: <b>${esc(px.nome||"interrupção")}</b>, de ${wgDM(px.de)} a ${wgDM(px.ate)} (daqui a ${wgDias(px.de)} dias).`:`Sem interrupções marcadas. `+wgIr("anos","Marcar")}</p>`}},
+ {id:"aniv",mod:"escola",nome:"Aniversários",desc:"Formandos e formadores que fazem anos hoje e nos próximos 14 dias, com um atalho para dar os parabéns por email",r(){
+   const E=escData(),TC=new Map(E.turmas.map(t=>[t.id,t.cod])),L=[];
+   for(const f of E.formandos||[]){if(f.estado||!f.nasc)continue;const d=forAniv(f.nasc);if(d!=null&&d<=14)L.push({d,n:f.nome,id:(forIdade(f.nasc)||0)+(d?1:0),q:TC.get(f.turmaId)?"formando · "+TC.get(f.turmaId):"formando",em:formandoEmail(f),nasc:f.nasc})}
+   for(const p of cfg.profs||[]){if(!p.nasc)continue;const d=forAniv(p.nasc);if(d!=null&&d<=14)L.push({d,n:p.nome,id:(forIdade(p.nasc)||0)+(d?1:0),q:"formador",em:String(p.email||"").trim(),nasc:p.nasc,pf:1})}
+   L.sort((a,b)=>a.d-b.d||COLL_PT.compare(a.n,b.n));
+   const semF=(cfg.profs||[]).filter(p=>!p.nasc).length,semA=(E.formandos||[]).filter(f=>!f.estado&&!f.nasc).length;
+   const parab=x=>x.em?`<a class="wg-ir" href="mailto:${esc(x.em)}?subject=${encodeURIComponent("Parabéns!")}&body=${encodeURIComponent(`Olá ${String(x.n).split(/\s+/)[0]},\n\nMuitos parabéns pelo seu aniversário! Desejamos-lhe um excelente dia.\n\nEscola Profissional da Ilha de São Jorge`)}" title="Escrever a ${esc(x.em)}">Dar os parabéns</a>`:"";
+   const av=x=>`<span class="frav sm" style="--c:${forCor(x.n)}">${esc(forIni(x.n))}</span>`;
+   const hoje=L.filter(x=>x.d===0),prox=L.filter(x=>x.d>0);
+   const quando=d=>{if(d===1)return "amanhã";const t=new Date();t.setHours(0,0,0,0);t.setDate(t.getDate()+d);return t.toLocaleDateString("pt-PT",{weekday:"short",day:"numeric",month:"short"}).replace(/\./g,"")};
+   let h="";
+   if(hoje.length)h+=`<div class="wg-aniv-hoje"><div class="wg-aniv-t">Hoje faz${hoje.length>1?"em":""} anos</div>${hoje.map(x=>`<div class="wg-aniv-p">${av(x)}<span><b>${esc(x.n)}</b><small>${x.id?x.id+" anos · ":""}${esc(x.q)}</small></span>${parab(x)}</div>`).join("")}</div>`;
+   if(prox.length)h+=`<div class="wg-lst">${prox.slice(0,8).map(x=>`<div class="wg-li">${av(x)}<span class="wg-el" style="flex:1;min-width:0"><b style="font-weight:600">${esc(x.n)}</b><br><small style="color:var(--muted)">${esc(x.q)}${x.id?" · faz "+x.id+" anos":""}</small></span><i class="wg-tag${x.d<=3?" w":""}">${esc(quando(x.d))}</i></div>`).join("")}${prox.length>8?`<p class="wg-t">e mais ${prox.length-8} nos próximos 14 dias.</p>`:""}</div>`;
+   if(!L.length)h+=wgVazio("Ninguém faz anos nos próximos 14 dias.");
+   if(semF||semA)h+=`<p class="wg-t" style="margin-top:8px;color:var(--muted)">Sem data de nascimento: ${[semA?`${semA} formando(s)`:"",semF?`${semF} formador(es)`:""].filter(Boolean).join(" e ")}.</p>${semF?wgIr("prof","Formadores"):""}${semA?wgIr("for","Formandos"):""}`;
+   return h}},
  {id:"anocur",mod:"escola",nome:"Turmas por ano curricular",desc:"Quantas turmas há no 1.º, 2.º e 3.º ano e quais terminam este ano",r(){
    const a=anoAtivo(),T=turmasDoAno(a);if(!T.length)return wgVazio("Ainda não há turmas neste ano letivo.")+wgIr("tur","Criar turmas");
    const G=new Map();T.forEach(t=>{const k=anoCurricular(t,a)||"sem ano de início";(G.get(k)||G.set(k,[]).get(k)).push(t)});const mx=Math.max(...[...G.values()].map(x=>x.length));
@@ -168,6 +186,7 @@ const WG_PADRAO2=["crcump","anocur","fse","cnq","ultimas","carga","ocup","crmods
 let WG_SEL2=(()=>{try{const v=JSON.parse(localStorage.getItem(WG_KEY+"2")||"null");return Array.isArray(v)?v:WG_PADRAO2.filter(id=>!WG_SEL.includes(id))}catch(e){return WG_PADRAO2.slice()}})();
 const WGZ={1:{grid:"#wgGrid",conta:"#wgConta",get sel(){return WG_SEL},set sel(v){WG_SEL=v},padrao:WG_PADRAO,nome:"Widgets"},
            2:{grid:"#wgGrid2",conta:"#wgConta2",get sel(){return WG_SEL2},set sel(v){WG_SEL2=v},padrao:WG_PADRAO2,nome:"Mais widgets"}};
+wgAnivMig();
 const wgGuardarZ=()=>{try{localStorage.setItem(WG_KEY,JSON.stringify(WG_SEL));localStorage.setItem(WG_KEY+"2",JSON.stringify(WG_SEL2))}catch(e){}prefsAgendar()};
 function renderWidgets(){if(!window.__wgOk)return; // só depois de a app arrancar (antes disso nem tudo está definido)
   const vis=new Set(wgVisiveis().map(w=>w.id));

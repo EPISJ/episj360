@@ -34,8 +34,9 @@ function renderProfs(){
    <td><input type="text" data-k="nome" value="${esc(p.nome)}"></td>
    <td><input type="text" data-k="abrev" value="${esc(p.abrev||"")}" maxlength="8"></td>
    <td><input type="email" data-k="email" value="${esc(p.email)}"></td>
+   <td><input type="date" data-k="nasc" value="${esc(p.nasc||"")}" title="Data de nascimento (só para o widget Aniversários do Dashboard; não é publicada)"></td>
    <td class="hm" style="color:var(--muted)">${cnt[p.id]||0}</td>
-   <td><button class="x" title="Remover" data-del>×</button></td></tr>`).join("")+(resto>0?`<tr><td colspan="6" style="text-align:center"><button class="b s" type="button" data-profmais>Mostrar mais ${Math.min(resto,500)} (faltam ${resto}) — ou procure acima</button></td></tr>`:"")||`<tr><td colspan="6" class="hint">${cfg.profs.length?"Ninguém corresponde à procura.":"Ainda sem formadores — adicione no formulário acima ou cole uma lista abaixo."}</td></tr>`;
+   <td><button class="x" title="Remover" data-del>×</button></td></tr>`).join("")+(resto>0?`<tr><td colspan="7" style="text-align:center"><button class="b s" type="button" data-profmais>Mostrar mais ${Math.min(resto,500)} (faltam ${resto}) — ou procure acima</button></td></tr>`:"")||`<tr><td colspan="7" class="hint">${cfg.profs.length?"Ninguém corresponde à procura.":"Ainda sem formadores — adicione no formulário acima ou cole uma lista abaixo."}</td></tr>`;
 }
 var PROF_N=200;
 $("#tbProfs").addEventListener("input",e=>{const tr=e.target.closest("tr");const p=cfg.profs.find(x=>x.id===tr.dataset.id);

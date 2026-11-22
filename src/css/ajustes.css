@@ -190,3 +190,9 @@ table.hsf th.hj{color:var(--brand)}table.hsf td.hj:not(.on){background:#f6f9ff}
 table.hsf tr.eu td{border-bottom-color:var(--brand)}table.hsf tr.eu .nm a{font-weight:700;color:var(--brand)}
 table.hsf .tt{font-weight:600;font-variant-numeric:tabular-nums;border-left:1px solid var(--line)}
 table.hsf tbody td:not(.nm):not(.tt),table.hsf thead tr+tr th{min-width:46px;width:46px}
+/* Dashboard › widget Aniversários (0.9.146) */
+.wg-aniv-hoje{border-radius:10px;padding:10px 12px;margin-bottom:8px;background:linear-gradient(135deg,color-mix(in srgb,var(--brand) 10%,#fff),#fff 70%);border:1px solid color-mix(in srgb,var(--brand) 22%,#fff)}
+.wg-aniv-t{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--brand);margin-bottom:6px}
+.wg-aniv-p{display:flex;align-items:center;gap:10px;padding:4px 0}.wg-aniv-p>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column}
+.wg-aniv-p b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wg-aniv-p small{font-size:12px;color:var(--muted)}
+.wg-aniv-p .wg-ir{white-space:nowrap}

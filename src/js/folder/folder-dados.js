@@ -83,7 +83,7 @@ function foLg(o){return o&&o.src&&o.w?o:null}
 function foOpts(L,v,vazio){return(vazio!==undefined?`<option value="">${esc(vazio)}</option>`:"")+L.map(x=>{const o=typeof x==="object"?x:{v:x,t:x};return `<option value="${esc(o.v)}"${String(o.v)===String(v)?" selected":""}>${esc(o.t)}</option>`}).join("")}
 // ----- widget do Painel -----
 WG_MOD.folder={l:"F",c:FO_COR,n:"Folder360"};
-WIDGETS.push({id:"fdreq",mod:"folder",nome:"Arquivo físico",desc:"Dossiers fora do arquivo e requisições em atraso (Folder360)",r(){
+WIDGETS.push({id:"fdreq",mod:"folder",nome:"Arquivo Físico",desc:"Dossiers fora do arquivo e requisições em atraso (Folder360)",r(){
   const hj=foHoje(),A=FOL.mov.filter(m=>!m.dev).sort((a,b)=>(a.prev||"9").localeCompare(b.prev||"9"));
   if(!FOL.dossiers.length)return wgVazio("Ainda sem dossiers no Folder360.")+wgIr("foInicio","Abrir o Folder360");
   if(!A.length)return `<div class="wg-big">${FOL.dossiers.length}</div><p class="wg-t">dossiers no arquivo, todos no sítio.</p>`+wgIr("foInicio","Abrir o Folder360");

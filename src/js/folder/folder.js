@@ -47,7 +47,7 @@ function foInicioUI(){const D=FOL.dossiers,ed=foEd(),U=FO_UI;
   const req=D.filter(d=>foEstado(d).k!=="ok"),at=D.filter(d=>foEstado(d).k==="ba"),rep=new Set(D.filter(foRepetido).map(d=>d.id)),arqs=foUniq(D.map(d=>d.arq));
   const anos=foUniq(D.map(d=>d.ano)).sort(COLL_PTN.compare),comUrl=D.filter(d=>d.url).length;
   const st=(t,v,em)=>`<div class="ay-st"><small>${t}</small><b>${v}</b>${em?`<em>${em}</em>`:""}</div>`;
-  $("#foHero").innerHTML=`<div class="ay-hero pp-hero"><div class="ay-top"><div><h1>Arquivo físico</h1><div class="sub">Dossiers técnico-pedagógicos e da Direção, com o sítio exato de cada um: arquivo, armário, prateleira e número.</div></div><span class="grow"></span>
+  $("#foHero").innerHTML=`<div class="ay-hero pp-hero"><div class="ay-top"><div><h1>Arquivo Físico</h1><div class="sub">Dossiers técnico-pedagógicos e da Direção, com o sítio exato de cada um: arquivo, armário, prateleira e número.</div></div><span class="grow"></span>
     ${D.length?`<div class="ay-pct"><b>${Math.round((D.length-req.length)/D.length*100)}%</b>no arquivo agora</div>`:""}</div>
     <div class="ay-stats">${st("Dossiers",D.length,`em ${arqs.length} arquivo${arqs.length===1?"":"s"}`)}${st("Anos letivos",anos.length,anos.length?`${anos[0]} a ${anos[anos.length-1]}`:"")}${st("Requisitados",req.length,at.length?`${at.length} em atraso`:"nenhum em atraso")}${st("Com ligação ao SharePoint",`${comUrl}/${D.length}`)}${rep.size?st("Códigos repetidos",rep.size,"dois dossiers no mesmo sítio"):""}</div></div>`;
   const E=foDef();

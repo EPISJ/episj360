@@ -134,28 +134,42 @@ $("#hsImpTudo").onclick=()=>h3Importar(true);
 $("#hsImpGpu").onclick=()=>h3Importar("gpu");
 document.addEventListener("click",e=>{const b=e.target.closest("[data-h3cp]");if(!b)return;try{navigator.clipboard.writeText(b.dataset.h3cp);toast("Copiado")}catch(x){}});
 
-/* ---------- Por formadores (0.9.142): todos os formadores numa semana, lado a lado ---------- */
-const H3F={q:""};
+/* ---------- Por formadores (0.9.142): todos os formadores numa semana, lado a lado ----------
+   0.9.158: tempos seguidos da mesma aula juntam-se num só bloco; por omissão só quem tem aulas na semana (botão «Todos»);
+   linhas da mesma altura, dias em fundos alternados, hoje destacado e uma linha final com quantos formadores estão em aula em cada tempo. */
+const H3F={q:"",todos:false};
 async function hsForRender(){await null;try{await esdPronto}catch(e){}try{await h3Carregar()}catch(e){}
   const out=$("#hsForOut"),hero=$("#hsForHero");if(!out)return;const st=mhEstado(),a=anoAtivo(),hj=calHoje();
   if(!H3S.seg){let d=hj;const w=calD(d).getDay();if(w===6)d=calMais(d,2);else if(w===0)d=calMais(d,1);H3S.seg=h3Seg(d)}
   $("#hsForData").value=H3S.seg;
   if(!st){hero.innerHTML=`<div class="ay-hero"><div class="ay-top"><div><h1>Por formadores</h1><div class="sub">${esc(a.nome)}</div></div></div></div>`;out.innerHTML=`<div class="pp-vz">${ICO.cal}<p>${RO?"A Direção ainda não publicou o horário de "+esc(a.nome)+".":"Ainda não há horário para "+esc(a.nome)+"."}</p></div>`;return}
-  const VL=cpVersoes(st).slice().sort((p,q)=>String(p.de||"").localeCompare(String(q.de||""))),D=st.days||["Seg","Ter","Qua","Qui","Sex"],P=st.periods||[],NL=calNaoLetivos(a);
+  const VL=cpVersoes(st).slice().sort((p,q)=>String(p.de||"").localeCompare(String(q.de||""))),D=st.days||["Seg","Ter","Qua","Qui","Sex"],P=st.periods||[],NP=P.length,NL=calNaoLetivos(a);
   const dias=D.map((d,i)=>{const dt=calMais(H3S.seg,i);let V=cpVersaoEm(VL,dt);if(!V&&VL.length===1)V=VL[0];return{i,nome:d,dt,V,nl:NL.get(dt),fora:(a.inicio&&dt<a.inicio)||(a.fim&&dt>a.fim)}});
-  const em=String(EU&&EU.email||"").toLowerCase(),me=(cfg.profs||[]).find(p=>String(p.email||"").toLowerCase()===em),eu=t=>!!me&&(t.id===me.id||(ESD.mapaT||{})[t.id]===me.id);
-  const q=norm(H3F.q||"");let T=(st.teachers||[]).filter(t=>!q||norm((t.name||"")+" "+(t.short||"")).includes(q)).sort((x,y)=>(eu(y)-eu(x))||COLL_PT.compare(String(x.name),String(y.name)));
+  const em=String(EU&&EU.email||"").toLowerCase(),me=(cfg.profs||[]).find(p=>h3Email(p)===em),eu=t=>!!me&&(t.id===me.id||(ESD.mapaT||{})[t.id]===me.id);
   const cache=new Map();const cel=(t,d)=>{if(!d.V||d.nl||d.fora)return null;const k=t.id+"|"+(VL.indexOf(d.V));if(!cache.has(k))cache.set(k,h3Celulas(st,d.V,"t",t.id));return cache.get(k)};
-  let tot=0;const fim=calMais(H3S.seg,D.length-1);
-  let h=`<div class="tw hsfw"><table class="hsf"><thead><tr><th class="nm" rowspan="2">Formador</th>${dias.map(d=>`<th colspan="${P.length}" class="dsep${d.dt===hj?" hj":""}${d.nl||d.fora?" nl":""}">${esc(d.nome)} <small>${esc(calDM(d.dt))}</small>${d.nl?`<em>${esc(d.nl.n)}</em>`:""}</th>`).join("")}<th rowspan="2" class="tt">Tempos</th></tr><tr>${dias.map(d=>P.map((p,pi)=>`<th class="${pi===0?"dsep":""}" title="${esc((p.start||"")+(p.end?"–"+p.end:""))}">${esc(p.label||pi+1)}</th>`).join("")).join("")}</tr></thead><tbody>`;
-  for(const t of T){let n=0;let r=`<td class="nm"><a href="#" data-hsver="${esc(t.id)}" title="Ver a semana de ${esc(t.name||"")}">${esc(t.name||t.short||"—")}</a>${t.short&&t.short!==t.name?` <span class="hint">${esc(t.short)}</span>`:""}</td>`;
-    for(const d of dias){const m=cel(t,d);P.forEach((p,pi)=>{const L=m&&m.get(d.i+"|"+pi),cl=(pi===0?"dsep":"")+(d.nl||d.fora?" nl":"")+(d.dt===hj?" hj":"");
-      if(!L){r+=`<td class="${cl}"></td>`;return}n+=L.length;const x=L[0],cor=h3Cor(st,x,"t");
-      r+=`<td class="${cl} on" style="--sc:${esc(cor)}" title="${esc(L.map(y=>[y.nome||y.disc,y.tu,y.sala].filter(Boolean).join(" · ")).join("\n"))}"><b>${esc(x.tu||x.disc)}</b><span>${esc(x.tu?x.disc:x.sala)}</span></td>`})}
-    tot+=n;h+=`<tr class="${eu(t)?"eu":""}">${r}<td class="tt">${n}</td></tr>`}
-  h+=`</tbody></table></div>`;
-  hero.innerHTML=`<div class="ay-hero"><div class="ay-top"><div><h1>Por formadores</h1><div class="sub">Semana de ${esc(calDM(H3S.seg,{day:"numeric",month:"short"}))} a ${esc(calDM(fim,{day:"numeric",month:"short"}))} · todos os formadores lado a lado${me?" · o seu horário aparece primeiro":""}</div></div><span class="grow"></span><div class="ay-pct"><b>${T.length}</b>formador${T.length===1?"":"es"} · ${tot} tempos</div></div></div>`;
-  out.innerHTML=T.length?h+`<p class="hint">Carregue no nome de um formador para ver a semana dele em pormenor.</p>`:`<p class="hint">Nenhum formador com este nome.</p>`}
+  const q=norm(H3F.q||"");
+  const TT=(st.teachers||[]).filter(t=>!q||norm((t.name||"")+" "+(t.short||"")).includes(q)).map(t=>{let n=0;for(const d of dias){const m=cel(t,d);if(m)for(let pi=0;pi<NP;pi++){const L=m.get(d.i+"|"+pi);if(L)n+=L.length}}return{t,n}})
+    .sort((x,y)=>(eu(y.t)-eu(x.t))||COLL_PT.compare(String(x.t.name),String(y.t.name)));
+  const comAulas=TT.filter(x=>x.n>0),semAulas=TT.filter(x=>!x.n&&!eu(x.t));
+  const mostra=H3F.todos||!comAulas.length?TT:TT.filter(x=>x.n>0||eu(x.t));
+  const ocup=dias.map(()=>new Array(NP).fill(0));let tot=0;const fim=calMais(H3S.seg,D.length-1);
+  let h=`<div class="tw hsfw"><table class="hsf"><thead><tr><th class="nm" rowspan="2">Formador</th>${dias.map((d,di)=>`<th colspan="${NP}" class="dsep${di%2?" alt":""}${d.dt===hj?" hj":""}${d.nl||d.fora?" nl":""}">${esc(d.nome)} <small>${esc(calDM(d.dt))}</small>${d.dt===hj?` <i class="hjt">hoje</i>`:""}${d.nl?`<em>${esc(d.nl.n)}</em>`:d.fora?`<em>fora do ano letivo</em>`:""}</th>`).join("")}<th rowspan="2" class="tt">Tempos</th></tr><tr>${dias.map((d,di)=>P.map((p,pi)=>`<th class="${pi===0?"dsep":""}${di%2?" alt":""}${d.dt===hj?" hj":""}" title="${esc((p.start||"")+(p.end?"–"+p.end:""))}">${esc(p.label||pi+1)}</th>`).join("")).join("")}</tr></thead><tbody>`;
+  for(const {t,n} of mostra){let r=`<td class="nm"><a href="#" data-hsver="${esc(t.id)}" title="Ver a semana de ${esc(t.name||"")}">${esc(t.name||t.short||"—")}</a>${t.short&&t.short!==t.name?` <span class="sg">${esc(t.short)}</span>`:""}</td>`;
+    dias.forEach((d,di)=>{const m=cel(t,d),base=(d.nl||d.fora?" nl":"")+(di%2?" alt":"")+(d.dt===hj?" hj":"");
+      for(let pi=0;pi<NP;){const L=m&&m.get(d.i+"|"+pi),cl=(pi===0?"dsep":"")+base;
+        if(!L){r+=`<td class="${cl}"></td>`;pi++;continue}
+        const x=L[0],k=L.map(y=>[y.tu,y.disc,y.sala].join("|")).join("~");let len=1;
+        while(pi+len<NP){const L2=m.get(d.i+"|"+(pi+len));if(!L2||L2.map(y=>[y.tu,y.disc,y.sala].join("|")).join("~")!==k)break;len++}
+        for(let z=0;z<len;z++)ocup[di][pi+z]++;
+        const cor=h3Cor(st,x,"t"),pa=P[pi]||{},pz=P[pi+len-1]||{},hr=(pa.start||"")+(pz.end?"–"+pz.end:"");
+        const tit=[`${x.nome||x.disc}${x.tu?" · "+x.tu:""}${x.sala?" · "+x.sala:""}`].concat(L.slice(1).map(y=>[y.nome||y.disc,y.tu,y.sala].filter(Boolean).join(" · "))).join("\n")+`\n${len} tempo${len>1?"s":""}${hr?" · "+hr:""}`;
+        r+=`<td class="${cl} on" colspan="${len}"><div class="hsb" style="--sc:${esc(cor)};background:${h3Tinta(cor,.16)};color:${h3Escuro(cor)}" title="${esc(tit)}"><b>${esc(x.tu||x.disc)}${L.length>1?` <i>+${L.length-1}</i>`:""}</b><span>${esc([x.tu?x.disc:"",x.sala].filter(Boolean).join(" · "))}${len>1?` · ${len} t`:""}</span></div></td>`;pi+=len}});
+    tot+=n;h+=`<tr class="${eu(t)?"eu":""}${n?"":" vz"}">${r}<td class="tt">${n||`<span class="z">0</span>`}</td></tr>`}
+  h+=`</tbody><tfoot><tr><td class="nm">Formadores em aula</td>${dias.map((d,di)=>ocup[di].map((v,pi)=>`<td class="${pi===0?"dsep":""}${di%2?" alt":""}${d.dt===hj?" hj":""}">${v||""}</td>`).join("")).join("")}<td class="tt">${tot}</td></tr></tfoot></table></div>`;
+  hero.innerHTML=`<div class="ay-hero"><div class="ay-top"><div><h1>Por formadores</h1><div class="sub">Semana de ${esc(calDM(H3S.seg,{day:"numeric",month:"short"}))} a ${esc(calDM(fim,{day:"numeric",month:"short"}))}${H3S.seg===h3Seg(hj)?" · esta semana":""}${me?" · o seu horário aparece primeiro":""}</div></div><span class="grow"></span><div class="ay-pct"><b>${comAulas.length}</b>com aulas, de ${TT.length} formador${TT.length===1?"":"es"} · ${tot} tempo${tot===1?"":"s"}</div></div></div>`;
+  const seg=comAulas.length&&semAulas.length?`<div class="hsfbar"><div class="frseg" role="group" aria-label="Formadores a mostrar"><button type="button" data-hsft="0" class="${H3F.todos?"":"on"}">Com aulas (${comAulas.length})</button><button type="button" data-hsft="1" class="${H3F.todos?"on":""}">Todos (${TT.length})</button></div>${H3F.todos?"":`<span class="hint" style="margin:0">${semAulas.length} sem aulas nesta semana: ${esc(semAulas.slice(0,6).map(x=>x.t.name||x.t.short).join(", "))}${semAulas.length>6?"…":""}</span>`}</div>`:"";
+  out.innerHTML=TT.length?seg+h+`<p class="hint">Carregue no nome de um formador para ver a semana dele em pormenor. Passe o rato por cima de uma aula para ver a disciplina, a turma, a sala e as horas.</p>`:`<p class="hint">Nenhum formador com este nome.</p>`}
+$("#hsForOut").addEventListener("click",e=>{const b=e.target.closest("[data-hsft]");if(!b)return;H3F.todos=b.dataset.hsft==="1";hsForRender()});
 $("#hsForQ").oninput=debounce(()=>{H3F.q=$("#hsForQ").value;hsForRender()},200);
 $("#hsForData").onchange=e=>{if(e.target.value){H3S.seg=h3Seg(e.target.value);hsForRender()}};
 $("#hsForAnt").onclick=()=>{H3S.seg=calMais(H3S.seg||h3Seg(calHoje()),-7);hsForRender()};

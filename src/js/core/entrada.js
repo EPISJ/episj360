@@ -183,7 +183,8 @@ async function guideSair(){ // 0.9.50: a Box fica ligada (só «Desligar a Box»
 
 // esconde os módulos e separadores que o perfil não pode abrir
 function aplicarPerfil(){
-  try{document.body.classList.toggle("pf-dir",!!podePublicar()&&!PREV)}catch(e){} // 0.9.184: o resumo da escola no Dashboard é só da Direção
+  try{document.body.classList.toggle("pf-dir",!!podePublicar()&&!PREV)}catch(e){}
+  setTimeout(()=>{try{fundosVersoes()}catch(e){}},0); // 0.9.190 // 0.9.184: o resumo da escola no Dashboard é só da Direção
   if(EU&&EU.email&&!PREV)modPreCarregar(); // 0.9.133: os módulos que esta conta pode abrir vêm em segundo plano
   document.querySelectorAll("#nav button[data-t]").forEach(b=>b.hidden=!podeVer(b.dataset.t));
   document.querySelectorAll("#mods button[data-m]").forEach(b=>{b.hidden=!primeiroPermitido(b.dataset.m);const off=MODS_OFF.includes(b.dataset.m)&&!b.hidden;b.classList.toggle("moff",off);

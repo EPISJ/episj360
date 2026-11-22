@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
-<!-- GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.156 -->
+<!-- GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.157 -->
 <meta charset="utf-8">
-<script src="app/sem-armazenamento.js?v=0.9.156"></script>
+<script src="app/sem-armazenamento.js?v=0.9.157"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'wasm-unsafe-eval'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>EPISJ 360 — Escola Profissional da Ilha de São Jorge</title>
@@ -11,8 +11,8 @@
 <!-- 0.9.50: a letra Poppins vem do próprio site (mais rápido, funciona sem o Google e também dentro do Horários360) -->
 <link rel="preload" href="fonts/poppins-latin-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/poppins-latin-600.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="app/app.css?v=0.9.156">
-<script src="app/cabeca.js?v=0.9.156"></script>
+<link rel="stylesheet" href="app/app.css?v=0.9.157">
+<script src="app/cabeca.js?v=0.9.157"></script>
 </head>
 <body>
 <div id="privLock" role="dialog" aria-modal="true" aria-labelledby="privTit">
@@ -1395,7 +1395,7 @@
 <section id="uti">
   <div class="card">
     <h2>Utilizadores e perfis</h2>
-    <p class="hint">Toda a gente entra na EPISJ 360 com a conta do <b>Office 365 da escola</b>. Cada conta tem um perfil, que decide o que vê. A regra é, por esta ordem: <b>1)</b> a lista abaixo; <b>2)</b> os administradores ficam com <b>Direção Executiva</b>; <b>3)</b> quem está em <b>Escola › Formadores</b> com o email da escola fica <b>Formador</b>; <b>4)</b> quem cumprir a regra dos formandos fica <b>Formando</b>. Quem não cumprir nenhuma não entra.</p>
+    <p class="hint">Toda a gente entra na EPISJ 360 com a conta do <b>Office 365 da escola</b>. Cada conta tem um perfil, que decide o que vê. A regra é, por esta ordem: <b>1)</b> o perfil mudado ou atribuído à mão na lista abaixo; <b>2)</b> os administradores ficam com <b>Direção Executiva</b>; <b>3)</b> cada formador de <b>Escola360 › Formadores</b> fica <b>Formador</b>; <b>4)</b> cada formando ativo de <b>Escola360 › Formandos</b> fica <b>Formando</b>, com a sua turma; <b>5)</b> quem cumprir a regra dos formandos fica <b>Formando</b>. Os emails são os da escola (automáticos: primeiro nome + último apelido @episj.com, ou a exceção escrita na ficha). Quem não cumprir nenhuma não entra.</p>
     <div id="utiMsg"></div>
   </div>
   <div class="card">
@@ -1405,15 +1405,17 @@
     <p class="hint" id="utiAdmInfo" style="margin:6px 0 0"></p>
   </div>
   <div class="card">
-    <h2>Contas com perfil atribuído</h2>
+    <h2>Contas e perfis</h2>
+    <p class="hint">Todos os formadores e formandos importados para a Escola360 aparecem aqui com o perfil já atribuído. Para uma exceção, mude o perfil na linha; «Automático» desfaz. Para acrescentar alguém que não está na Escola360 (ex.: Direção, Economato), use o formulário.</p>
     <form id="utiForm" class="row" style="background:#f6f8fb;border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px" autocomplete="off">
       <label class="grow">Email do Office 365<input type="email" id="utiEmail" placeholder="nome@episj.pt" required></label>
       <label style="width:200px">Perfil<select id="utiPerfil"></select></label>
       <label style="width:130px" title="Só para formandos: a turma do horário que vê">Turma<select id="utiTurma"></select></label>
       <button class="b" type="submit" style="align-self:flex-end">Atribuir</button>
     </form>
-    <div class="row" style="margin-bottom:10px"><label class="grow">Procurar<input type="text" id="utiFiltro" placeholder="email ou perfil"></label></div>
-    <table class="rt"><thead><tr><th>Email</th><th style="width:200px">Perfil</th><th style="width:120px">Turma</th><th></th></tr></thead><tbody id="tbUti"></tbody></table>
+    <div class="row" style="margin-bottom:10px;align-items:flex-end"><label class="grow">Procurar<input type="text" id="utiFiltro" placeholder="email, nome, perfil ou turma"></label>
+      <div class="frseg" id="utiOrg" role="group" aria-label="Origem"><button type="button" data-uo="">Todos</button><button type="button" data-uo="prof">Formadores</button><button type="button" data-uo="form">Formandos</button><button type="button" data-uo="mao">À mão</button><button type="button" data-uo="rep">Repetidos</button></div></div>
+    <div style="overflow:auto"><table class="rt"><thead><tr><th>Email</th><th>Nome</th><th style="width:190px">Perfil</th><th style="width:110px">Turma</th><th>Origem</th><th></th></tr></thead><tbody id="tbUti"></tbody></table></div>
     <details style="margin-top:12px"><summary class="hint" style="cursor:pointer;margin:0"><b>Colar uma lista</b> (email; perfil; turma)</summary>
       <p class="hint">Um por linha. Perfil: <code>executiva</code>, <code>pedagógica</code>, <code>formador</code> ou <code>formando</code>. A turma é opcional (só para formandos).</p>
       <textarea id="utiBulk" placeholder="ana.silva@episj.pt; pedagógica&#10;a1234@episj.pt; formando; A04"></textarea>
@@ -1522,8 +1524,8 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="app/rede.js?v=0.9.156"></script>
-<script src="app/app.js?v=0.9.156"></script>
-<script src="app/extra.js?v=0.9.156"></script>
+<script src="app/rede.js?v=0.9.157"></script>
+<script src="app/app.js?v=0.9.157"></script>
+<script src="app/extra.js?v=0.9.157"></script>
 </body>
 </html>

@@ -39,6 +39,19 @@ $("#mhQuem").onchange=e=>{$("#mhQuem").dataset.v=e.target.value;if(perfilAtual()
 
 /* Utilizadores e perfis (administradores) */
 let UTI_SUJO=false;
+// 0.9.157: contas automáticas — cada formador e cada formando da Escola360 tem perfil sem ser preciso pô-lo na lista
+function profEmail(p){return p?(String(p.email||"").trim().toLowerCase()||(typeof emailAuto==="function"?emailAuto(p.nome):"")):""}
+// formandos com conta: sem «desistente»/«transferido», numa turma do ano ativo ou de um ano que ainda vem (as turmas que já acabaram não contam)
+function forTurmaViva(t){const a=anoAtivo();if(!t)return false;if(!a||!a.ini)return true;return t.anoFim?t.anoFim>a.ini:(t.anoIni?t.anoIni>=a.ini:true)}
+function forContas(){const E=escData(),TM=new Map((E.turmas||[]).map(t=>[t.id,t])),out=[],vis=new Set();
+  for(const f of E.formandos||[]){if(f.estado)continue;const t=TM.get(f.turmaId);if(!forTurmaViva(t))continue;const em=formandoEmail(f);if(!em||!em.includes("@")||vis.has(em))continue;vis.add(em);out.push({email:em,nome:f.nome||"",turma:t.cod||"",fid:f.id})}
+  return out}
+// mapa email → {perfil, nome, turma, org:"formador"|"formando"}; o formador ganha se o email for igual (como no servidor)
+function utiAuto(){const M=new Map(),rep=new Set();
+  for(const p of cfg.profs||[]){const e=profEmail(p);if(!e||!e.includes("@"))continue;if(M.has(e)){rep.add(e);continue}M.set(e,{perfil:"prof",nome:p.nome||"",turma:"",org:"formador"})}
+  for(const c of forContas()){if(M.has(c.email)){rep.add(c.email);continue}M.set(c.email,{perfil:"form",nome:c.nome,turma:c.turma,org:"formando"})}
+  return {M,rep}}
+var UTI_ORG="";
 function utiPerfilDe(t){t=norm(t);return /econom/.test(t)?"econ":/exec/.test(t)?"dexec":/pedag/.test(t)?"dped":/prof|formador|docente/.test(t)?"prof":/forman|alun|estud/.test(t)?"form":""}
 function utiSujo(){UTI_SUJO=true;$("#utiEstado").innerHTML=`<span style="color:var(--warn)">Alterações por guardar.</span>`}
 async function renderUti(force){const m=$("#utiMsg");
@@ -52,25 +65,41 @@ async function renderUti(force){const m=$("#utiMsg");
   const turmas=turmasDoAno().map(t=>t.cod);$("#utiTurma").innerHTML=`<option value="">—</option>`+turmas.map(c=>`<option>${esc(c)}</option>`).join("");
   $("#utiDom").value=L.formandos.dominios.join(", ");$("#utiPad").value=L.formandos.padrao||"";
   utiTabela();utiVis();utiMods();
-  const sem=cfg.profs.filter(p=>!p.email).length;
-  $("#utiProfs").innerHTML=`Ficam <b>Formador</b> automaticamente os ${cfg.profs.filter(p=>p.email).length} formadores com email em <b>Escola › Formadores</b>${sem?` — <span style="color:var(--warn)">${sem} sem email não conseguem entrar</span>`:""}.`;
   $("#utiPrev").innerHTML=`<option value="">— escolha —</option>`+Object.entries(UTI.perfis).map(([k,n])=>`<option value="${k}">${esc(n)}</option>`).join("");
   $("#utiEstado").innerHTML=UTI_SUJO?`<span style="color:var(--warn)">Alterações por guardar.</span>`:L.t?`Guardado a ${new Date(L.t).toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"})}${L.por?" por "+esc(L.por):""}.`:""}
 // 0.9.50: com 1300 contas — 200 linhas de cada vez, a lista de turmas só se enche quando se toca nela, e mudar uma linha só redesenha essa linha
 var UTI_N=200;
 // 0.9.110: sem a lista carregada do servidor (sem rede ou ainda a carregar), os botões avisam em vez de dar erro
 function utiOk(cala){if(UTI&&UTI.loja)return true;if(!cala)toast("A lista de utilizadores ainda não foi carregada — verifique a ligação à internet e volte a abrir este separador.");return false}
-function utiLinha(e,u){const PO=Object.entries(UTI.perfis).map(([k,n])=>`<option value="${k}"${k===u.perfil?" selected":""}>${esc(n)}</option>`).join("");
-  return `<tr data-ur="${esc(e)}"><td>${esc(e)}</td><td><select data-ue="${esc(e)}" data-k="perfil">${PO}</select></td>
-    <td>${u.perfil==="form"?`<select data-ue="${esc(e)}" data-k="turma"><option value="" data-lzk="tcod" data-lzf="${utiLzF()}">—</option>${u.turma?`<option selected>${esc(u.turma)}</option>`:""}</select>`:""}</td>
-    <td><button class="b s" data-udel="${esc(e)}" title="Tirar da lista">✕</button></td></tr>`}
+function utiLinha(e,u,au,rep){const man=!!UTI.loja.utilizadores[e],pf=u.perfil;
+  const PO=Object.entries(UTI.perfis).map(([k,n])=>`<option value="${k}"${k===pf?" selected":""}>${esc(n)}</option>`).join("");
+  const orgT=au?(au.org==="formador"?"Escola360 › Formadores":"Escola360 › Formandos"):"";
+  const org=man?(au?`<span class="tag exc" title="Na Escola360 seria ${esc(UTI.perfis[au.perfil]||"")}${au.turma?" ("+esc(au.turma)+")":""}">mudado à mão</span>`:`<span class="tag">atribuído à mão</span>`):`<span class="hint" style="margin:0">automático · ${esc(orgT)}</span>`;
+  const turma=pf!=="form"?"":man?`<select data-ue="${esc(e)}" data-k="turma"><option value="" data-lzk="tcod" data-lzf="${utiLzF()}">—</option>${u.turma?`<option selected>${esc(u.turma)}</option>`:""}</select>`:esc(u.turma||"—");
+  const acc=man?(au?`<button class="b s" data-udel="${esc(e)}" title="Voltar ao perfil automático da Escola360">Automático</button>`:`<button class="b s" data-udel="${esc(e)}" title="Tirar da lista">✕</button>`):"";
+  return `<tr data-ur="${esc(e)}"><td>${esc(e)}${rep&&rep.has(e)?` <span class="tag exc" title="Este email aparece mais do que uma vez em Formadores/Formandos — confirme na Escola360">repetido</span>`:""}</td><td>${esc(u.nome||(au&&au.nome)||"")}</td><td><select data-ue="${esc(e)}" data-k="perfil">${PO}</select></td>
+    <td>${turma}</td><td>${org}</td><td>${acc}</td></tr>`}
 function utiLzF(){const f=`<option value="">—</option>`;let i=LZ.first.indexOf(f);if(i<0){LZ.first.push(f);i=LZ.first.length-1}return i}
-function utiTabela(){if(!utiOk(1))return;const L=UTI.loja,f=norm($("#utiFiltro").value);
-  const rows=Object.entries(L.utilizadores).filter(([e,u])=>!f||norm(e+" "+UTI.perfis[u.perfil]+" "+(u.turma||"")).includes(f)).sort((a,b)=>a[0].localeCompare(b[0]));
+function utiTabela(){if(!utiOk(1))return;const L=UTI.loja,f=norm($("#utiFiltro").value),{M,rep}=utiAuto();UTI_AUTO={M,rep};
+  const todos=new Map(M);for(const [e,u] of Object.entries(L.utilizadores))todos.set(e,u);
+  document.querySelectorAll("#utiOrg [data-uo]").forEach(b=>b.classList.toggle("on",b.dataset.uo===UTI_ORG));
+  const rows=[...todos].filter(([e,u])=>{const au=M.get(e),man=!!L.utilizadores[e];
+      if(UTI_ORG==="mao"&&!man)return false;if(UTI_ORG==="prof"&&!(au&&au.org==="formador"))return false;if(UTI_ORG==="form"&&!(au&&au.org==="formando"))return false;if(UTI_ORG==="rep"&&!rep.has(e))return false;
+      return !f||norm(e+" "+(u.nome||(au&&au.nome)||"")+" "+UTI.perfis[u.perfil]+" "+(u.turma||"")).includes(f)})
+    .sort((a,b)=>(!!L.utilizadores[b[0]]-!!L.utilizadores[a[0]])||a[0].localeCompare(b[0]));
   UTI_N=UTI_N||200;const mais=rows.length-UTI_N;
-  $("#tbUti").innerHTML=rows.slice(0,UTI_N).map(([e,u])=>utiLinha(e,u)).join("")+(mais>0?`<tr><td colspan="4" style="text-align:center"><button class="b s" id="utiMais" type="button">Mostrar mais ${Math.min(mais,500)} (faltam ${mais})</button></td></tr>`:"")
-    ||`<tr><td colspan="4" class="hint">${f?"Ninguém com este filtro.":"Ninguém na lista — valem as regras automáticas."}</td></tr>`;
-  const b=$("#utiMais");if(b)b.onclick=()=>{UTI_N+=500;utiTabela()}}
+  $("#tbUti").innerHTML=rows.slice(0,UTI_N).map(([e,u])=>utiLinha(e,u,M.get(e),rep)).join("")+(mais>0?`<tr><td colspan="6" style="text-align:center"><button class="b s" id="utiMais" type="button">Mostrar mais ${Math.min(mais,500)} (faltam ${mais})</button></td></tr>`:"")
+    ||`<tr><td colspan="6" class="hint">${f||UTI_ORG?"Ninguém com este filtro.":"Ainda não há formadores nem formandos na Escola360."}</td></tr>`;
+  const b=$("#utiMais");if(b)b.onclick=()=>{UTI_N+=500;utiTabela()};utiResumo()}
+var UTI_AUTO=null;
+function utiResumo(){const el=$("#utiProfs");if(!el||!UTI_AUTO)return;const {M,rep}=UTI_AUTO,L=UTI.loja,E=escData(),TM=new Map((E.turmas||[]).map(t=>[t.id,t]));
+  let np=0,nf=0,mud=0;for(const [e,a] of M){if(L.utilizadores[e]){mud++;continue}if(a.org==="formador")np++;else nf++}
+  const fora=(E.formandos||[]).filter(f=>!f.estado&&!forTurmaViva(TM.get(f.turmaId))).length,saidos=(E.formandos||[]).filter(f=>f.estado).length,man=Object.keys(L.utilizadores).filter(e=>!M.has(e)).length;
+  el.innerHTML=`Com perfil automático, vindos da Escola360: <b>${np}</b> formador(es) e <b>${nf}</b> formando(s) (com a turma)${mud?` · <b>${mud}</b> com o perfil mudado à mão`:""}${man?` · <b>${man}</b> conta(s) só desta lista`:""}.`+
+    (rep.size?` <span style="color:var(--warn)">${rep.size} email(s) repetido(s) — fica o primeiro (formador antes de formando); corrija em Escola360.</span>`:"")+
+    (fora||saidos?`<br>Sem conta: ${saidos?`${saidos} desistente(s)/transferido(s)`:""}${saidos&&fora?" e ":""}${fora?`${fora} formando(s) sem turma deste ano letivo (turmas já concluídas ou sem turma)`:""}.`:"")+
+    `<br>A lista chega ao servidor quando a Direção publica (é automático a cada alteração).`}
+$("#utiOrg").addEventListener("click",e=>{const b=e.target.closest("[data-uo]");if(!b)return;UTI_ORG=b.dataset.uo;UTI_N=200;utiTabela()});
 function utiMods(){if(!utiOk(1))return;const off=new Set(UTI.loja.modsOff||[]);
   $("#utiMods").innerHTML=MODULOS.map(M=>`<label class="${off.has(M.id)?"off":""}"><input type="checkbox" data-mod="${M.id}"${off.has(M.id)?"":" checked"}><span><b>${esc(M.nome)}</b><br><span class="hint" style="margin:0">${off.has(M.id)?"Desligado — só os administradores":"Ligado para os perfis com acesso"}</span></span></label>`).join("");
   $("#utiModsAviso").innerHTML=("modsOff" in UTI.loja)?"":`<span style="color:var(--warn)">Para isto funcionar para toda a gente, atualize o serviço na Cloudflare com o ficheiro <code>servidor/boxcheck-avisos.js</code> da EPISJ 360 0.9.19.</span>`}
@@ -84,9 +113,13 @@ function utiVis(){if(!utiOk(1))return;const L=UTI.loja,P=Object.keys(UTI.perfis)
 {let h=null;$("#utiFiltro").oninput=()=>{clearTimeout(h);h=setTimeout(()=>{UTI_N=200;utiTabela()},120)}}
 $("#utiForm").onsubmit=e=>{e.preventDefault();if(!utiOk())return;const em=$("#utiEmail").value.trim().toLowerCase();if(!/@/.test(em)){toast("Email inválido");return}
   const pf=$("#utiPerfil").value;UTI.loja.utilizadores[em]={perfil:pf,turma:pf==="form"?$("#utiTurma").value:"",nome:""};$("#utiEmail").value="";utiTabela();utiSujo()};
-$("#tbUti").addEventListener("change",e=>{const x=e.target.closest("[data-ue]");if(!x||!utiOk())return;const em=x.dataset.ue,u=UTI.loja.utilizadores[em];if(!u)return;u[x.dataset.k]=x.value;
-  if(x.dataset.k==="perfil"){if(x.value!=="form")u.turma="";const tr=x.closest("tr");if(tr)tr.outerHTML=utiLinha(em,u)}utiSujo()});
-$("#tbUti").addEventListener("click",e=>{const b=e.target.closest("[data-udel]");if(!b||!utiOk())return;delete UTI.loja.utilizadores[b.dataset.udel];const tr=b.closest("tr");if(tr)tr.remove();utiSujo()});
+$("#tbUti").addEventListener("change",e=>{const x=e.target.closest("[data-ue]");if(!x||!utiOk())return;const em=x.dataset.ue,A=UTI_AUTO||utiAuto(),au=A.M.get(em);let u=UTI.loja.utilizadores[em];
+  if(!u){if(!au)return;if(x.dataset.k==="perfil"&&x.value===au.perfil)return;u=UTI.loja.utilizadores[em]={perfil:au.perfil,turma:au.turma||"",nome:au.nome||""}} // 0.9.157: mudar uma conta automática cria a exceção
+  u[x.dataset.k]=x.value;
+  if(x.dataset.k==="perfil"){if(x.value!=="form")u.turma="";else if(!u.turma&&au&&au.turma)u.turma=au.turma}
+  const tr=x.closest("tr");if(tr)tr.outerHTML=utiLinha(em,u,au,A.rep);utiResumo();utiSujo()});
+$("#tbUti").addEventListener("click",e=>{const b=e.target.closest("[data-udel]");if(!b||!utiOk())return;const em=b.dataset.udel;delete UTI.loja.utilizadores[em];const A=UTI_AUTO||utiAuto(),au=A.M.get(em),tr=b.closest("tr");
+  if(tr){if(au)tr.outerHTML=utiLinha(em,{perfil:au.perfil,turma:au.turma,nome:au.nome},au,A.rep);else tr.remove()}utiResumo();utiSujo()});
 $("#utiBulkGo").onclick=()=>{if(!utiOk())return;let n=0,mal=0;for(const l of $("#utiBulk").value.split(/\n/)){const c=l.split(/[;\t,]/).map(x=>x.trim());if(!c[0])continue;const em=c[0].toLowerCase(),pf=utiPerfilDe(c[1]||"");
     if(!/@/.test(em)||!pf){mal++;continue}UTI.loja.utilizadores[em]={perfil:pf,turma:pf==="form"?(c[2]||"").toUpperCase():"",nome:""};n++}
   utiTabela();if(n){utiSujo();$("#utiBulk").value=""}toast(`${n} conta(s) juntada(s)${mal?` · ${mal} linha(s) não percebida(s)`:""}`)};

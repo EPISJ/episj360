@@ -149,7 +149,7 @@ function renderFormandos(){const e=escData(),q=norm($("#forFilter").value||""),f
   const CN=new Intl.Collator("pt",{numeric:true}),CP=new Intl.Collator("pt");
   const L=e.formandos.filter(f=>(!ft||f.turmaId===ft)&&(!q||norm((f.num||"")+" "+f.nome).includes(q))).sort((a,b)=>CN.compare(cod(a.turmaId),cod(b.turmaId))||CN.compare(String(a.num),String(b.num))||CP.compare(a.nome,b.nome));
   FOR_N=FOR_N||200;const resto=L.length-FOR_N;
-  $("#tbFor").innerHTML=L.slice(0,FOR_N).map(f=>`<tr data-id="${f.id}"><td><input type="text" data-k="num" value="${esc(f.num||"")}"></td><td><input type="text" data-k="nome" value="${esc(f.nome)}"></td><td><select data-k="turmaId">${lzOpts("turma",f.turmaId)}</select></td><td><button class="x" data-del title="Apagar">×</button></td></tr>`).join("")+(resto>0?`<tr><td colspan="4" style="text-align:center"><button class="b s" type="button" data-formais>Mostrar mais ${Math.min(resto,500)} (faltam ${resto}) — ou escolha a turma acima</button></td></tr>`:"")
+  $("#tbFor").innerHTML=L.slice(0,FOR_N).map(f=>`<tr data-id="${f.id}"><td><input type="text" data-k="num" value="${esc(f.num||"")}"></td><td><div style="display:flex;gap:6px;align-items:center"><input type="text" data-k="nome" value="${esc(f.nome)}"${f.nasc?` title="Nascimento: ${esc(forDataPt(f.nasc))}"`:""}>${f.estado?`<span class="tag exc" style="flex:none">${esc(f.estado)}</span>`:""}</div></td><td><select data-k="turmaId">${lzOpts("turma",f.turmaId)}</select></td><td><button class="x" data-del title="Apagar">×</button></td></tr>`).join("")+(resto>0?`<tr><td colspan="4" style="text-align:center"><button class="b s" type="button" data-formais>Mostrar mais ${Math.min(resto,500)} (faltam ${resto}) — ou escolha a turma acima</button></td></tr>`:"")
     ||`<tr><td colspan="4" class="hint">${e.formandos.length?"Ninguém corresponde à procura.":"Ainda sem formandos — acrescente acima ou cole uma lista."}</td></tr>`;
   $("#forCnt").textContent=e.formandos.length?`${L.length} de ${e.formandos.length} formando(s)${resto>0?" — a mostrar os primeiros "+FOR_N:""}.`:""}
 var FOR_N=200;
@@ -167,5 +167,57 @@ $("#forImport").onclick=()=>{const lines=$("#forBulk").value.split(/\r?\n/).map(
     const ex=E.formandos.find(f=>(num&&f.num===num&&f.turmaId===tid)||norm(f.nome)===norm(nome));
     if(ex){if(num)ex.num=num;if(tid)ex.turmaId=tid;upd++}else{E.formandos.push({id:uid(),num,nome,turmaId:tid});add++}}
   save();renderFormandos();esRecarregar();$("#forMsg").textContent=`${add} acrescentado(s), ${upd} atualizado(s)${bad?`, ${bad} linha(s) ignorada(s)`:""}.`;if(add||upd)$("#forBulk").value=""};
+
+/* ---------- 0.9.139: importar o «Mapa dos alunos por turma» do dbGEP (PDF) ----------
+   Lê só número, nome, data de nascimento, turma e d)esistente / t)ransferido. Morada, n.º de identificação e NIF ficam de fora.
+   Junta-se ao que existe (mesmo número, ou mesmo nome na mesma turma); nunca apaga. */
+let FOR_PDF=null;
+async function forPdfLinhas(buf){const pdfjs=await calPdfJs(),doc=await pdfjs.getDocument({data:new Uint8Array(buf),isEvalSupported:false,disableFontFace:true}).promise,pags=[];
+  try{for(let n=1;n<=doc.numPages;n++){const tc=await (await doc.getPage(n)).getTextContent(),L=[];
+    for(const it of tc.items){if(!it||typeof it.str!=="string"||!it.str.trim()||!it.transform)continue;const y=it.transform[5];
+      let l=null;for(const k of L)if(Math.abs(k.y-y)<=2.5){l=k;break}if(!l){l={y,a:[]};L.push(l)}l.a.push({x:it.transform[4],s:it.str.trim()})}
+    L.sort((p,q)=>q.y-p.y);pags.push(L.map(l=>l.a.sort((p,q)=>p.x-q.x).map(i=>i.s).join(" ").replace(/\s+/g," ").trim()))}}
+  finally{try{doc.destroy()}catch(e){}}return pags}
+function forPdfMapa(pags){const T=[];let cur=null;
+  for(const L of pags)for(const l of L){
+    const mt=l.match(/Turma:\s*([A-Z]{1,2}\d{1,3}\s*[-–]\s*.+?\(\s*\d{2,4}\s*[-\/]\s*\d{2,4}\s*\))/i)||l.match(/^Turma:\s*([A-Z]{1,2}\d{1,3}\b.*)$/i);
+    if(mt){const txt=mt[1].trim();cur=T.find(x=>norm(x.turma)===norm(txt));if(!cur){cur={turma:txt,fs:[],total:null};T.push(cur)}continue}
+    const mn=l.match(/Total de Alunos:\s*(\d+)/i);if(mn){if(cur)cur.total=+mn[1];continue}
+    const m=l.match(/^(?:([dt])\)\s*)?(\d{4,9})\s+(.+?)\s+(\d{2})\/(\d{2})\/(\d{4})(?:\s|$)/i);
+    if(m&&cur&&!cur.fs.some(f=>f.num===m[2]))cur.fs.push({num:m[2],nome:m[3].trim(),nasc:`${m[6]}-${m[5]}-${m[4]}`,estado:m[1]?(m[1].toLowerCase()==="d"?"desistente":"transferido"):""})}
+  return T.filter(x=>x.fs.length)}
+function forPdfPar(f,tid){const L=escData().formandos;
+  return L.find(x=>x.num&&x.num===f.num)||(tid&&L.find(x=>x.turmaId===tid&&norm(x.nome)===norm(f.nome)))||L.find(x=>!x.num&&!x.turmaId&&norm(x.nome)===norm(f.nome))||null}
+function forPdfMuda(x,f,tid){return x.num!==f.num||x.nome!==f.nome||(tid&&x.turmaId!==tid)||(x.nasc||"")!==f.nasc||(x.estado||"")!==f.estado}
+function forDataPt(iso){const m=String(iso||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}/${m[2]}/${m[1]}`:""}
+function forPdfPrever(){const P=FOR_PDF,out=$("#forPdfPrev");if(!P){out.innerHTML="";return}const inc=P.inc;let tN=0,tA=0,tI=0,tX=0;
+  const rows=P.T.map(T=>{const t=pcTurmaDe({turma:T.turma},true),F=T.fs.filter(f=>inc||!f.estado);let n=0,a=0,i=0;
+    for(const f of F){const x=forPdfPar(f,t&&t.id);if(!x)n++;else if(forPdfMuda(x,f,t&&t.id))a++;else i++}
+    const sai=T.fs.filter(f=>f.estado).length;tN+=n;tA+=a;tI+=i;tX+=sai;
+    const conf=T.total!=null&&T.total!==T.fs.length?`<span class="tag bad" title="O PDF diz ${T.total} e a app leu ${T.fs.length}">${T.fs.length} de ${T.total}</span>`:`${T.fs.length}`;
+    return `<tr><td><b>${esc(T.turma)}</b></td><td>${t?"já existe":`<span class="tag exc">será criada</span>`}</td><td class="pcn">${conf}</td><td class="pcn">${n}</td><td class="pcn">${a}</td><td class="pcn">${i}</td><td class="pcn">${sai}</td></tr>`}).join("");
+  out.innerHTML=`<div class="msg info" style="margin-top:12px">«${esc(P.nome)}»: ${P.T.length} turma(s) e ${P.T.reduce((s,T)=>s+T.fs.length,0)} formando(s). Confira e carregue em <b>Importar</b>.</div>
+    <div style="overflow-x:auto"><table class="rt"><thead><tr><th>Turma</th><th>Na EPISJ 360</th><th>No PDF</th><th>Novos</th><th>A atualizar</th><th>Já estavam</th><th>Desistentes / transferidos</th></tr></thead><tbody>${rows}</tbody>
+    <tfoot><tr><td colspan="3"><b>Total</b></td><td class="pcn"><b>${tN}</b></td><td class="pcn"><b>${tA}</b></td><td class="pcn"><b>${tI}</b></td><td class="pcn"><b>${tX}</b></td></tr></tfoot></table></div>
+    <label class="cal-chk"><input type="checkbox" id="forPdfInc" ${inc?"checked":""}> Importar também os desistentes e os transferidos (ficam assinalados na lista)</label>
+    <div class="row" style="margin-top:10px"><button class="b imp" type="button" id="forPdfOk">Importar ${tN+tA} formando(s)</button><button class="b s" type="button" id="forPdfNao">Cancelar</button></div>`}
+$("#forPdfGo").onclick=()=>$("#forPdfFile").click();
+$("#forPdfFile").addEventListener("change",async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;const msg=$("#forPdfMsg");msg.textContent="A ler o PDF…";FOR_PDF=null;forPdfPrever();
+  try{const T=forPdfMapa(await forPdfLinhas(await f.arrayBuffer()));
+    if(!T.length){msg.textContent="Não encontrei turmas nem formandos neste PDF. É o «Mapa dos alunos por turma» do dbGEP?";return}
+    msg.textContent="";FOR_PDF={nome:f.name,T,inc:true};forPdfPrever()}
+  catch(x){console.warn(x);msg.textContent="Não foi possível ler este PDF ("+(x&&x.message||x)+")."}});
+$("#forPdfPrev").addEventListener("change",e=>{if(e.target.id==="forPdfInc"&&FOR_PDF){FOR_PDF.inc=e.target.checked;forPdfPrever()}});
+$("#forPdfPrev").addEventListener("click",e=>{const P=FOR_PDF;if(!P)return;
+  if(e.target.id==="forPdfNao"){FOR_PDF=null;forPdfPrever();return}
+  if(e.target.id!=="forPdfOk")return;
+  ponto("Antes de importar o mapa dos alunos (PDF)");const E=escData(),novasT=[],novosC=[];let add=0,upd=0;
+  for(const T of P.T){const t=pcTurmaDe({turma:T.turma},false,novasT,novosC),tid=t?t.id:"";
+    for(const f of T.fs){if(!P.inc&&f.estado)continue;const x=forPdfPar(f,tid);
+      if(x){if(!forPdfMuda(x,f,tid))continue;x.num=f.num;x.nome=f.nome;if(tid)x.turmaId=tid;x.nasc=f.nasc;x.estado=f.estado;upd++}
+      else{const o={id:uid(),num:f.num,nome:f.nome,turmaId:tid,nasc:f.nasc};if(f.estado)o.estado=f.estado;E.formandos.push(o);add++}}}
+  save();FOR_PDF=null;forPdfPrever();escRender();esRecarregar();
+  $("#forPdfMsg").textContent=`Importado: ${add} formando(s) novo(s), ${upd} atualizado(s)${novasT.length?`; turmas criadas: ${novasT.join(", ")}`:""}${novosC.length?`; cursos criados: ${novosC.join(", ")}`:""}.`;
+  toast("Mapa dos alunos importado (pode anular)")});
 
 

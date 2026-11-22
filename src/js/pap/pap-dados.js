@@ -108,7 +108,7 @@ function papNovaProva(anoId,turmaId,fase,vazia){const E=escData(),D=papDef(),t=t
   const P={id:uid(),anoId,turmaId:turmaId||"",fase:fase||"1",curso:t?turmaNome(t):"",fse:"",resp:t?papCargo(t.id,anoId,/respons.*curso/):"",orient,dped:D.dped||(ult&&ult.dped)||"",
     local:D.local||"",box:"",obs:{},atas:{},cands:[],criado:Date.now(),por:String(EU&&EU.email||"")};
   if(t&&!vazia)papJuntarTurma(P);return P}
-function papJuntarTurma(P){if(!P.turmaId)return 0;const F=(escData().formandos||[]).filter(f=>f.turmaId===P.turmaId);let n=0;
+function papJuntarTurma(P){if(!P.turmaId)return 0;const F=(escData().formandos||[]).filter(f=>f.turmaId===P.turmaId&&!f.estado);let n=0;
   for(const f of F){if(P.cands.some(c=>c.fId===f.id||(f.num&&c.num===f.num)||norm(c.nome||"")===norm(f.nome||"")))continue;P.cands.push({id:uid(),fId:f.id,num:f.num||"",nome:f.nome,inc:true,n:{}});n++}
   P.cands.sort(papOrdNome);return n}
 function papDatasCal(P){try{const a=papAnoDe(P),t=papTurma(P);if(!t)return[];return[...new Set(calMarcos(a,t.id).filter(m=>m.tipo==="pap"&&m.de).flatMap(m=>calDatasDe(m)))].sort()}catch(e){return[]}}

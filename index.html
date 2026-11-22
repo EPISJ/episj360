@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
-<!-- GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.138 -->
+<!-- GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.139 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>EPISJ 360 — Escola Profissional da Ilha de São Jorge</title>
@@ -9,8 +9,8 @@
 <!-- 0.9.50: a letra Poppins vem do próprio site (mais rápido, funciona sem o Google e também dentro do Horários360) -->
 <link rel="preload" href="fonts/poppins-latin-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/poppins-latin-600.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="app/app.css?v=0.9.138">
-<script src="app/cabeca.js?v=0.9.138"></script>
+<link rel="stylesheet" href="app/app.css?v=0.9.139">
+<script src="app/cabeca.js?v=0.9.139"></script>
 </head>
 <body>
 <div id="privLock" role="dialog" aria-modal="true" aria-labelledby="privTit">
@@ -537,6 +537,12 @@
     <p class="hint">Copie do Excel ou do pleon as colunas <b>número, nome e turma</b> (a turma pelo código, ex.: <code>A04</code>), um formando por linha. Quem já existir (mesmo número na mesma turma, ou mesmo nome) é atualizado, não duplicado.</p>
     <textarea id="forBulk" placeholder="1&#9;Nome do formando&#9;A04"></textarea>
     <div class="row" style="margin-top:8px"><label style="width:240px">Turma, se a lista não a tiver<select id="forBulkT"></select></label><button class="b imp" id="forImport" style="align-self:flex-end">Importar formandos</button><span id="forMsg" class="hint" style="margin:0;align-self:flex-end"></span></div>
+  </div>
+  <div class="card" id="forPdfCard">
+    <h2>Importar o mapa dos alunos por turma (PDF)</h2>
+    <p class="hint">O PDF «Mapa dos alunos por turma» tirado do dbGEP. A app lê de cada formando o <b>número</b>, o <b>nome</b>, a <b>data de nascimento</b>, a <b>turma</b> e se é <b>desistente</b> ou <b>transferido</b>. A morada, o n.º de identificação e o NIF <b>não</b> são lidos nem guardados. Antes de importar mostra o que vai entrar; quem já existe (mesmo número, ou mesmo nome na mesma turma) é atualizado e nada é apagado. As turmas e os cursos que faltarem são criados.</p>
+    <div class="row" style="align-items:center"><button class="b imp" id="forPdfGo" type="button">Importar o mapa (PDF)</button><input type="file" id="forPdfFile" accept=".pdf,application/pdf" style="display:none"><span id="forPdfMsg" class="hint" style="margin:0"></span></div>
+    <div id="forPdfPrev"></div>
   </div>
 </section>
 
@@ -1481,8 +1487,8 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="app/rede.js?v=0.9.138"></script>
-<script src="app/app.js?v=0.9.138"></script>
-<script src="app/extra.js?v=0.9.138"></script>
+<script src="app/rede.js?v=0.9.139"></script>
+<script src="app/app.js?v=0.9.139"></script>
+<script src="app/extra.js?v=0.9.139"></script>
 </body>
 </html>

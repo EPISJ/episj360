@@ -537,6 +537,12 @@
     <textarea id="forBulk" placeholder="1&#9;Nome do formando&#9;A04"></textarea>
     <div class="row" style="margin-top:8px"><label style="width:240px">Turma, se a lista não a tiver<select id="forBulkT"></select></label><button class="b imp" id="forImport" style="align-self:flex-end">Importar formandos</button><span id="forMsg" class="hint" style="margin:0;align-self:flex-end"></span></div>
   </div>
+  <div class="card" id="forPdfCard">
+    <h2>Importar o mapa dos alunos por turma (PDF)</h2>
+    <p class="hint">O PDF «Mapa dos alunos por turma» tirado do dbGEP. A app lê de cada formando o <b>número</b>, o <b>nome</b>, a <b>data de nascimento</b>, a <b>turma</b> e se é <b>desistente</b> ou <b>transferido</b>. A morada, o n.º de identificação e o NIF <b>não</b> são lidos nem guardados. Antes de importar mostra o que vai entrar; quem já existe (mesmo número, ou mesmo nome na mesma turma) é atualizado e nada é apagado. As turmas e os cursos que faltarem são criados.</p>
+    <div class="row" style="align-items:center"><button class="b imp" id="forPdfGo" type="button">Importar o mapa (PDF)</button><input type="file" id="forPdfFile" accept=".pdf,application/pdf" style="display:none"><span id="forPdfMsg" class="hint" style="margin:0"></span></div>
+    <div id="forPdfPrev"></div>
+  </div>
 </section>
 
 <section id="esch" data-fixo="1">

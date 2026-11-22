@@ -83,8 +83,10 @@ function h3Celulas(st,V,tipo,id){const T=new Map((st.teachers||[]).map(t=>[t.id,
    no horário de uma turma a cor é a da DISCIPLINA. Fundo claro, barra de cor à esquerda e texto escuro (lê-se sempre bem). */
 const H3_PAL=["#2f5fb8","#e8743b","#7c6cf0","#d99a18","#0a8fb0","#e0507e","#b24ccf","#a8714d","#3949ab","#d64545","#3b9be6","#5b6b8c","#c2410c","#8b5cf6","#0e7490","#be185d"];
 var H3_CORC={k:"",m:null};
-function h3CorMapa(st){const k=(st.classes||[]).length+":"+(st.subjects||[]).length+":"+(st.name||"");if(H3_CORC.k===k&&H3_CORC.m)return H3_CORC.m;
-  const m={c:new Map(),s:new Map()};(st.classes||[]).slice().sort((a,b)=>COLL_PTN.compare(String(a.name),String(b.name))).forEach((c,i)=>m.c.set(c.id,H3_PAL[i%H3_PAL.length]));
+function h3CorMapa(st){turCores();const k=(st.classes||[]).length+":"+(st.subjects||[]).length+":"+(st.name||"")+":"+TUR_COR_K;if(H3_CORC.k===k&&H3_CORC.m)return H3_CORC.m;
+  const m={c:new Map(),s:new Map()};// 0.9.172: a cor de cada turma é a da turma na Escola360 (turmaCor), a mesma em toda a app
+  {let E={turmas:[]};try{E=escData()}catch(e){}const byId=new Map(E.turmas.map(t=>[t.id,t])),byCod=new Map();for(const t of E.turmas)if(!turAcabou(t,turAnoHoje())||!byCod.has(norm(t.cod)))byCod.set(norm(t.cod),t);
+   (st.classes||[]).slice().sort((a,b)=>COLL_PTN.compare(String(a.name),String(b.name))).forEach((c,i)=>{const t=byId.get(c.id)||byId.get((ESD.mapaC||{})[c.id])||byCod.get(norm(c.name));m.c.set(c.id,t?turmaCor(t):H3_PAL[i%H3_PAL.length])})}
   (st.subjects||[]).slice().sort((a,b)=>COLL_PTN.compare(String(a.short||a.name),String(b.short||b.name))).forEach((x,i)=>m.s.set(x.id,H3_PAL[(i*5)%H3_PAL.length]));H3_CORC={k,m};return m}
 function h3Cor(st,x,tipo){const m=h3CorMapa(st);return (tipo==="c"?m.s.get(x.sid):m.c.get(x.cid))||m.s.get(x.sid)||H3_PAL[0]}
 function h3Tinta(hex,a){const m=/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(hex||"");if(!m)return "#eef3fc";return "#"+[1,2,3].map(i=>Math.round(parseInt(m[i],16)*a+255*(1-a)).toString(16).padStart(2,"0")).join("")}

@@ -118,7 +118,7 @@ function renderTurmas(){const e=escData(),a=anoAtivo(),q=norm($("#turFilter").va
   const L=(todas?e.turmas.slice().sort((x,y)=>COLL_PTN.compare(String(x.cod),String(y.cod))):turmasDoAno(a))
     .filter(t=>!q||norm(t.cod+" "+turmaNome(t)+" "+((cursoById(t.cursoId)||{}).nome||"")+" "+profName(turmaOE(t,a.id))+" "+profName(turmaRC(t,a.id))+" "+(t.fse||"")).includes(q));
   $("#tbTur").innerHTML=L.map(t=>{const ac=anoCurricular(t,a);return `<tr data-id="${t.id}">
-    <td><input type="text" data-k="cod" value="${esc(t.cod)}" style="width:70px"></td>
+    <td style="white-space:nowrap"><input type="color" data-k="cor" class="turcor" value="${esc(turmaCor(t))}" title="Cor da turma (igual em toda a app até a turma acabar)"><input type="text" data-k="cod" value="${esc(t.cod)}" style="width:70px"></td>
     <td><select data-k="cursoId">${curOpts(t.cursoId)}</select>${turmaPlanoProprio(t)?`<span class="tag" style="margin-top:4px;background:var(--brandbg);color:var(--brand)" title="Esta turma tem escolhas diferentes das do curso (Escola360 › Cursos)">plano próprio</span>`:""}</td>
     <td><input type="number" data-k="anoIni" value="${t.anoIni||""}" min="2000" max="2100" style="width:84px"></td>
     <td><input type="number" data-k="anoFim" value="${t.anoFim||""}" min="2000" max="2100" style="width:84px"></td>
@@ -132,7 +132,7 @@ function renderTurmas(){const e=escData(),a=anoAtivo(),q=norm($("#turFilter").va
   $("#tCurso").innerHTML=curOpts($("#tCurso").value);if(!$("#tIni").value)$("#tIni").placeholder=a.ini;if(!$("#tFim").value)$("#tFim").placeholder=a.ini+3}
 $("#turFilter").addEventListener("input",debounce(()=>renderTurmas(),120));$("#turTodas").addEventListener("change",renderTurmas);
 $("#tbTur").addEventListener("change",e=>{const tr=e.target.closest("tr");const t=escData().turmas.find(x=>x.id===tr.dataset.id);if(!t)return;const k=e.target.dataset.k;
-  t[k]=/^anoIni|anoFim$/.test(k)?(parseInt(e.target.value)||null):e.target.value.trim();if(k==="cod")t.cod=t.cod.toUpperCase();
+  t[k]=/^anoIni|anoFim$/.test(k)?(parseInt(e.target.value)||null):e.target.value.trim();if(k==="cod")t.cod=t.cod.toUpperCase();if(k==="cor"&&!turCorOk(t.cor))delete t.cor;
   if(k==="fse"){t.fse=fseNorm(t.fse);if(t.fse&&!fseOk(t.fse))toast("Guardado — mas confirme o código FSE (o habitual é ACORES-10-5571-FSE-000123)")}
   save();renderTurmas();esRecarregar()});
 $("#tbTur").addEventListener("click",e=>{if(!e.target.hasAttribute("data-del"))return;const E=escData(),t=E.turmas.find(x=>x.id===e.target.closest("tr").dataset.id);if(!t)return;

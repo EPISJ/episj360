@@ -39,6 +39,23 @@ function escData(){const e=cfg.escola&&typeof cfg.escola==="object"?cfg.escola:(
   if(!e.anos.some(a=>a.id===e.ativo))e.ativo=e.anos.slice().sort((a,b)=>b.ini-a.ini)[0].id;
   calTiposSync();
   return e}
+/* 0.9.172: cada turma tem a sua cor (t.cor), igual em toda a app, do início ao fim da turma. Uma cor só volta a ser dada a uma turma
+   nova depois de a turma que a tinha acabar (anoFim ≤ ano letivo de hoje). A escolha é determinística (por ano de início e código):
+   todos os computadores calculam a mesma cor antes de a Direção a gravar. Pode ser mudada em Escola360 › Turmas. */
+var TUR_PAL=["#2f5fb8","#e8743b","#7c6cf0","#d99a18","#0a8fb0","#e0507e","#b24ccf","#a8714d","#3949ab","#d64545","#3b9be6","#5b6b8c","#c2410c","#8b5cf6","#0e7490","#be185d"];
+var TUR_COR_K="",TUR_COR_GRAV=0;
+function turAnoHoje(){const d=new Date();return d.getMonth()>=8?d.getFullYear():d.getFullYear()-1}
+function turAcabou(t,ini){return !!(t&&t.anoFim&&t.anoFim<=ini)}
+function turCorOk(c){return /^#[0-9a-f]{6}$/i.test(String(c||""))}
+function turCores(){let E;try{E=escData()}catch(e){return}const T=E.turmas||[],ini=turAnoHoje();
+  const k=ini+"|"+T.map(t=>t.id+":"+(t.cor||"")+":"+(t.anoFim||"")).join(",");if(k===TUR_COR_K)return;
+  const usa=new Map();for(const t of T)if(turCorOk(t.cor)&&!turAcabou(t,ini))usa.set(t.cor.toLowerCase(),(usa.get(t.cor.toLowerCase())||0)+1);
+  const sem=T.filter(t=>!turCorOk(t.cor)).sort((a,b)=>(turAcabou(a,ini)-turAcabou(b,ini))||((a.anoIni||0)-(b.anoIni||0))||COLL_PTN.compare(String(a.cod||""),String(b.cod||""))||String(a.id).localeCompare(String(b.id)));
+  for(const t of sem){let best=TUR_PAL[0],bn=1e9;for(const c of TUR_PAL){const n=usa.get(c)||0;if(n<bn){bn=n;best=c}}t.cor=best;if(!turAcabou(t,ini))usa.set(best,(usa.get(best)||0)+1)}
+  TUR_COR_K=ini+"|"+T.map(t=>t.id+":"+(t.cor||"")+":"+(t.anoFim||"")).join(",");
+  if(sem.length&&!TUR_COR_GRAV){TUR_COR_GRAV=1;setTimeout(()=>{TUR_COR_GRAV=0;try{if(typeof podePublicar==="function"&&podePublicar()&&!RO)save()}catch(e){}},1500)}}
+function turmaCor(t){if(!t)return TUR_PAL[0];if(!turCorOk(t.cor))turCores();return turCorOk(t.cor)?t.cor:TUR_PAL[0]}
+function turDot(t){return `<i class="tdot" style="background:${esc(turmaCor(t))}"></i>`}
 function anoAtivo(){const e=escData();return e.anos.find(a=>a.id===e.ativo)}
 function anosOrd(){return escData().anos.slice().sort((a,b)=>a.ini-b.ini)}
 function turmaNoAno(t,a){if(!a)return false;if(t.anoIni&&t.anoFim)return a.ini>=t.anoIni&&a.ini<t.anoFim;if(t.anoIni)return a.ini===t.anoIni;return true}

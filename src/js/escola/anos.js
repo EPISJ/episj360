@@ -129,8 +129,8 @@ function ayGantt(){const e=escData(),at=anoAtivo(),T=e.turmas.filter(t=>t.anoIni
   const L=T.slice().sort((a,b)=>a.anoIni-b.anoIni||COLL_PTN.compare(String(a.cod),String(b.cod)));const sem=e.turmas.length-T.length;
   const yy=n=>String(n).slice(-2);
   $("#ayGantt").innerHTML=`<div class="ay-g"><table><thead><tr><th></th>${Y.map(y=>`<th class="${y===at.ini?"on":""} ${e.anos.some(a=>a.ini===y)?"":"nx"}" ${e.anos.some(a=>a.ini===y)?"":`title="Ano letivo ainda não criado"`}>${yy(y)}/${yy(y+1)}</th>`).join("")}</tr></thead><tbody>
-    ${L.map(t=>{const c=cursoById(t.cursoId),dur=t.anoFim-t.anoIni;return `<tr><td class="nm" title="${esc(turmaNome(t))}"><b>${esc(t.cod)}</b> <span>${esc(c?c.nome:"")}</span></td>${Y.map(y=>{const i=y-t.anoIni;if(i<0||i>=dur)return `<td class="${y===at.ini?"on":""}"></td>`;
-      return `<td class="${y===at.ini?"on":""}"><div class="bar y${Math.min(3,i+1)} ${i===0?"s":""} ${i===dur-1?"e fin":""} ${y<at.ini?"past":""}" title="${esc(t.cod)} · ${i+1}.º ano em ${y}/${y+1}">${i+1}.º</div></td>`}).join("")}</tr>`}).join("")}</tbody></table></div>
+    ${L.map(t=>{const c=cursoById(t.cursoId),dur=t.anoFim-t.anoIni;return `<tr><td class="nm" title="${esc(turmaNome(t))}">${turDot(t)}<b>${esc(t.cod)}</b> <span>${esc(c?c.nome:"")}</span></td>${Y.map(y=>{const i=y-t.anoIni;if(i<0||i>=dur)return `<td class="${y===at.ini?"on":""}"></td>`;
+      return `<td class="${y===at.ini?"on":""}"><div class="bar y${Math.min(3,i+1)} ${i===0?"s":""} ${i===dur-1?"e fin":""} ${y<at.ini?"past":""}" style="background:${esc(turmaCor(t))}" title="${esc(t.cod)} · ${i+1}.º ano em ${y}/${y+1}">${i+1}.º</div></td>`}).join("")}</tr>`}).join("")}</tbody></table></div>
     ${sem?`<p class="hint" style="margin:8px 0 0">${sem} turma${sem===1?"":"s"} sem ano de início e de fim não aparece${sem===1?"":"m"} aqui.</p>`:""}`}
 
 function renderFerias(){const a=escData().anos.find(x=>x.id===$("#ferAno").value)||anoAtivo(),FER=calFeriados(a),SEM=["dom","seg","ter","qua","qui","sex","sáb"];

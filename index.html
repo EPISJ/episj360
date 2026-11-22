@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
-<!-- GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.149 -->
+<!-- GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.150 -->
 <meta charset="utf-8">
-<script src="app/sem-armazenamento.js?v=0.9.149"></script>
+<script src="app/sem-armazenamento.js?v=0.9.150"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'wasm-unsafe-eval'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>EPISJ 360 — Escola Profissional da Ilha de São Jorge</title>
@@ -11,8 +11,8 @@
 <!-- 0.9.50: a letra Poppins vem do próprio site (mais rápido, funciona sem o Google e também dentro do Horários360) -->
 <link rel="preload" href="fonts/poppins-latin-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/poppins-latin-600.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="app/app.css?v=0.9.149">
-<script src="app/cabeca.js?v=0.9.149"></script>
+<link rel="stylesheet" href="app/app.css?v=0.9.150">
+<script src="app/cabeca.js?v=0.9.150"></script>
 </head>
 <body>
 <div id="privLock" role="dialog" aria-modal="true" aria-labelledby="privTit">
@@ -555,13 +555,12 @@
 <section id="hsSem">
   <div id="hsHero"></div>
   <div class="card">
+    <div class="hsimpg" id="hsImpG"><span class="hint">Importar do Untis:</span> <button class="b imp" id="hsImp" type="button" hidden title="Ler os horários em PDF do Untis (formadores e turmas), vários PDF ou um .zip">PDF ou .zip</button> <button class="b imp" id="hsImpTudo" type="button" hidden title="Escolher a pasta dos horários do Untis: entram os ficheiros GPU (se houver) ou todos os PDF dela e das subpastas (formadores e turmas); das versões repetidas fica a mais recente">Pasta toda</button> <button class="b imp" id="hsImpGpu" type="button" hidden title="Ficheiros de intercâmbio do Untis (GPU001.TXT e, se houver, GPU002…GPU006) — os mesmos que o DBG pleon importa. Juntam-se ao horário atual">Ficheiros GPU (como o pleon)</button></div>
     <div class="row hsbar" style="margin-bottom:12px;align-items:flex-end;flex-wrap:wrap;gap:10px">
       <label style="width:150px">Ver por<select id="hsTipo"><option value="t">Formador</option><option value="c">Turma</option><option value="r">Sala</option></select></label>
       <label class="grow" style="min-width:200px">Quem<select id="hsQuem"></select></label>
       <span class="hsnav"><button class="b s" id="hsAnt" type="button" aria-label="Semana anterior" title="Semana anterior">‹</button><button class="b s" id="hsHoje" type="button">Esta semana</button><button class="b s" id="hsSeg" type="button" aria-label="Semana seguinte" title="Semana seguinte">›</button></span>
       <label style="width:160px">Semana de<input type="date" id="hsData"></label>
-      <button class="b imp" id="hsImp" type="button" hidden title="Ler os horários em PDF do Untis (formadores e turmas), vários PDF ou um .zip">Importar do Untis (PDF)</button>
-      <button class="b imp" id="hsImpTudo" type="button" hidden title="Escolher a pasta dos horários do Untis: entram todos os PDF dela e das subpastas (formadores e turmas); das versões repetidas fica a mais recente">Importar tudo (pasta)</button>
     </div>
     <div id="hsOut"></div>
   </div>
@@ -1523,8 +1522,8 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="app/rede.js?v=0.9.149"></script>
-<script src="app/app.js?v=0.9.149"></script>
-<script src="app/extra.js?v=0.9.149"></script>
+<script src="app/rede.js?v=0.9.150"></script>
+<script src="app/app.js?v=0.9.150"></script>
+<script src="app/extra.js?v=0.9.150"></script>
 </body>
 </html>

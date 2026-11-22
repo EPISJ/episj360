@@ -554,13 +554,12 @@
 <section id="hsSem">
   <div id="hsHero"></div>
   <div class="card">
+    <div class="hsimpg" id="hsImpG"><span class="hint">Importar do Untis:</span> <button class="b imp" id="hsImp" type="button" hidden title="Ler os horários em PDF do Untis (formadores e turmas), vários PDF ou um .zip">PDF ou .zip</button> <button class="b imp" id="hsImpTudo" type="button" hidden title="Escolher a pasta dos horários do Untis: entram os ficheiros GPU (se houver) ou todos os PDF dela e das subpastas (formadores e turmas); das versões repetidas fica a mais recente">Pasta toda</button> <button class="b imp" id="hsImpGpu" type="button" hidden title="Ficheiros de intercâmbio do Untis (GPU001.TXT e, se houver, GPU002…GPU006) — os mesmos que o DBG pleon importa. Juntam-se ao horário atual">Ficheiros GPU (como o pleon)</button></div>
     <div class="row hsbar" style="margin-bottom:12px;align-items:flex-end;flex-wrap:wrap;gap:10px">
       <label style="width:150px">Ver por<select id="hsTipo"><option value="t">Formador</option><option value="c">Turma</option><option value="r">Sala</option></select></label>
       <label class="grow" style="min-width:200px">Quem<select id="hsQuem"></select></label>
       <span class="hsnav"><button class="b s" id="hsAnt" type="button" aria-label="Semana anterior" title="Semana anterior">‹</button><button class="b s" id="hsHoje" type="button">Esta semana</button><button class="b s" id="hsSeg" type="button" aria-label="Semana seguinte" title="Semana seguinte">›</button></span>
       <label style="width:160px">Semana de<input type="date" id="hsData"></label>
-      <button class="b imp" id="hsImp" type="button" hidden title="Ler os horários em PDF do Untis (formadores e turmas), vários PDF ou um .zip">Importar do Untis (PDF)</button>
-      <button class="b imp" id="hsImpTudo" type="button" hidden title="Escolher a pasta dos horários do Untis: entram todos os PDF dela e das subpastas (formadores e turmas); das versões repetidas fica a mais recente">Importar tudo (pasta)</button>
     </div>
     <div id="hsOut"></div>
   </div>

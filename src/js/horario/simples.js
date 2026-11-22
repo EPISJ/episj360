@@ -16,14 +16,17 @@ function h3Norm(v){v=v&&typeof v==="object"?v:{};return{t:+v.t||0,salT:+v.salT||
   env:Array.isArray(v.env)?v.env:[],auto:Object.assign({on:false,email:true,push:true,min:10},v.auto||{}),msg:Object.assign({},H3_MSG0,v.msg||{}),visto:+v.visto||0}}
 function h3Carregar(){if(!H3_PRONTO)H3_PRONTO=DB.get("kv","h3").then(v=>{H3=h3Norm(v);h3ModoAplicar()}).catch(()=>{H3=h3Norm(null);h3ModoAplicar()});return H3_PRONTO}
 function h3Sal(){const a=new Uint8Array(9);crypto.getRandomValues(a);return [...a].map(x=>x.toString(36).padStart(2,"0")).join("")}
-function h3Guardar(){if(RO||LIMPAR||!H3)return;H3.t=Date.now();DB.put("kv","h3",H3);clearTimeout(H3_H);
-  H3_H=setTimeout(()=>{try{if(NUVOK()&&!nuvDesl())nuvemPut("H3",H3,H3.t)}catch(e){}},2500);try{guidePubAgendar()}catch(e){}}
+function h3Guardar(){if(RO||LIMPAR||!H3)return;H3.t=Date.now();DB.put("kv","h3",H3);
+  nuvFila("h3",()=>{try{if(NUVOK()&&!nuvDesl()){if(H3_SINC)nuvemPut("H3",H3,H3.t);else h3TrazerNuvem()}}catch(e){}},2500);try{guidePubAgendar()}catch(e){}} // 0.9.149: fila de envios (sai ao fechar a página)
 function h3Juntar(a,b){const n=h3Norm((b.t||0)>(a.t||0)?b:a),o=(b.t||0)>(a.t||0)?a:b;
-  n.tel=Object.assign({},o.tel,n.tel);for(const [k,v] of Object.entries(o.ult||{}))if(!n.ult[k]||(v.t||0)>(n.ult[k].t||0))n.ult[k]=v;
+  n.tel=Object.assign({},o.tel,n.tel);for(const [k,v] of Object.entries(o.ult||{})){const q=n.ult[k];if(!q){n.ult[k]=v;continue}const r=Object.assign({},(v.t||0)>(q.t||0)?v:q);
+    for(const [c,ct] of [["em","emT"],["tl","tlT"]]){const x=(v[ct]||0)>(q[ct]||0)?v:q;if(x[c]!==undefined){r[c]=x[c];r[ct]=x[ct]}}if(r.em&&r.em===r.tl){const z=[v,q].find(y=>y.c&&y.em===r.em&&y.tl===r.tl);if(z)r.c=z.c}n.ult[k]=r}
   const m=new Map();for(const x of(o.env||[]).concat(n.env||[]))m.set(x.t+"|"+x.por,x);n.env=[...m.values()].sort((x,y)=>x.t-y.t).slice(-200);if(o.sal&&(!n.sal||(o.salT||0)<(n.salT||Infinity))){n.sal=o.sal;n.salT=o.salT||0}return n}
-async function h3TrazerNuvem(){try{await h3Carregar();if(RO||!NUVOK()||nuvDesl())return;const idx=(await(await nuvem("GET","")).json()).itens||{};
-    if(idx.H3&&(idx.H3.t||0)>(H3.t||0)){const j=h3Norm(await nuvemGet("H3"));H3=h3Juntar(H3,j);DB.put("kv","h3",H3);h3ModoAplicar();if(curTab==="hsCom")hsComRender()}
-    else if((H3.t||0)>((idx.H3||{}).t||0))await nuvemPut("H3",H3,H3.t)}
+// 0.9.149: os dados só vivem na nuvem — até à primeira leitura, nada se envia sem antes juntar com o que lá está (h3Juntar nunca apaga contactos nem avisos)
+var H3_SINC=false;
+async function h3TrazerNuvem(){try{await h3Carregar();if(RO||!NUVOK()||nuvDesl())return;const idx=(await(await nuvem("GET","")).json()).itens||{},tn=(idx.H3||{}).t||0;
+    if(tn&&(tn>(H3.t||0)||!H3_SINC)){const j=h3Norm(await nuvemGet("H3")),n=h3Juntar(H3,j),mud=JSON.stringify(n)!==JSON.stringify(j);H3=n;H3_SINC=true;DB.put("kv","h3",H3);h3ModoAplicar();if(curTab==="hsCom")hsComRender();if(mud&&(H3.t||0)>=tn)await nuvemPut("H3",H3,Date.now())}
+    else{H3_SINC=true;if((H3.t||0)>tn)await nuvemPut("H3",H3,H3.t)}}
   catch(e){if(e&&e.kind!=="nokv")console.warn("Horários360/nuvem",e)}}
 
 /* ---------- Simples / Completa ---------- */
@@ -70,7 +73,7 @@ function h3Celulas(st,V,tipo,id){const T=new Map((st.teachers||[]).map(t=>[t.id,
 /* ---------- Semana ---------- */
 async function hsRender(){await null;try{await esdPronto}catch(e){}try{await h3Carregar()}catch(e){}
   const out=$("#hsOut"),hero=$("#hsHero");if(!out)return;const st=mhEstado(),a=anoAtivo(),pf=perfilAtual(),dir=podePublicar()&&!RO;
-  $("#hsImp").style.display=dir?"":"none";$("#hsImpTudo").style.display=dir?"":"none";$("#hsAvisos").innerHTML=pf==="prof"?h3AvisosFormador():"";
+  $("#hsImpG").style.display=dir?"":"none";["hsImp","hsImpTudo","hsImpGpu"].forEach(i=>{const b=$("#"+i);b.hidden=false;b.style.display=""});$("#hsAvisos").innerHTML=pf==="prof"?h3AvisosFormador():"";
   if(!st){hero.innerHTML=`<div class="ay-hero"><div class="ay-top"><div><h1>Horários</h1><div class="sub">${esc(a.nome)}</div></div></div></div>`;
     out.innerHTML=`<div class="pp-vz">${ICO.cal}<p>${RO?"A Direção ainda não publicou o horário de "+esc(a.nome)+".":"Ainda não há horário para "+esc(a.nome)+". Importe os PDF do Untis (botão verde acima)."}</p></div>`;$("#hsQuem").innerHTML="";return}
   const T=(st.teachers||[]).slice().sort((x,y)=>COLL_PT.compare(String(x.name),String(y.name))),C=(st.classes||[]).slice().sort((x,y)=>COLL_PTN.compare(String(x.name),String(y.name))),R=(st.rooms||[]).slice().sort((x,y)=>COLL_PTN.compare(String(x.name),String(y.name)));
@@ -113,6 +116,7 @@ $("#hsSeg").onclick=()=>{H3S.seg=calMais(H3S.seg||h3Seg(calHoje()),7);hsRender()
 $("#hsHoje").onclick=()=>{H3S.seg="";hsRender()};
 $("#hsImp").onclick=()=>h3Importar();
 $("#hsImpTudo").onclick=()=>h3Importar(true);
+$("#hsImpGpu").onclick=()=>h3Importar("gpu");
 document.addEventListener("click",e=>{const b=e.target.closest("[data-h3cp]");if(!b)return;try{navigator.clipboard.writeText(b.dataset.h3cp);toast("Copiado")}catch(x){}});
 
 /* ---------- Por formadores (0.9.142): todos os formadores numa semana, lado a lado ---------- */
@@ -146,18 +150,30 @@ $("#hsForOut").addEventListener("click",e=>{const l=e.target.closest("[data-hsve
 
 /* ---------- Importar do Untis a partir da versão simples ----------
    Os PDF escolhem-se aqui e são entregues ao importador do editor (o mesmo da versão completa), onde se confirma a importação. */
-function h3Importar(pasta){const inp=document.createElement("input");inp.type="file";inp.multiple=true;if(pasta)inp.webkitdirectory=true;else inp.accept=".pdf,.zip,application/pdf,application/zip";inp.style.display="none";document.body.append(inp);
-  inp.onchange=async()=>{let fs=[...inp.files];inp.remove();
-    // 0.9.142: «Importar tudo» — a pasta toda do Untis (e subpastas): só os PDF e .zip; as versões repetidas resolvem-se no importador (fica a mais recente)
-    if(pasta){const n0=fs.length;fs=fs.filter(f=>/\.(pdf|zip)$/i.test(f.name)&&!/(^|\/)(__MACOSX|\.)/.test(f.webkitRelativePath||f.name));if(!fs.length){toast(n0?"Essa pasta não tem nenhum PDF.":"Pasta vazia.");return}toast(`A importar ${fs.length} ficheiro${fs.length===1?"":"s"} da pasta…`)}
-    if(!fs.length)return;H3_IMP=true;aplicarPerfil();show("esch");
+// 0.9.148: também os ficheiros GPU do Untis (GPU001.TXT…GPU006.TXT) — o mesmo intercâmbio que o DBG pleon lê; vão para o importador GPU do editor (junta ao horário atual)
+const h3EhGPU=f=>/(^|\/)GPU0*\d+\D*\.txt$/i.test(f.webkitRelativePath||f.name)||/^GPU0*\d+\.txt$/i.test(f.name);
+function h3Importar(modo){const pasta=modo===true||modo==="pasta",gpu=modo==="gpu";
+  const inp=document.createElement("input");inp.type="file";inp.multiple=true;if(pasta)inp.webkitdirectory=true;else inp.accept=gpu?".txt,.TXT,text/plain":".pdf,.zip,.txt,application/pdf,application/zip,text/plain";inp.style.display="none";document.body.append(inp);
+  inp.onchange=async()=>{let fs=[...inp.files].filter(f=>!/(^|\/)(__MACOSX|\.)/.test(f.webkitRelativePath||f.name));inp.remove();if(!fs.length){if(pasta)toast("Pasta vazia.");return}
+    // na pasta (ou numa escolha mista): se houver ficheiros GPU, entram esses (dados exatos do Untis); senão os PDF e .zip
+    const G=fs.filter(h3EhGPU),PD=fs.filter(f=>/\.(pdf|zip)$/i.test(f.name));
+    let tipo=gpu||G.length?"gpu":"pdf",L=tipo==="gpu"?(G.length?G:fs.filter(f=>/\.txt$/i.test(f.name))):PD;
+    if(!L.length){toast(gpu?"Escolha os ficheiros GPU do Untis (GPU001.TXT e, se houver, GPU002…GPU006).":pasta?"Essa pasta não tem PDF nem ficheiros GPU do Untis.":"Escolha PDF, .zip ou ficheiros GPU do Untis.");return}
+    if(tipo==="gpu"&&!L.some(f=>/GPU0*1\D*\.txt$/i.test(f.name))){toast("Falta o GPU001.TXT (horários) — é o ficheiro principal da exportação do Untis.");return}
+    if(pasta||(G.length&&PD.length))toast(tipo==="gpu"?`A importar ${L.length} ficheiro${L.length===1?"":"s"} GPU do Untis${PD.length?" (os PDF ficam de fora: os GPU têm os dados exatos)":""}…`:`A importar ${L.length} PDF…`);
+    H3_IMP=true;aplicarPerfil();show("esch");
     const fr=$("#esFr");let w=null;for(let i=0;i<100;i++){try{w=fr.contentWindow;if(w&&typeof w.updfEscolher==="function"&&fr.classList.contains("pronto"))break}catch(e){}w=null;await new Promise(r=>setTimeout(r,200))}
     if(!w){toast("O editor de horários não abriu — tente outra vez");return}
-    const Pr=w.HTMLInputElement.prototype,orig=Pr.click;
-    Pr.click=function(){if(this.type==="file"){Pr.click=orig;try{const dt=new w.DataTransfer();fs.forEach(f=>dt.items.add(f));this.files=dt.files;this.dispatchEvent(new w.Event("change",{bubbles:true}))}catch(e){toast("Não foi possível entregar os ficheiros ao importador: "+e.message)}return}return orig.call(this)};
-    try{w.updfEscolher()}catch(e){Pr.click=orig;toast("Não foi possível importar: "+e.message);return}
-    setTimeout(()=>{if(Pr.click!==orig)Pr.click=orig},4000);
-    $("#esMsg").innerHTML=`<div class="msg info h3volta"><span>Confirme a importação na janela do Horários360. Quando terminar, volte à vista simples — os formadores com o horário mudado aparecem em «Comunicar».</span><button class="b s" data-h3volta>Voltar à semana</button></div>`};
+    const entregar=inpEl=>{const dt=new w.DataTransfer();L.forEach(f=>dt.items.add(f));inpEl.files=dt.files;inpEl.dispatchEvent(new w.Event("change",{bubbles:true}))};
+    if(tipo==="gpu"){ // a página «Ficheiro» do editor tem o importador GPU (#im-dif): abre-a e entrega-lhe os ficheiros
+      try{w.location.hash="ficheiro"}catch(e){}let el=null;for(let i=0;i<50&&!el;i++){await new Promise(r=>setTimeout(r,100));try{el=fr.contentDocument.getElementById("im-dif")}catch(e){}}
+      if(!el){toast("Não encontrei o importador GPU do editor — abra Horários › Ficheiro › Importar ficheiros GPU");return}
+      try{entregar(el)}catch(e){toast("Não foi possível entregar os ficheiros ao importador: "+e.message);return}}
+    else{const Pr=w.HTMLInputElement.prototype,orig=Pr.click;
+      Pr.click=function(){if(this.type==="file"){Pr.click=orig;try{entregar(this)}catch(e){toast("Não foi possível entregar os ficheiros ao importador: "+e.message)}return}return orig.call(this)};
+      try{w.updfEscolher()}catch(e){Pr.click=orig;toast("Não foi possível importar: "+e.message);return}
+      setTimeout(()=>{if(Pr.click!==orig)Pr.click=orig},4000)}
+    $("#esMsg").innerHTML=`<div class="msg info h3volta"><span>Confirme a importação na janela do Horários360 (por omissão junta ao horário atual, sem apagar nada). Quando terminar, volte à vista simples — os formadores com o horário mudado aparecem em «Comunicar».</span><button class="b s" data-h3volta>Voltar à semana</button></div>`};
   inp.click()}
 document.addEventListener("click",e=>{if(!e.target.closest("[data-h3volta]"))return;H3_IMP=false;$("#esMsg").innerHTML="";aplicarPerfil();show(h3Modo()==="completa"?"hsCom":"hsSem")});
 
@@ -168,30 +184,41 @@ function h3Linhas(st,tid){const VL=cpVersoes(st),hj=calHoje(),D=st.days||["Seg",
     for(const [k,L] of m){const [di,pi]=k.split("|").map(Number),p=P[pi]||{};for(const x of L)o.add(`${pre}${D[di]||"?"} ${p.start||p.label||pi+1}${p.end?"–"+p.end:""} · ${x.disc}${x.tu?" · "+x.tu:""}${x.sala?" · "+x.sala:""}`)}}
   const DS=["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"],ord=s=>{const m=/(Seg|Ter|Qua|Qui|Sex|Sáb|Dom)\S* (\d\d:\d\d)?/.exec(s);return (s.startsWith("A partir")?"1":"0")+(m?DS.indexOf(m[1].slice(0,3))+(m[2]||""):"")+s};
   return [...o].sort((a,b)=>ord(a).localeCompare(ord(b)))}
+// 0.9.149: cada formador só sai da lista depois de avisado pelas duas vias — email e telemóvel (notificação ou SMS).
+// H3.ult[tid] = {c: horário do último aviso completo (base das diferenças), em/emT: horário avisado por email, tl/tlT: por telemóvel}
 function h3Pendentes(){const st=mhEstado();if(!st||!H3)return[];const r=[];
-  for(const t of st.teachers||[]){const cur=h3Linhas(st,t.id),ant=H3.ult[t.id],p=h3ProfDe(st,t.id);
-    if(!ant){if(cur.length)r.push({t,p,cur,novo:true,mais:cur,menos:[]});continue}
-    const A=new Set(ant.c||[]),B=new Set(cur),mais=cur.filter(x=>!A.has(x)),menos=(ant.c||[]).filter(x=>!B.has(x));if(mais.length||menos.length)r.push({t,p,cur,novo:false,mais,menos})}
+  for(const t of st.teachers||[]){const cur=h3Linhas(st,t.id),h=esHash(cur.join("\n")),ant=H3.ult[t.id],p=h3ProfDe(st,t.id);
+    if(!ant&&!cur.length)continue;
+    const base=ant&&ant.c,A=new Set(base||[]),B=new Set(cur),mais=base?cur.filter(x=>!A.has(x)):cur,menos=base?base.filter(x=>!B.has(x)):[],igual=!!base&&!mais.length&&!menos.length;
+    const antigo=!!ant&&ant.em===undefined&&ant.tl===undefined; // avisos de antes da 0.9.149: contam para as duas vias se nada mudou
+    const emOk=!!ant&&(ant.em===h||(antigo&&igual)),tlOk=!!ant&&(ant.tl===h||(antigo&&igual));
+    if(emOk&&tlOk)continue;
+    r.push({t,p,cur,h,novo:!base,mais,menos,emOk,tlOk})}
   return r.sort((a,b)=>COLL_PT.compare(String(a.t.name),String(b.t.name)))}
 function h3Txt(x){if(x.novo)return "O seu horário:\n"+x.cur.map(s=>"  "+s).join("\n");
   return (x.mais.length?"Aulas novas ou mudadas:\n"+x.mais.map(s=>"  + "+s).join("\n"):"")+(x.mais.length&&x.menos.length?"\n\n":"")+(x.menos.length?"Deixam de existir:\n"+x.menos.map(s=>"  − "+s).join("\n"):"")}
 function h3Preencher(tpl,x){const n=x.novo?"horário novo":(x.mais.length+x.menos.length)+" alteraç"+(x.mais.length+x.menos.length===1?"ão":"ões");
   const sem=calDM(h3Seg(calHoje()),{day:"numeric",month:"long"});
   return String(tpl||"").replace(/\{nome\}/g,(x.p&&x.p.nome)||x.t.name||"").replace(/\{alteracoes\}/g,h3Txt(x)).replace(/\{ligacao\}/g,h3Lig()).replace(/\{semana\}/g,sem).replace(/\{n\}/g,n)}
-function h3Marcar(x,canais){H3.ult[x.t.id]={c:x.cur,t:Date.now()};H3.env.push({t:Date.now(),por:(EU&&EU.email)||"",quem:x.t.name||"",canais,n:x.novo?-1:x.mais.length+x.menos.length});if(H3.env.length>200)H3.env=H3.env.slice(-200)}
+function h3Marcar(x,canais){const u=Object.assign({},H3.ult[x.t.id]||{}),agora=Date.now(),todos=canais.includes("marca");
+  if(todos||canais.includes("email")){u.em=x.h;u.emT=agora}
+  if(todos||canais.includes("push")||canais.includes("sms")){u.tl=x.h;u.tlT=agora}
+  if(u.em===x.h&&u.tl===x.h)u.c=x.cur;u.t=agora;H3.ult[x.t.id]=u;
+  H3.env.push({t:agora,por:(EU&&EU.email)||"",quem:x.t.name||"",canais,n:x.novo?-1:x.mais.length+x.menos.length});if(H3.env.length>200)H3.env=H3.env.slice(-200)}
 async function h3Push(x){const tp=h3Topico(h3Email(x.p));if(!tp)throw new Error("sem tópico");
   const r=await fetch("https://ntfy.sh/",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({topic:tp,title:"EPISJ 360 — Horário",message:h3Preencher(H3.msg.curta,x),click:h3Lig(),tags:["calendar"]})});
   if(!r.ok)throw new Error("ntfy "+r.status)}
 async function h3Email1(x){const to=h3Email(x.p);if(!to)throw new Error("sem email");await msEnviar({to,subject:h3Preencher(H3.msg.assunto,x),body:h3Preencher(H3.msg.corpo,x)})}
-function h3SmsLink(L){const nums=L.map(x=>h3Tel(H3.tel[(x.p||{}).id])).filter(Boolean);if(!nums.length)return "";
+function h3SmsLink(L){L=L.filter(x=>!x.tlOk);const nums=L.map(x=>h3Tel(H3.tel[(x.p||{}).id])).filter(Boolean);if(!nums.length)return "";
   const body=encodeURIComponent(L.length===1?h3Preencher(H3.msg.curta,L[0]):"EPISJ 360: o seu horário mudou. Veja em "+h3Lig()),ios=/iPhone|iPad|Macintosh/.test(navigator.userAgent);
   return ios?`sms:/open?addresses=${nums.join(",")}&body=${body}`:`sms:${nums.join(",")}?body=${body}`}
 async function h3Enviar(L,canais,msg){if(H3_ENVIO||!L.length)return;H3_ENVIO=true;let ok=0,erros=[];
   try{for(let i=0;i<L.length;i++){const x=L[i],feito=[];if(msg)msg(`A enviar ${i+1} de ${L.length}…`);
-      if(canais.includes("email"))try{await h3Email1(x);feito.push("email")}catch(e){erros.push((x.t.name||"")+": email — "+(e.message||e))}
-      if(canais.includes("push"))try{await h3Push(x);feito.push("push")}catch(e){erros.push((x.t.name||"")+": notificação — "+(e.message||e))}
+      const fazEm=canais.includes("email")&&!x.emOk,fazTl=canais.includes("push")&&!x.tlOk;
+      if(fazEm)try{await h3Email1(x);feito.push("email")}catch(e){erros.push((x.t.name||"")+": email — "+(e.message||e))}
+      if(fazTl)try{await h3Push(x);feito.push("push")}catch(e){erros.push((x.t.name||"")+": notificação — "+(e.message||e))}
       if(feito.length){h3Marcar(x,feito);ok++}
-      if(canais.includes("email")&&i<L.length-1)await new Promise(r=>setTimeout(r,2100))}}
+      if(fazEm&&i<L.length-1)await new Promise(r=>setTimeout(r,2100))}}
   finally{H3_ENVIO=false;h3Guardar()}
   return{ok,erros}}
 // avisos automáticos: do navegador de quem é da Direção, alguns minutos depois de o horário mudar (um computador de cada vez)
@@ -209,9 +236,10 @@ async function hsComRender(){await null;try{await esdPronto}catch(e){}await h3Ca
   if(!st){el.innerHTML=`<div class="pp-vz">${ICO.cal}<p>Ainda não há horário para ${esc(anoAtivo().nome)}. Importe os PDF do Untis em «Semana».</p></div>`;return}
   const sms=h3SmsLink(L),semEm=L.filter(x=>!h3Email(x.p)).length;
   let h=`<div class="card"><h3 style="margin:0 0 4px">Por avisar</h3>
-    <p class="hint" style="margin:0 0 10px">${L.length?"Formadores com o horário diferente do último aviso. Escolha a quem enviar e por onde.":"Todos os formadores já foram avisados do horário atual."}</p>`;
-  if(L.length){h+=`<div class="tw"><table class="rt"><thead><tr><th><input type="checkbox" id="h3All" checked aria-label="Todos"></th><th>Formador</th><th>Email</th><th>Telemóvel</th><th>O que mudou</th></tr></thead><tbody>`+
+    <p class="hint" style="margin:0 0 10px">${L.length?"Formadores com o horário diferente do último aviso. Cada um só sai da lista depois de avisado pelas duas vias: email e telemóvel (notificação ou SMS). Quem já foi avisado por uma via só recebe a outra.":"Todos os formadores já foram avisados do horário atual, por email e por telemóvel."}</p>`;
+  if(L.length){h+=`<div class="tw"><table class="rt"><thead><tr><th><input type="checkbox" id="h3All" checked aria-label="Todos"></th><th>Formador</th><th>Email</th><th>Telemóvel</th><th>Avisado por</th><th>O que mudou</th></tr></thead><tbody>`+
     L.map(x=>`<tr><td><input type="checkbox" data-h3sel="${esc(x.t.id)}" checked></td><td>${esc((x.p&&x.p.nome)||x.t.name)}</td><td>${esc(h3Email(x.p)||"—")}</td><td>${esc(h3Tel(H3.tel[(x.p||{}).id])||"—")}</td>
+      <td><span class="h3via ${x.emOk?"ok":""}">${x.emOk?"✓ ":""}Email</span> <span class="h3via ${x.tlOk?"ok":""}">${x.tlOk?"✓ ":""}Telemóvel</span></td>
       <td><details><summary>${x.novo?"horário novo ("+x.cur.length+" tempo"+(x.cur.length===1?"":"s")+")":`${x.mais.length?"+"+x.mais.length:""}${x.mais.length&&x.menos.length?" / ":""}${x.menos.length?"−"+x.menos.length:""}`}</summary><pre class="h3dif">${esc(h3Txt(x))}</pre></details></td></tr>`).join("")+`</tbody></table></div>
     <div class="row" style="margin-top:10px;flex-wrap:wrap;gap:8px">
       <button class="b" id="h3Em"${ms?"":" disabled title=\"Entre com o Office 365 para enviar emails\""}>Enviar email</button>
@@ -258,9 +286,9 @@ async function hsComRender(){await null;try{await esdPronto}catch(e){}await h3Ca
   if(all)all.onchange=()=>{el.querySelectorAll("[data-h3sel]").forEach(i=>i.checked=all.checked);h3SmsAtual()};
   el.querySelectorAll("[data-h3sel]").forEach(i=>i.onchange=h3SmsAtual);
   function h3SmsAtual(){if(b5){const s=h3SmsLink(sel());if(s)b5.href=s;b5.hidden=!s}}
-  if(b5)b5.onclick=()=>{setTimeout(()=>{const S=sel().filter(x=>h3Tel(H3.tel[(x.p||{}).id]));if(S.length&&confirm("A mensagem foi enviada pelo telemóvel? Os "+S.length+" formadores com telemóvel ficam como avisados."))
+  if(b5)b5.onclick=()=>{setTimeout(()=>{const S=sel().filter(x=>!x.tlOk&&h3Tel(H3.tel[(x.p||{}).id]));if(S.length&&confirm("A mensagem foi enviada pelo telemóvel? Os "+S.length+" formadores com telemóvel ficam como avisados por telemóvel."))
     {S.forEach(x=>h3Marcar(x,["sms"]));h3Guardar();hsComRender()}},1500)};
-  if(b4)b4.onclick=()=>{const S=sel();if(!S.length)return;if(!confirm(`Dar ${S.length} formador${S.length===1?"":"es"} como avisado${S.length===1?"":"s"} sem enviar nada?`))return;S.forEach(x=>h3Marcar(x,["marca"]));h3Guardar();hsComRender()};
+  if(b4)b4.onclick=()=>{const S=sel();if(!S.length)return;if(!confirm(`Dar ${S.length} formador${S.length===1?"":"es"} como avisado${S.length===1?"":"s"} pelas duas vias sem enviar nada?`))return;S.forEach(x=>h3Marcar(x,["marca"]));h3Guardar();hsComRender()};
   el.querySelectorAll("[data-h3a]").forEach(i=>i.onchange=()=>{H3.auto[i.dataset.h3a]=i.checked;h3Guardar()});
   el.querySelectorAll("[data-h3m2]").forEach(i=>i.onchange=()=>{H3.msg[i.dataset.h3m2]=i.value;h3Guardar()});
   $("#h3MsgRep").onclick=()=>{if(!confirm("Repor as mensagens originais?"))return;H3.msg=Object.assign({},H3_MSG0);h3Guardar();hsComRender()};

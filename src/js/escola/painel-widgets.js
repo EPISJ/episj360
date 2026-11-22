@@ -180,7 +180,19 @@ const WIDGETS=[
 const WG_R={};
 function wgLazy(m,id){if(typeof WG_R[id]==="function")return WG_R[id]();
   modCarregar(m).then(()=>{if(curTab==="esc")try{renderWidgets()}catch(e){}}).catch(()=>{});return wgVazio("A carregar…")}
-function wgVisiveis(){return WIDGETS.filter(w=>modOn(w.mod))}
+/* 0.9.184: um Dashboard para cada perfil — widgets que cada perfil pode ver e os que aparecem por omissão
+   (a quem ainda não escolheu os seus). A Direção pode ver todos; os outros perfis só os que lhes dizem respeito. */
+const WG_PERFIL={
+  dexec:{a:["ano","cal","aniv","entregas","top","ecorep","fdreq","papprox","s3sem","fse"],b:["crcump","carga","ocup","turmasbox","estbox","cnq"]},
+  dped:{a:["ano","cal","aniv","incompletas","entregas","prazo","top","crcump","crmods","horario","agora"],b:["papprox","carga","anocur","turmasbox","ultimas","esphoje","proxres","avisos"]},
+  prof:{a:["meudia","agora","cal","prazo","crmods","aniv"],b:["ano","esphoje","proxres"],pode:["meudia","agora","cal","prazo","crmods","aniv","ano","esphoje","proxres","ocup","papprox"]},
+  form:{a:["meudia","cal","ano"],b:[],pode:["meudia","cal","ano"]},
+  econ:{a:["ecorep","ano","cal"],b:["aniv"],pode:["ecorep","ano","cal","aniv"]}};
+function wgPerfilAtual(){let p="";try{p=perfilAtual()}catch(e){}if(!PREV&&EU&&EU.admin)return "dexec";return WG_PERFIL[p]?p:"prof"}
+function wgPodePerfil(id){const P=WG_PERFIL[wgPerfilAtual()];return !P.pode||P.pode.includes(id)}
+function wgVisiveis(){return WIDGETS.filter(w=>modOn(w.mod)&&wgPodePerfil(w.id))}
+// quem nunca escolheu os seus widgets fica com os do seu perfil
+function wgPadraoDoPerfil(){const P=WG_PERFIL[wgPerfilAtual()];WG_SEL=P.a.slice();WG_SEL2=P.b.filter(id=>!WG_SEL.includes(id));try{renderWidgets()}catch(e){}}
 // 0.9.24: duas zonas de widgets (cada uma com a sua escolha); um widget só aparece numa zona de cada vez
 const WG_PADRAO2=["crcump","anocur","fse","cnq","ultimas","carga","ocup","crmods"];
 let WG_SEL2=(()=>{try{const v=JSON.parse(localStorage.getItem(WG_KEY+"2")||"null");return Array.isArray(v)?v:WG_PADRAO2.filter(id=>!WG_SEL.includes(id))}catch(e){return WG_PADRAO2.slice()}})();

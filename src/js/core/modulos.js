@@ -51,6 +51,7 @@ function tabNovo(t,v,pfX){
      o Dashboard (esc) e passava a ver Comunicar, Folder360, PAP360, Social360 e o Cumprimento/Definições do Crono360.
      Agora: se o servidor já conhece o separador, vale só o que está marcado em Perfis (null = não há regra extra);
      para os separadores que o servidor ainda não conhece, a regra por omissão é pelo perfil (Direção = Executiva/Pedagógica/administrador). */
+  if(t==="esc")return (pfX||perfilAtual())!=="econ"; // 0.9.184: cada perfil tem o seu Dashboard (desmarcar em Perfis esconde-o); o Economato só vê o Econo360 (o seu painel é o Início do Econo360)
   if(tabSrv(t))return null;
   const PF=()=>pfX||perfilAtual(),DIR=()=>pfX?(pfX==="dexec"||pfX==="dped"):podePublicar(),PROF=()=>PF()==="prof";
   if(t==="cal")return true;

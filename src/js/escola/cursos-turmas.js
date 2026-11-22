@@ -145,12 +145,17 @@ function turmaOpts(sel,first){return (first??`<option value="">— sem turma —
 function turmaPorCod(cod){const a=anoAtivo(),L=escData().turmas.filter(t=>norm(t.cod)===norm(cod));return L.find(t=>turmaNoAno(t,a))||L[0]||null}
 /* 0.9.141: Formandos — lista por turma com a ficha completa de cada formando (dados, turma e curso, orientador educativo,
    plano curricular, calendário da turma, PAP e colegas). A ficha abre ao carregar na linha; os dados mudam-se lá. */
-var FOR_EST="",FOR_AB="";
+var FOR_EST="",FOR_AB="",FOR_REP=null;
 function forIdade(iso,ref){const m=String(iso||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return null;const r=ref||new Date();let i=r.getFullYear()-+m[1];if(r.getMonth()+1<+m[2]||(r.getMonth()+1===+m[2]&&r.getDate()<+m[3]))i--;return i}
 function forAniv(iso){const m=String(iso||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return null;const h=new Date();h.setHours(0,0,0,0);let d=new Date(h.getFullYear(),+m[2]-1,+m[3]);if(d<h)d=new Date(h.getFullYear()+1,+m[2]-1,+m[3]);return Math.round((d-h)/864e5)}
 function forIni(n){const p=String(n||"").trim().split(/\s+/).filter(Boolean);return ((p[0]||"?")[0]+(p.length>1?p[p.length-1][0]:"")).toUpperCase()}
 function forCor(s){let h=0;for(const c of String(s))h=(h*31+c.charCodeAt(0))>>>0;return ["#3b6fd8","#0f9b8e","#8b5cf6","#d9468f","#e07a1f","#2f855a","#c0392b","#4a5fc1","#0e7490","#9a6b00"][h%10]}
 var FOR_EST_TXT={desistente:"Desistente",transferido:"Transferido"};
+// 0.9.144: email oficial do formando — a mesma regra dos formadores (primeiro nome + último apelido @episj.com);
+// só se guarda f.email nas exceções (escrito à mão). Emails repetidos (formandos ou formadores) ficam assinalados para confirmar.
+function formandoEmail(f){return String((f&&f.email)||"").trim().toLowerCase()||(typeof emailAuto==="function"?emailAuto(f&&f.nome):"")}
+function forEmailsRep(){const c=new Map(),add=e=>{if(e)c.set(e,(c.get(e)||0)+1)};escData().formandos.forEach(f=>add(formandoEmail(f)));(cfg.profs||[]).forEach(p=>add(String(p.email||"").trim().toLowerCase()));
+  return new Set([...c].filter(([,n])=>n>1).map(([e])=>e))}
 function forEstTag(f){return f.estado?`<span class="tag exc">${esc(FOR_EST_TXT[f.estado]||f.estado)}</span>`:""}
 function renderFormandos(){const e=escData(),q=norm($("#forFilter").value||""),ft=$("#forTurmaF").value,a=anoAtivo();
   $("#forTurmaF").innerHTML=turmaOpts(ft,`<option value="">Todas as turmas</option>`);$("#fTurma").innerHTML=turmaOpts($("#fTurma").value);$("#forBulkT").innerHTML=turmaOpts($("#forBulkT").value,`<option value="">— na própria lista —</option>`);
@@ -159,11 +164,12 @@ function renderFormandos(){const e=escData(),q=norm($("#forFilter").value||""),f
   const CN=new Intl.Collator("pt",{numeric:true}),CP=new Intl.Collator("pt");
   const base=e.formandos.filter(f=>!ft||f.turmaId===ft);
   // números do topo (da turma escolhida ou de todas)
-  const at=base.filter(f=>!f.estado),ids=at.map(f=>forIdade(f.nasc)).filter(x=>x!=null),men=ids.filter(x=>x<18).length,anivs=at.filter(f=>{const d=forAniv(f.nasc);return d!=null&&d<=7});
+  const REP0=forEmailsRep(),at=base.filter(f=>!f.estado),ids=at.map(f=>forIdade(f.nasc)).filter(x=>x!=null),men=ids.filter(x=>x<18).length,anivs=at.filter(f=>{const d=forAniv(f.nasc);return d!=null&&d<=7});
   $("#forTiles").innerHTML=e.formandos.length?[[at.length,"ativos"],[base.filter(f=>f.estado==="desistente").length,"desistentes"],[base.filter(f=>f.estado==="transferido").length,"transferidos"],
-    [ids.length?(ids.reduce((s,x)=>s+x,0)/ids.length).toLocaleString("pt-PT",{maximumFractionDigits:1}):"—","idade média"],[ids.length?men:"—","menores de 18"],[anivs.length,"fazem anos esta semana"]]
+    [ids.length?(ids.reduce((s,x)=>s+x,0)/ids.length).toLocaleString("pt-PT",{maximumFractionDigits:1}):"—","idade média"],[ids.length?men:"—","menores de 18"],[anivs.length,"fazem anos esta semana"],[base.filter(f=>REP0.has(formandoEmail(f))).length,"emails repetidos a confirmar"]]
     .map(([v,l])=>`<div class="frt"><b>${v}</b><span>${l}</span></div>`).join(""):"";
-  const L=base.filter(f=>(!FOR_EST||(FOR_EST==="ativo"?!f.estado:f.estado===FOR_EST))&&(!q||norm((f.num||"")+" "+f.nome+" "+cod(f.turmaId)).includes(q)))
+  const REP=forEmailsRep();FOR_REP=REP;
+  const L=base.filter(f=>(!FOR_EST||(FOR_EST==="ativo"?!f.estado:f.estado===FOR_EST)||(FOR_EST==="email"&&REP.has(formandoEmail(f))))&&(!q||norm((f.num||"")+" "+f.nome+" "+cod(f.turmaId)+" "+formandoEmail(f)).includes(q)))
     .sort((x,y)=>CN.compare(cod(x.turmaId),cod(y.turmaId))||(!!x.estado-!!y.estado)||CP.compare(x.nome,y.nome));
   FOR_N=FOR_N||200;const resto=L.length-FOR_N;let h="",tAnt=null;
   for(const f of L.slice(0,FOR_N)){
@@ -172,8 +178,8 @@ function renderFormandos(){const e=escData(),q=norm($("#forFilter").value||""),f
     const id=forIdade(f.nasc),an=forAniv(f.nasc),ab=FOR_AB===f.id;
     h+=`<div class="frr${f.estado?" sai":""}${ab?" ab":""}" data-id="${f.id}"><button type="button" class="frh" data-fab aria-expanded="${ab}">
       <span class="frav" style="--c:${forCor(f.nome)}">${esc(forIni(f.nome))}</span>
-      <span class="frn"><b>${esc(f.nome)}</b><small>${f.num?"N.º "+esc(f.num):"sem número"}${id!=null?` · ${id} anos`:""}${an===0?" · faz anos hoje":an!=null&&an<=7?` · faz anos daqui a ${an} dia${an>1?"s":""}`:""}</small></span>
-      ${forEstTag(f)}<span class="frc">${cod(f.turmaId)?esc(cod(f.turmaId)):""}</span><svg class="frchev" viewBox="0 0 24 24" width="16" height="16"><path d="m6 9 6 6 6-6"/></svg></button>
+      <span class="frn"><b>${esc(f.nome)}</b><small>${f.num?"N.º "+esc(f.num):"sem número"}${id!=null?` · ${id} anos`:""}${formandoEmail(f)?" · "+esc(formandoEmail(f)):""}${an===0?" · faz anos hoje":an!=null&&an<=7?` · faz anos daqui a ${an} dia${an>1?"s":""}`:""}</small></span>
+      ${FOR_REP&&FOR_REP.has(formandoEmail(f))?`<span class="tag bad" title="Há outra pessoa com este email: escreva o email certo na ficha (exceção)">email repetido</span>`:""}${forEstTag(f)}<span class="frc">${cod(f.turmaId)?esc(cod(f.turmaId)):""}</span><svg class="frchev" viewBox="0 0 24 24" width="16" height="16"><path d="m6 9 6 6 6-6"/></svg></button>
       ${ab?forFicha(f):""}</div>`}
   if(resto>0)h+=`<div style="text-align:center;padding:10px"><button class="b s" type="button" data-formais>Mostrar mais ${Math.min(resto,500)} (faltam ${resto}) — ou escolha a turma acima</button></div>`;
   $("#tbFor").innerHTML=h||`<p class="hint">${e.formandos.length?"Ninguém corresponde à procura.":"Ainda sem formandos — acrescente acima, cole uma lista ou importe o mapa (PDF)."}</p>`;
@@ -186,7 +192,9 @@ function forFicha(f){const E=escData(),a=anoAtivo(),t=E.turmas.find(x=>x.id===f.
     <label class="w2">Nome<input type="text" data-k="nome" value="${esc(f.nome)}"></label>
     <label>Data de nascimento<input type="date" data-k="nasc" value="${esc(f.nasc||"")}"></label>
     <label>Turma<select data-k="turmaId">${turmaOpts(f.turmaId)}</select></label>
+    <label class="w2">Email da escola${f.email?" (exceção)":" (automático)"}<input type="email" data-k="email" value="${esc(f.email||"")}" placeholder="${esc(typeof emailAuto==="function"?emailAuto(f.nome):"")}" spellcheck="false"></label>
     <label>Situação<select data-k="estado"><option value="">Ativo</option><option value="desistente"${f.estado==="desistente"?" selected":""}>Desistente</option><option value="transferido"${f.estado==="transferido"?" selected":""}>Transferido</option></select></label></div>
+    <p class="frnota">${formandoEmail(f)?`<a href="mailto:${esc(formandoEmail(f))}">${esc(formandoEmail(f))}</a> — ${f.email?"escrito à mão (exceção à regra)":"primeiro nome + último apelido; se este formando tiver outro email, escreva-o acima"}`:""}${FOR_REP&&FOR_REP.has(formandoEmail(f))?' · <b style="color:var(--bad)">há outra pessoa com este email</b>':""}</p>
     ${id!=null?`<p class="frnota">${id} anos · ${id>=18?"maior de idade":"menor de idade"}${an!=null?` · ${an===0?"faz anos hoje":`faz ${id+1} anos a ${esc(forDataPt(f.nasc).slice(0,5))} (daqui a ${an} dia${an>1?"s":""})`}`:""}</p>`:""}
     <div class="row" style="margin-top:8px"><button class="b s pcdanger" type="button" data-fdel>Apagar formando</button></div>`);
   // 2) turma e curso
@@ -202,8 +210,10 @@ function forFicha(f){const E=escData(),a=anoAtivo(),t=E.turmas.find(x=>x.id===f.
       const fut=M.filter(m=>(m.ate||m.de)>=hoje).slice(0,6),fct=M.filter(m=>m.tipo==="fct");
       h+=sec("Calendário da turma",(fct.length?li("FCT",fct.map(m=>esc(calDatasTxt(m))).join("<br>")):"")+(fut.length?`<div class="frmarcos">${fut.map(m=>`<div>${calTag(m.tipo)}<span>${esc(m.nome||((CAL_TIPOS[m.tipo]||CAL_TIPOS.outro)[0]))}</span><time>${esc(calDatasTxt(m))}</time></div>`).join("")}</div>`:`<p class="hint" style="margin:0">Sem marcos por vir em ${esc(a.nome)}.</p>`))}catch(x){}
     // 4) colegas
-    const col=E.formandos.filter(x=>x.turmaId===t.id&&x.id!==f.id),ca=col.filter(x=>!x.estado);
-    h+=sec("Colegas de turma",`<p class="frnota" style="margin-top:0">${ca.length} colega(s) ativo(s)${col.length>ca.length?` · ${col.length-ca.length} saíram`:""}</p><div class="frcol">${ca.slice(0,24).map(x=>`<button type="button" class="frav sm" style="--c:${forCor(x.nome)}" data-fver="${x.id}" title="${esc(x.nome)}">${esc(forIni(x.nome))}</button>`).join("")}${ca.length>24?`<span class="hint" style="margin:0">+${ca.length-24}</span>`:""}</div>`)}
+    const col=E.formandos.filter(x=>x.turmaId===t.id&&x.id!==f.id).sort((x,y)=>(!!x.estado-!!y.estado)||COLL_PT.compare(x.nome,y.nome)),ca=col.filter(x=>!x.estado);
+    const idT=E.formandos.filter(x=>x.turmaId===t.id&&!x.estado).map(x=>forIdade(x.nasc)).filter(x=>x!=null),curto=n=>{const w=String(n||"").trim().split(/\s+/);return w.length>1?w[0]+" "+w[w.length-1]:w[0]||""};
+    h+=sec("Colegas de turma",`<div class="frcs"><span><b>${ca.length}</b> ativos</span>${col.length>ca.length?`<span><b>${col.length-ca.length}</b> saíram</span>`:""}${idT.length?`<span><b>${(idT.reduce((x,y)=>x+y,0)/idT.length).toLocaleString("pt-PT",{maximumFractionDigits:1})}</b> anos em média</span>`:""}</div>
+      <div class="frcol">${col.map(x=>{const ix=forIdade(x.nasc);return `<button type="button" class="frcl${x.estado?" sai":""}" data-fver="${x.id}" title="${esc(x.nome)}${x.estado?" ("+esc(x.estado)+")":""}"><span class="frav sm" style="--c:${forCor(x.nome)}">${esc(forIni(x.nome))}</span><span class="frcn"><b>${esc(curto(x.nome))}</b><small>${x.num?"N.º "+esc(x.num):""}${ix!=null?(x.num?" · ":"")+ix+" anos":""}${x.estado?" · "+esc(x.estado):""}</small></span></button>`}).join("")||'<p class="hint" style="margin:0">Sem colegas registados.</p>'}</div>`)}
   else h+=sec("Turma e curso",`<p class="hint" style="margin:0">Este formando ainda não tem turma: escolha-a nos dados.</p>`);
   // 5) PAP
   try{if(typeof PAP!=="undefined"&&PAP&&Array.isArray(PAP.provas)&&(typeof podePublicar!=="function"||podePublicar())){const R=[];
@@ -217,7 +227,9 @@ var FOR_N=200;
 {let h=null;$("#forFilter").addEventListener("input",()=>{FOR_N=200;clearTimeout(h);h=setTimeout(renderFormandos,120)})}$("#forTurmaF").addEventListener("change",()=>{FOR_N=200;renderFormandos()});
 $("#forEstF").addEventListener("click",e=>{const b=e.target.closest("[data-fe]");if(!b)return;FOR_EST=b.dataset.fe;FOR_N=200;renderFormandos()});
 $("#tbFor").addEventListener("change",e=>{const r=e.target.closest(".frr");if(!r||!e.target.dataset.k)return;const f=escData().formandos.find(x=>x.id===r.dataset.id);if(!f)return;const k=e.target.dataset.k,v=e.target.value.trim();
-  if(k==="estado"){if(v)f.estado=v;else delete f.estado}else f[k]=v;save();esRecarregar();renderFormandos()});
+  if(k==="estado"){if(v)f.estado=v;else delete f.estado}
+  else if(k==="email"){const em=v.toLowerCase();if(!em||em===emailAuto(f.nome))delete f.email;else f.email=em}
+  else f[k]=v;save();esRecarregar();renderFormandos()});
 $("#tbFor").addEventListener("click",e=>{if(e.target.closest("[data-formais]")){FOR_N+=500;renderFormandos();return}
   const ir=e.target.closest("[data-fir]"),r=e.target.closest(".frr"),f=r&&escData().formandos.find(x=>x.id===r.dataset.id);
   if(ir){if(f&&f.turmaId&&ir.dataset.fir==="pc"){PC_T=f.turmaId;try{localStorage.setItem("pc_t",PC_T)}catch(x){}}show(ir.dataset.fir);return}

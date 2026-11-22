@@ -19,7 +19,7 @@ let ES_ANO=null,ES_SIG="";
 function esAno(){return escData().anos.find(a=>a.id===ES_ANO)||anoAtivo()}
 // assinatura do que a EPISJ 360 entrega ao EduSchedule: se mudar, o EduSchedule é reaberto com os dados novos
 function esSig(){const e=escData(),a=anoAtivo();let pl=[],es=[];try{pl=pcPlanos().filter(p=>p.anoId===a.id).map(p=>[p.turmaId,p.semanas,(p.linhas||[]).map(l=>[l.disc,l.h,l.f])])}catch(x){}try{es=RC.esp.filter(x=>x.on).map(x=>[x.id,x.n])}catch(x){}
-  return JSON.stringify([e.nome,a.id,a.nome,a.inicio,a.fim,a.ferias,cfg.profs.map(p=>[p.id,p.nome,p.abrev||""]),turmasDoAno(a).map(t=>[t.id,t.cod,turmaNome(t),t.dt||""]),(e.formandos||[]).map(f=>[f.id,f.num,f.nome,f.turmaId]),pl,es])}
+  return JSON.stringify([e.nome,a.id,a.nome,a.inicio,a.fim,a.ferias,cfg.profs.map(p=>[p.id,p.nome,p.abrev||""]),turmasDoAno(a).map(t=>[t.id,t.cod,turmaNome(t),turmaOE(t,a.id)]),(e.formandos||[]).map(f=>[f.id,f.num,f.nome,f.turmaId]),pl,es])}
 const GRELHA_ES=[["08:30","09:20"],["09:20","10:10",1],["10:30","11:20"],["11:20","12:10"],["12:10","13:00",1],["14:00","14:50"],["14:50","15:40",1],["15:50","16:40"]];
 function esNovoEstado(a){const e=escData();
   return{v:3,name:e.nome,ano:a.nome,tlMin:50,alvo:1100,tarde:0,days:["Seg","Ter","Qua","Qui","Sex"],periods:GRELHA_ES.map((t,i)=>({label:String(i+1),start:t[0],end:t[1],breakAfter:!!t[2]})),
@@ -43,8 +43,8 @@ function esInjetar(st,a){const e=escData(),P=cfg.profs,byId=new Map(P.map(p=>[p.
     if(t&&tu.has(t.id))t=null;
     if(!t){if(ESD.ligC[c.id])return false; // turma apagada ou que já não é deste ano letivo
       t=T.find(x=>!tu.has(x.id)&&norm(x.cod)===norm(c.name));if(!t)return true;ESD.mapaC[c.id]=t.id}
-    tu.add(t.id);ESD.ligC[c.id]=1;c.name=t.cod;c.full=turmaNome(t);if(t.dt&&t2p.has(t.dt))c.dt=t2p.get(t.dt);return true});
-  for(const t of T)if(!tu.has(t.id)){st.classes.push({id:t.id,name:t.cod,full:turmaNome(t),roomId:"",dt:t.dt&&t2p.has(t.dt)?t2p.get(t.dt):"",minDay:0,maxDay:7,tardesLivres:0,dep:""});ESD.ligC[t.id]=1}
+    tu.add(t.id);ESD.ligC[c.id]=1;c.name=t.cod;c.full=turmaNome(t);{const oe=turmaOE(t,a.id);if(oe&&t2p.has(oe))c.dt=t2p.get(oe)}return true});
+  for(const t of T)if(!tu.has(t.id)){st.classes.push({id:t.id,name:t.cod,full:turmaNome(t),roomId:"",dt:(oe=>oe&&t2p.has(oe)?t2p.get(oe):"")(turmaOE(t,a.id)),minDay:0,maxDay:7,tardesLivres:0,dep:""});ESD.ligC[t.id]=1}
   // 0.9.47: espaços do Sala360 → salas do Horários360
   esInjetarLigacoes(st,a,T,tTodas,t2p);
   // formandos da GUIDE → formandos do EduSchedule (nome, número e turma vêm da GUIDE; aulas e opções ficam no EduSchedule)
@@ -133,7 +133,7 @@ function esRetorno(txt,a){clearTimeout(esRetH);esRetH=setTimeout(()=>{let st;try
     if(!t){if(ESD.ligC[c.id]&&!ESD.mapaC[c.id]&&!tTodas.has(c.id))continue;
       t={id:uid(),cod:String(c.name||"T").trim().toUpperCase(),nome:"",cursoId:"",anoIni:a.ini,anoFim:a.ini+1,dt:""};e.turmas.push(t);tTodas.set(t.id,t);ESD.mapaC[c.id]=t.id;ESD.ligC[c.id]=1;mud=1}
     else if(c.name&&c.name.trim()&&c.name.trim()!==t.cod){t.cod=c.name.trim();mud=1}
-    const dt=c.dt&&t2p.get(c.dt)||"";if(dt&&dt!==(t.dt||"")){t.dt=dt;mud=1}}
+    const dt=c.dt&&t2p.get(c.dt)||"";if(dt&&dt!==(t.dt||"")&&!turmaCargoPlano(t,"dt",a.id)){t.dt=dt;mud=1}}
   ESD.mapaA=ESD.mapaA||{};ESD.ligA=ESD.ligA||{};const F=e.formandos||(e.formandos=[]),fById=new Map(F.map(f=>[f.id,f]));
   const c2t=new Map();for(const c of st.classes||[])c2t.set(c.id,tTodas.has(c.id)?c.id:ESD.mapaC[c.id]);
   for(const al of st.alunos||[]){if(fById.has(al.id)||ESD.mapaA[al.id]||ESD.ligA[al.id])continue;

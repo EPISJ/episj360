@@ -306,7 +306,7 @@ function crPdfGantt(doc,y,T,M,L){const D=M.D,N=D.length;if(!N||!L.length)return 
   doc.setDrawColor(22,50,105);doc.setLineWidth(.5);doc.line(lx+1.5,y-2.6,lx+1.5,y+.6);doc.text(pdfTxt("data da situação"),lx+3.4,y);
   return y+5}
 async function crEnviarDT(){const a=crAnoSel(),asof=CR_SEL.asof||calHoje(),M=crMotor(a,asof);
-  const L=[...M.turmas.values()].filter(T=>crTurmaRes(T,"").L.length).map(T=>({T,dt:cfg.profs.find(p=>p.id===T.t.dt)})).filter(x=>x.dt&&/\S+@\S+\.\S+/.test(x.dt.email||""));
+  const L=[...M.turmas.values()].filter(T=>crTurmaRes(T,"").L.length).map(T=>({T,dt:cfg.profs.find(p=>p.id===turmaOE(T.t))})).filter(x=>x.dt&&/\S+@\S+\.\S+/.test(x.dt.email||""));
   const sem=[...M.turmas.values()].filter(T=>crTurmaRes(T,"").L.length&&!L.some(x=>x.T===T)).map(T=>T.t.cod);
   if(!L.length){toast("Nenhuma turma com orientador educativo com email (Escola › Turmas)");return}
   if(!confirm(`Enviar o ponto de situação a ${calDMA(asof)} aos orientadores educativos de ${L.length} turma(s), com o PDF da turma em anexo (a partir da sua conta do Office 365)?${sem.length?`\n\nSem orientador educativo com email: ${sem.join(", ")}.`:""}`))return;

@@ -103,23 +103,32 @@ async function cursoCnq(id,forcar,calado){const c=cursoById(id);if(!c)return;
   catch(err){$("#curMsg").textContent="Não foi possível consultar o catálogo: "+err.message}
   renderCursos()}
 
+/* 0.9.166: orientador educativo e responsável de curso vêm dos cargos do Plano Curricular da turma (Escola › Turmas › Planos Curriculares);
+   se o plano não os tiver, usa-se o que foi escolhido à mão em Escola › Turmas (t.dt / t.rc — nunca se apagam). */
+var CARGO_RE={dt:/orientador.*educ|diretor.*turma/,rc:/respons.*curso|coordenador.*curso/};
+function turmaCargoPlano(t,k,aid){try{if(!t||typeof pcDe!=="function")return "";const p=pcDe(t.id,aid);const x=p&&(p.cargos||[]).find(c=>c.f&&CARGO_RE[k].test(norm(c.nome||"")));return x&&cfg.profs.some(q=>q.id===x.f)?x.f:""}catch(e){return ""}}
+function turmaOE(t,aid){return turmaCargoPlano(t,"dt",aid)||(t&&t.dt)||""}
+function turmaRC(t,aid){return turmaCargoPlano(t,"rc",aid)||(t&&t.rc)||""}
+function turmaCargoCel(t,k,aid,vazio){const f=turmaCargoPlano(t,k,aid);if(f){const p=cfg.profs.find(q=>q.id===f);return `<div class="tcargo" title="Vem do Plano Curricular da turma (cargos). Para mudar, mude o cargo no plano.">${esc(p.nome)}${p.cod?` (${esc(p.cod)})`:""}<small>do plano curricular</small></div>`}
+  return `<select data-k="${k}">${lzOpts("prof",t[k],`<option value="">— ${vazio} —</option>`)}</select>`}
 /* ---------- turmas ---------- */
 function renderTurmas(){const e=escData(),a=anoAtivo(),q=norm($("#turFilter").value||""),todas=$("#turTodas").checked;
   $("#turAnoLbl").textContent=a.nome;
   const curOpts=sel=>`<option value="">— sem curso —</option>`+e.cursos.map(c=>`<option value="${c.id}" ${c.id===sel?"selected":""}>${esc(c.nome)}</option>`).join("");
   const L=(todas?e.turmas.slice().sort((x,y)=>COLL_PTN.compare(String(x.cod),String(y.cod))):turmasDoAno(a))
-    .filter(t=>!q||norm(t.cod+" "+turmaNome(t)+" "+((cursoById(t.cursoId)||{}).nome||"")+" "+profName(t.dt)+" "+(t.fse||"")).includes(q));
+    .filter(t=>!q||norm(t.cod+" "+turmaNome(t)+" "+((cursoById(t.cursoId)||{}).nome||"")+" "+profName(turmaOE(t,a.id))+" "+profName(turmaRC(t,a.id))+" "+(t.fse||"")).includes(q));
   $("#tbTur").innerHTML=L.map(t=>{const ac=anoCurricular(t,a);return `<tr data-id="${t.id}">
     <td><input type="text" data-k="cod" value="${esc(t.cod)}" style="width:70px"></td>
     <td><select data-k="cursoId">${curOpts(t.cursoId)}</select>${turmaPlanoProprio(t)?`<span class="tag" style="margin-top:4px;background:var(--brandbg);color:var(--brand)" title="Esta turma tem escolhas diferentes das do curso (Escola360 › Cursos)">plano próprio</span>`:""}</td>
     <td><input type="number" data-k="anoIni" value="${t.anoIni||""}" min="2000" max="2100" style="width:84px"></td>
     <td><input type="number" data-k="anoFim" value="${t.anoFim||""}" min="2000" max="2100" style="width:84px"></td>
     <td class="hm">${ac?esc(ac):`<span class="hint" style="margin:0">fora de ${esc(a.nome)}</span>`}</td>
-    <td><select data-k="dt">${lzOpts("prof",t.dt,`<option value="">— sem orientador educativo —</option>`)}</select></td>
+    <td>${turmaCargoCel(t,"dt",a.id,"sem orientador educativo")}</td>
+    <td>${turmaCargoCel(t,"rc",a.id,"sem responsável de curso")}</td>
     <td><input type="text" data-k="fse" value="${esc(t.fse||"")}" placeholder="código FSE" spellcheck="false" style="min-width:190px;text-transform:uppercase;font-variant-numeric:tabular-nums"${t.fse&&!fseOk(t.fse)?` title="Confirme o código: o habitual é REGIÃO-00-0000-FSE-000000"`:""}></td>
     <td class="hm"><input type="text" data-k="nome" value="${esc(t.nome||"")}" placeholder="${esc(turmaNome(Object.assign({},t,{nome:""})))}"></td>
     <td><button class="x" data-del title="Apagar turma">×</button></td></tr>`}).join("")
-    ||`<tr><td colspan="9" class="hint">${e.turmas.length?(q?"Nenhuma turma corresponde à procura.":`Nenhuma turma em ${esc(a.nome)} — veja <b>todas as turmas</b> ou crie uma acima.`):"Ainda sem turmas — crie uma acima ou importe da Box."}</td></tr>`;
+    ||`<tr><td colspan="10" class="hint">${e.turmas.length?(q?"Nenhuma turma corresponde à procura.":`Nenhuma turma em ${esc(a.nome)} — veja <b>todas as turmas</b> ou crie uma acima.`):"Ainda sem turmas — crie uma acima ou importe da Box."}</td></tr>`;
   $("#tCurso").innerHTML=curOpts($("#tCurso").value);if(!$("#tIni").value)$("#tIni").placeholder=a.ini;if(!$("#tFim").value)$("#tFim").placeholder=a.ini+3}
 $("#turFilter").addEventListener("input",debounce(()=>renderTurmas(),120));$("#turTodas").addEventListener("change",renderTurmas);
 $("#tbTur").addEventListener("change",e=>{const tr=e.target.closest("tr");const t=escData().turmas.find(x=>x.id===tr.dataset.id);if(!t)return;const k=e.target.dataset.k;
@@ -178,7 +187,7 @@ function renderFormandos(){const e=escData(),q=norm($("#forFilter").value||""),f
   if(G.length>1){const todasF=G.every(fech);h+=`<div class="frgtodas"><button class="b s" type="button" data-frgtodas="${todasF?"abrir":"fechar"}">${todasF?"Abrir todas as turmas":"Fechar todas as turmas"}</button></div>`}
   for(const g of G){const t=TM.get(g.tid),c=t&&cursoById(t.cursoId),nA=e.formandos.filter(x=>x.turmaId===g.tid&&!x.estado).length,fc=fech(g);
     if(mostra>=FOR_N&&!fc){resto+=g.fs.length;continue}
-    h+=`<button type="button" class="frg${fc?" fc":""}" data-frg="${esc(g.k)}" aria-expanded="${!fc}"><svg class="frgchev" viewBox="0 0 24 24" width="16" height="16"><path d="m6 9 6 6 6-6"/></svg><b>${t?esc(t.cod):"Sem turma"}</b><span>${t?esc(c?c.nome:turmaNome(t)):""}${t&&anoCurricular(t,a)?" · "+esc(anoCurricular(t,a)):""}${t&&t.dt?" · Orientador educativo: "+esc(profName(t.dt)):""}</span><i>${fc?g.fs.length+" na lista · ":""}${nA} ativo(s)</i></button>`;
+    h+=`<button type="button" class="frg${fc?" fc":""}" data-frg="${esc(g.k)}" aria-expanded="${!fc}"><svg class="frgchev" viewBox="0 0 24 24" width="16" height="16"><path d="m6 9 6 6 6-6"/></svg><b>${t?esc(t.cod):"Sem turma"}</b><span>${t?esc(c?c.nome:turmaNome(t)):""}${t&&anoCurricular(t,a)?" · "+esc(anoCurricular(t,a)):""}${turmaOE(t,a.id)?" · Orientador educativo: "+esc(profName(turmaOE(t,a.id))):""}</span><i>${fc?g.fs.length+" na lista · ":""}${nA} ativo(s)</i></button>`;
     if(fc)continue;
     for(const f of g.fs){if(mostra>=FOR_N){resto++;continue}mostra++;
     const id=forIdade(f.nasc),an=forAniv(f.nasc),ab=FOR_AB===f.id;
@@ -204,12 +213,12 @@ function forFicha(f){const E=escData(),a=anoAtivo(),t=E.turmas.find(x=>x.id===f.
     ${id!=null?`<p class="frnota">${id} anos · ${id>=18?"maior de idade":"menor de idade"}${an!=null?` · ${an===0?"faz anos hoje":`faz ${id+1} anos a ${esc(forDataPt(f.nasc).slice(0,5))} (daqui a ${an} dia${an>1?"s":""})`}`:""}</p>`:""}
     <div class="row" style="margin-top:8px"><button class="b s pcdanger" type="button" data-fdel>Apagar formando</button></div>`);
   // 2) turma e curso
-  if(t){const dt=t.dt?cfg.profs.find(p=>p.id===t.dt):null,ac=anoCurricular(t,a),p=typeof pcDe==="function"?pcDe(t.id,a.id):null;
+  if(t){const dtI=turmaOE(t,a.id),rcI=turmaRC(t,a.id),dt=dtI?cfg.profs.find(p=>p.id===dtI):null,rc=rcI?cfg.profs.find(p=>p.id===rcI):null,ac=anoCurricular(t,a),p=typeof pcDe==="function"?pcDe(t.id,a.id):null;
     let pl="";if(p&&p.linhas&&p.linhas.length){const disc=new Set(p.linhas.map(l=>l.disc)).size,hh=p.linhas.reduce((s,l)=>s+(+l.h||0),0),fct=+(p.fct&&p.fct.horas)||0;
       pl=li("Plano curricular",`${disc} disciplinas · ${hh.toLocaleString("pt-PT")} h${fct?` + ${fct} h de FCT`:""}`)}
     const pp=typeof turmaPlanoProprio==="function"&&turmaPlanoProprio(t);
     h+=sec("Turma e curso",li("Turma",esc(turmaNome(t)))+li("Curso",c?esc(c.nome)+(c.qual?` <small>(${esc(c.qual.cod)}, nível ${esc(c.qual.nivel||"?")})</small>`:""):"")+li("Ano curricular",ac?esc(ac)+" em "+esc(a.nome):`fora de ${esc(a.nome)}`)
-      +li("N.º de projeto",t.fse?esc(t.fse):"")+li("Orientador educativo",dt?esc(dt.nome)+(dt.email?` <a href="mailto:${esc(dt.email)}">${esc(dt.email)}</a>`:""):"")+pl+(pp?li("Plano","plano próprio da turma"):"")
+      +li("N.º de projeto",t.fse?esc(t.fse):"")+li("Orientador educativo",dt?esc(dt.nome)+(dt.email?` <a href="mailto:${esc(dt.email)}">${esc(dt.email)}</a>`:""):"")+li("Responsável de curso",rc?esc(rc.nome)+(rc.email?` <a href="mailto:${esc(rc.email)}">${esc(rc.email)}</a>`:""):"")+pl+(pp?li("Plano","plano próprio da turma"):"")
       +`<div class="row" style="margin-top:8px;gap:6px"><button class="b s" type="button" data-fir="pc">Plano curricular</button><button class="b s" type="button" data-fir="tur">Turma</button><button class="b s" type="button" data-fir="cal">Calendário</button></div>`);
     // 3) calendário da turma
     try{const hoje=calHoje(),M=calMarcos(a,t.id).filter(m=>m.de).slice().sort((x,y)=>String(x.de).localeCompare(String(y.de)));

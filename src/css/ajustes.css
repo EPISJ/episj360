@@ -234,3 +234,6 @@ body.callamplo #calLinhaCard .dh{display:none}
 .cal-l.amp .cal-ld.cm{top:4px}.cal-l.amp .cal-ld.bx{top:36px}
 .cal-ldt{position:absolute;font-style:normal;font-size:10.5px;font-weight:600;color:color-mix(in srgb,var(--c) 70%,#000);margin-left:10px;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;line-height:14px;z-index:2;background:rgba(255,255,255,.85);border-radius:3px;padding:0 3px}
 .cal-ldt small{font-weight:500;color:var(--muted)}.cal-ldt.cm{top:2px}.cal-ldt.bx{top:35px}
+
+/* 0.9.166: cargo que vem do Plano Curricular (Escola › Turmas) */
+.tcargo{padding:6px 2px;font-size:14px;line-height:1.25}.tcargo small{display:block;font-size:11.5px;color:var(--muted)}

@@ -69,7 +69,7 @@ function mudarAnoAtivo(id){const e=escData();if(e.ativo===id)return;e.ativo=id;A
 function epPontos(){const e=escData(),a=anoAtivo(),T=turmasDoAno(a),P=cfg.profs||[],L=[];
   const add=(o)=>{if(o.tot>0)L.push(o)};
   add({k:"curso",t:"Turmas com curso",ok:T.filter(t=>cursoById(t.cursoId)).length,tot:T.length,ir:"tur",fx:"Atribuir cursos",p:5});
-  add({k:"dt",t:"Turmas com orientador educativo",ok:T.filter(t=>t.dt).length,tot:T.length,ir:"tur",fx:"Atribuir orientadores",p:4});
+  add({k:"dt",t:"Turmas com orientador educativo",ok:T.filter(t=>turmaOE(t)).length,tot:T.length,ir:"tur",fx:"Atribuir orientadores",p:4});
   add({k:"mail",t:"Formadores com email",ok:P.filter(p=>/\S+@\S+\.\S+/.test(p.email||"")).length,tot:P.length,ir:"prof",fx:"Completar emails",p:4,nota:"sem email não entram na EPISJ 360 nem recebem avisos"});
   add({k:"fse",t:"Turmas com código FSE",ok:T.filter(t=>t.fse).length,tot:T.length,ir:"tur",fx:"Juntar códigos",p:2});
   add({k:"pc",t:"Turmas com plano curricular",ok:T.filter(t=>{try{return pcDe(t.id,a.id)}catch(x){return false}}).length,tot:T.length,ir:"pc",fx:"Fazer planos",p:3});

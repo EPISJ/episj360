@@ -59,7 +59,7 @@ const WIDGETS=[
      +`<p class="wg-t">${fim.length?`Terminam este ano: <b>${fim.map(t=>esc(t.cod)).join(", ")}</b>`:"Nenhuma turma termina este ano."}</p>`}},
  {id:"incompletas",mod:"escola",nome:"Turmas com dados por completar",desc:"Turmas sem curso, sem orientador educativo ou sem código FSE",r(){
    const T=turmasDoAno();if(!T.length)return wgVazio("Ainda não há turmas neste ano letivo.")+wgIr("tur","Criar turmas");
-   const L=T.map(t=>({t,f:[!cursoById(t.cursoId)&&"curso",!t.dt&&"orientador educativo",!t.fse&&"código FSE"].filter(Boolean)})).filter(x=>x.f.length);
+   const L=T.map(t=>({t,f:[!cursoById(t.cursoId)&&"curso",!turmaOE(t)&&"orientador educativo",!t.fse&&"código FSE"].filter(Boolean)})).filter(x=>x.f.length);
    if(!L.length)return `<div class="wg-okm">✓ Todas as ${T.length} turmas têm curso, orientador educativo e código FSE.</div>`;
    return `<p class="wg-t"><b>${L.length}</b> de ${T.length} turmas por completar:</p><div class="wg-lst">${L.map(x=>`<div class="wg-li"><b>${esc(x.t.cod)}</b><span>${x.f.map(f=>`<i class="wg-tag w">sem ${f}</i>`).join("")}</span></div>`).join("")}</div>`+wgIr("tur","Completar em Turmas")}},
  {id:"fse",mod:"escola",nome:"Projetos FSE",desc:"Turmas agrupadas pelo código da operação do Fundo Social Europeu",r(){
@@ -75,7 +75,7 @@ const WIDGETS=[
    if(!L.length)return `<div class="wg-okm">✓ Os ${C.length} cursos estão ligados ao Catálogo e com as opcionais escolhidas.</div>`;
    return `<div class="wg-lst">${L.map(x=>`<div class="wg-li"><span class="wg-el">${esc(x.c.nome)}</span><i class="wg-tag w">${esc(x.p)}</i></div>`).join("")}</div>`+wgIr("cur","Abrir Cursos")}},
  {id:"profs",mod:"escola",nome:"Formadores",desc:"Total, sem email do Office 365 (não conseguem entrar) e orientadores educativos",r(){
-   const P=cfg.profs,sem=P.filter(p=>!/\S+@\S+\.\S+/.test(p.email||"")),T=turmasDoAno(),dts=new Set(T.map(t=>t.dt).filter(Boolean));
+   const P=cfg.profs,sem=P.filter(p=>!/\S+@\S+\.\S+/.test(p.email||"")),T=turmasDoAno(),dts=new Set(T.map(t=>turmaOE(t)).filter(Boolean));
    return `<div class="wg-ns">${wgNum(P.length,"formadores")}${wgNum(sem.length,"sem email",sem.length?"w":"")}${wgNum(dts.size,"orientadores educativos")}</div>`
      +(sem.length?`<p class="wg-t wg-w">Sem email (não entram na EPISJ 360 nem recebem avisos): ${sem.slice(0,6).map(p=>esc(p.nome)).join(", ")}${sem.length>6?` e mais ${sem.length-6}`:""}</p>`:"")+wgIr("prof","Abrir Formadores")}},
  {id:"entregas",mod:"boxcheck",nome:"Entregas do ano",desc:"Percentagem entregue face ao previsto e como evoluiu nos últimos envios",r(){
@@ -170,7 +170,7 @@ const WIDGETS=[
      if(!SES)al.push({u:40,t:"A Box não está ligada neste computador.",ir:"box"})}
    if(modOn("eduschedule")){const st=mhEstado();if(!st)al.push({u:55,t:`Ainda não há horário para ${esc(anoAtivo().nome)}.`,ir:"esch"});else{const f=(st.cards||[]).filter(c=>c.day==null).length;if(f)al.push({u:60,t:`${f} bloco${f>1?"s":""} do horário por colocar.`,ir:"esch"})}}
    if(modOn("roomcheck")){const A=rcAtivas().filter(r=>r.d===h&&r.h1>m);if(A.length)al.push({u:30,t:`${A.length} reserva${A.length>1?"s":""} de espaços ainda hoje.`,ir:"rcMapa"})}
-   const inc=T.filter(t=>!cursoById(t.cursoId)||!t.dt||!t.fse).length;if(inc)al.push({u:45,t:`${inc} turma${inc>1?"s":""} com dados por completar.`,ir:"tur"});
+   const inc=T.filter(t=>!cursoById(t.cursoId)||!turmaOE(t)||!t.fse).length;if(inc)al.push({u:45,t:`${inc} turma${inc>1?"s":""} com dados por completar.`,ir:"tur"});
    const sm=cfg.profs.filter(p=>!/\S+@\S+\.\S+/.test(p.email||"")).length;if(sm)al.push({u:50,t:`${sm} formador${sm>1?"es":""} sem email — não conseguem entrar.`,ir:"prof"});
    al.sort((a,b)=>b.u-a.u);
    return `<p class="wg-t">Bom dia${EU&&EU.nome?", "+esc(EU.nome.split(/\s+/)[0]):""}! ${al.length?"O mais urgente:":""}</p>`+(al.length?`<div class="wg-lst">${al.slice(0,3).map((a,i)=>`<div class="wg-li"><b class="wg-nr">${i+1}</b><span style="flex:1;min-width:0;line-height:1.35">${a.t}</span><button class="b s" data-wgir="${a.ir}">Ver</button></div>`).join("")}</div>`:`<div class="wg-okm">✓ Nada urgente — está tudo em dia.</div>`)}}

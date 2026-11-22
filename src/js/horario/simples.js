@@ -269,9 +269,20 @@ function h3EmailHtml(x){const st=mhEstado();if(!st)return "";const hj=calHoje(),
   const btn="";
   return `<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head><body style="margin:0;padding:0;background:#ffffff">
 <div style="max-width:780px;padding:8px 4px">
-<div style="${F};font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7385;margin:0 0 12px">EPISJ 360 · Horários360</div>
+${h3EmailTopo(F)}
 <div style="${F};font-size:14px;color:#1b2333;line-height:1.55">${partes.map(txt).join(meio)}</div>${partes.length<2?quadro:""}${btn}
-<p style="${F};font-size:11px;color:#9aa1ad;margin:18px 0 0">Escola Profissional da Ilha de São Jorge · mensagem enviada pela EPISJ 360</p></div></body></html>`}
+${h3EmailFundos()}<p style="${F};font-size:11px;color:#9aa1ad;margin:10px 0 0">Escola Profissional da Ilha de São Jorge · mensagem enviada pela EPISJ 360</p></div></body></html>`}
+/* 0.9.169: logótipos do ano letivo no email — em cima o logótipo principal (e o do canto direito, se houver), em baixo a barra de
+   financiamento do ano (a mesma da barra de baixo da app). As imagens seguem como anexos embutidos (cid:, ver msEmbutir em o365.js). */
+function h3LgImg(o,maxW,maxH,alt){if(!o||!o.src||!/^data:image\//.test(o.src))return "";const w0=+o.w||maxW,h0=+o.h||maxH,k=Math.min(1,maxW/w0,maxH/h0),w=Math.max(1,Math.round(w0*k)),h=Math.max(1,Math.round(h0*k));
+  return `<img src="${esc(o.src)}" width="${w}" height="${h}" alt="${esc(alt)}" style="display:block;border:0;width:${w}px;height:${h}px;max-width:100%">`}
+function h3EmailTopo(F){let m,r;try{m=lgGet("main");r=lgGet("right")}catch(e){}
+  const a=h3LgImg(m,220,52,"Escola Profissional da Ilha de São Jorge"),b=h3LgImg(r,200,52,"");
+  const tit=`<div style="${F};font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7385;margin:0 0 12px">EPISJ 360 · Horários360</div>`;
+  if(!a&&!b)return tit;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:760px;margin:0 0 14px;border-bottom:1px solid #e3e7ee"><tr><td style="padding:0 0 12px;vertical-align:middle">${a}</td><td style="padding:0 0 12px;vertical-align:middle" align="right">${b}</td></tr></table>`+tit}
+function h3EmailFundos(){let f;try{f=lgFootBarra()}catch(e){try{f=lgGet("foot")}catch(x){}}const im=h3LgImg(f,560,64,"Logótipos de financiamento do ano letivo");
+  return im?`<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:760px;margin:22px 0 0;border-top:1px solid #e3e7ee"><tr><td align="center" style="padding:14px 0 0">${im}</td></tr></table>`:""}
 function h3SmsLink(L){L=L.filter(x=>!x.tlOk);const nums=L.map(x=>h3Tel(H3.tel[(x.p||{}).id])).filter(Boolean);if(!nums.length)return "";
   const body=encodeURIComponent(L.length===1?h3Preencher(H3.msg.curta,L[0]):"EPISJ 360: o seu horário mudou. Veja em "+h3Lig()),ios=/iPhone|iPad|Macintosh/.test(navigator.userAgent);
   return ios?`sms:/open?addresses=${nums.join(",")}&body=${body}`:`sms:${nums.join(",")}?body=${body}`}

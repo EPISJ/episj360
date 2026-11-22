@@ -41,9 +41,11 @@ $("#msLogout").onclick=async()=>{try{const p=await msInit();await p.clearCache({
 async function msEnviar({to,cc,subject,body,html,anexo}){
   const rec=s=>String(s||"").split(/[;,]/).map(x=>x.trim()).filter(Boolean).map(address=>({emailAddress:{address}}));
   if(!rec(to).length)throw new Error("Sem endereço de email.");
-  const message={subject,body:html?{contentType:"HTML",content:html}:{contentType:"Text",content:body},toRecipients:rec(to)}; // 0.9.151: html opcional (o Horários360 envia o horário desenhado)
+  let emb=[];if(html){const r=msEmbutir(html);html=r.html;emb=r.att}
+  const message={subject,body:html?{contentType:"HTML",content:html}:{contentType:"Text",content:body},toRecipients:rec(to)};
+  if(emb.length)message.attachments=emb; // 0.9.151: html opcional (o Horários360 envia o horário desenhado)
   if(rec(cc).length)message.ccRecipients=rec(cc);
-  if(anexo)message.attachments=[{"@odata.type":"#microsoft.graph.fileAttachment",name:anexo.name,contentType:"application/pdf",contentBytes:anexo.b64}];
+  if(anexo)message.attachments=(message.attachments||[]).concat([{"@odata.type":"#microsoft.graph.fileAttachment",name:anexo.name,contentType:"application/pdf",contentBytes:anexo.b64}]);
   for(let t=0;;t++){const tok=await msToken();
     const r=await fetch("https://graph.microsoft.com/v1.0/me/sendMail",{method:"POST",headers:{Authorization:"Bearer "+tok,"Content-Type":"application/json"},body:JSON.stringify({message,saveToSentItems:true})});
     if(r.status===202)return;
@@ -51,6 +53,13 @@ async function msEnviar({to,cc,subject,body,html,anexo}){
     let m="";try{m=(await r.json()).error.message}catch(e){}
     if(r.status===401&&t<1){MSACC=null;continue}
     throw new Error(`O Office 365 recusou o envio (${r.status})${m?": "+m:""}`)}}
+/* 0.9.169: imagens data: num email HTML passam a anexos embutidos (cid:) — o Outlook e o Gmail não mostram imagens data:.
+   Imagens iguais vão uma só vez. */
+function msEmbutir(html){const att=[],por={};let n=0;
+  html=String(html).replace(/src="data:(image\/[a-z0-9.+-]+);base64,([A-Za-z0-9+/=]+)"/gi,(t,tipo,b64)=>{let id=por[b64];
+    if(!id){id=por[b64]="img"+(++n)+"@episj360";const ext=(tipo.split("/")[1]||"png").replace("jpeg","jpg").replace(/\+.*/,"");
+      att.push({"@odata.type":"#microsoft.graph.fileAttachment",name:"logotipo-"+n+"."+ext,contentType:tipo,contentBytes:b64,contentId:id,isInline:true})}
+    return `src="cid:${id}"`});return{html,att}}
 const ENV_OK={};
 async function enviarFormador(t){const doc=await pdfFormador(t);
   await msEnviar({to:t.p.email,cc:msCfg().cc,subject:subj(t),body:fill(cfg.mail.body,t,!msCfg().lista),anexo:{name:pdfNomeF(t),b64:pdfB64(doc)}});

@@ -1,6 +1,6 @@
 /* corre no <head>, antes de a página aparecer: modo de privacidade e tema escolhidos neste aparelho */
 try{(function(){if(localStorage.getItem("g360_priv_on"))document.documentElement.setAttribute("data-priv","on")})()}catch(e){}
-try{(function(){var t=localStorage.getItem("g360_tema");if(t&&t!=="360")document.documentElement.setAttribute("data-tema",t)})()}catch(e){}
+try{document.documentElement.setAttribute("data-tema","cobalto")}catch(e){} // 0.9.177: o Cobalto é o único tema (automático)
 /* 0.9.133: segurança — a EPISJ 360 não abre dentro de páginas de outros sites (evita que um site alheio a mostre por baixo
    de botões falsos e leve alguém a clicar sem saber: «clickjacking»). Dentro da própria EPISJ 360 continua a funcionar. */
 try{(function(){if(window.top===window.self)return;var mesma=false;try{mesma=window.top.location.origin===location.origin}catch(e){}if(mesma)return;

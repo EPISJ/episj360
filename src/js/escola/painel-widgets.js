@@ -247,16 +247,11 @@ setInterval(()=>{if(curTab==="esc"&&document.visibilityState==="visible"&&$("#rc
    aplicado logo no <head> para não piscar) e na conta, com as outras preferências (prefsDados().tema) */
 const TEMAS=[{id:"360",nome:"360",ds:"O aspeto original da EPISJ 360: menu claro, letra Poppins e o azul da escola.",side:"#fbfcfd",si:"#c5ccd8",sa:"#ffffff",bg:"#f8f9fb",btn:"#163269"},
   {id:"cobalto",nome:"Cobalto",ds:"Inspirado no aspeto da Box: menu lateral azul-cobalto com letra branca, conteúdo branco e tabelas leves.",side:"#3d5c9e",si:"rgba(255,255,255,.55)",sa:"#2f4a86",bg:"#ffffff",btn:"#2d58b8"}];
-function temaAtual(){let t="360";try{t=localStorage.getItem("g360_tema")||"360"}catch(e){}return TEMAS.some(x=>x.id===t)?t:"360"}
-function temaAplicar(t,sinc){if(!TEMAS.some(x=>x.id===t))t="360";
-  if(t==="360")document.documentElement.removeAttribute("data-tema");else document.documentElement.setAttribute("data-tema",t);
-  try{localStorage.setItem("g360_tema",t)}catch(e){}renderTemas();try{esTemaSinc()}catch(e){} /* 0.9.101 */if(sinc!==false)try{prefsAgendar()}catch(e){}}
-function renderTemas(){const el=$("#temas");if(!el)return;const at=temaAtual();
-  el.innerHTML=TEMAS.map(t=>`<button type="button" class="tema${t.id===at?" on":""}" data-tema="${t.id}" aria-pressed="${t.id===at}">
-    <span class="tpv" style="background:${t.bg}"><span class="ts" style="background:${t.side}"><i class="a" style="background:${t.sa};${t.id==="360"?"box-shadow:inset 0 0 0 1px #e3e7ee":""}"></i><i style="background:${t.si}"></i><i style="background:${t.si}"></i><i style="background:${t.si}"></i></span>
-    <span class="tc"><i style="width:70%"></i><i></i><i style="width:85%"></i><b style="background:${t.btn}"></b></span></span>
-    <span class="tnm">${esc(t.nome)}${t.id===at?`<span class="tag ok">em uso</span>`:""}</span><span class="tds">${esc(t.ds)}</span></button>`).join("")}
-(()=>{const el=$("#temas");if(!el)return;el.addEventListener("click",e=>{const b=e.target.closest("[data-tema]");if(!b)return;const t=b.dataset.tema;if(t===temaAtual())return;temaAplicar(t);toast("Tema «"+(TEMAS.find(x=>x.id===t)||{}).nome+"» aplicado")});renderTemas()})();
+/* 0.9.177: deixa de haver escolha de temas — o Cobalto é o único, aplicado sempre e automaticamente (a preferência antiga é ignorada) */
+function temaAtual(){return "cobalto"}
+function temaAplicar(t,sinc){document.documentElement.setAttribute("data-tema","cobalto");try{esTemaSinc()}catch(e){}}
+function renderTemas(){}
+temaAplicar();
 
 /* 0.9.95: modo de privacidade e código de desbloqueio.
    · O código (4–8 algarismos) nunca é guardado em claro: guarda-se SHA-256(sal + email + código), com um sal aleatório.

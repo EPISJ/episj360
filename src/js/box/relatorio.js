@@ -18,7 +18,7 @@ const RELM_EST={ok:["ok","entregue"],warn:["warn","entregue — a confirmar"],mo
 function relMeuDados(BM){const okS=s=>s==="ok"||s==="warn"||s==="modelo",q=norm(RELM.q||"");
   return BM.m.map(m=>({m,it:m.it.map(x=>({tipo:x[0],st:x[1],pasta:x[2],d:x[3]})).filter(x=>(RELM.so!=="falta"||!okS(x.st))&&(!q||norm([m.tu,m.di,m.mo,x.tipo,x.pasta].join(" ")).includes(q)))})).filter(g=>g.it.length)
     .sort((a,b)=>COLL_PTN.compare(a.m.tu+" "+a.m.mo,b.m.tu+" "+b.m.mo))}
-function relMeuTexto(BM){const L=relMeuDados(BM);return `RELATÓRIO DE ENTREGAS — ${(BM.me&&BM.me.nome)||""}\nAnálise: ${BM.nome||""}${BM.t?" ("+new Date(BM.t).toLocaleDateString("pt-PT")+")":""}\n${RELM.so==="falta"?"Só o que falta":"Todos os documentos"}\n\n`+
+function relMeuTexto(BM){const L=relMeuDados(BM);return `DOCUMENTOS EM FALTA — ${(BM.me&&BM.me.nome)||""}\nAnálise: ${BM.nome||""}${BM.t?" ("+new Date(BM.t).toLocaleDateString("pt-PT")+")":""}\n${RELM.so==="falta"?"Só o que falta":"Todos os documentos"}\n\n`+
   L.map(g=>`${[g.m.tu,g.m.di,g.m.mo].filter(Boolean).join(" · ")}\n`+g.it.map(x=>`  [${(RELM_EST[x.st]||["",x.st])[1]}] ${[x.tipo,x.pasta].filter(Boolean).join(" › ")}${x.d?" — "+new Date(x.d+"T12:00").toLocaleDateString("pt-PT"):""}`).join("\n")).join("\n\n")}
 /* 0.9.208: relatório de entregas para imprimir / guardar em PDF — A4, com os logótipos da escola e do ano letivo, resumo e
    uma tabela por turma e módulo com o estado de cada documento a cores */
@@ -31,7 +31,7 @@ function relMeuImprimir(BM){const w=window.open("","_blank");if(!w){toast("O nav
   const caixa=(l,v,c)=>`<div class="bx"><small>${esc(l)}</small><b style="color:${c||"#1b2333"}">${v}</b></div>`;
   const tabelas=L.map(g=>{const f=g.it.filter(x=>!okS(x.st)).length;return `<section class="g"><h3>${esc([g.m.tu,g.m.mo].filter(Boolean).join(" · "))}<span class="di">${esc(g.m.di||"")}</span><span class="pl" style="background:${f?"#fdecec":"#e6f4ea"};color:${f?"#b42318":"#0f7b3f"}">${f?f+" em falta":"completo"}</span></h3>
     <table><thead><tr><th style="width:130px">Estado</th><th>Documento</th><th style="width:170px">Pasta</th><th style="width:90px">Entregue a</th></tr></thead><tbody>${g.it.map(x=>`<tr><td><span class="st" style="background:${fundo[x.st]||"#eef1f6"};color:${cor[x.st]||"#333"}">${esc((RELM_EST[x.st]||["",x.st])[1])}</span></td><td>${esc(x.tipo||"")}</td><td class="mu">${esc(x.pasta||"")}</td><td class="mu">${x.d?esc(new Date(x.d+"T12:00").toLocaleDateString("pt-PT")):"—"}</td></tr>`).join("")}</tbody></table></section>`}).join("")||`<p class="ok">${RELM.so==="falta"?"Não falta entregar nenhum documento nesta análise.":"Sem documentos."}</p>`;
-  w.document.write(`<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><title>Relatório de entregas — ${esc(nome)}</title><style>
+  w.document.write(`<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><title>Documentos em falta — ${esc(nome)}</title><style>
     @page{size:A4;margin:14mm 12mm 16mm}*{box-sizing:border-box}body{font:11.5px/1.45 "Segoe UI",Helvetica,Arial,sans-serif;color:#1b2333;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     header{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #163269;padding-bottom:10px;margin-bottom:14px}header img{max-height:52px;max-width:200px}
     .tit{text-align:center;flex:1}.tit h1{font-size:18px;margin:0;color:#163269}.tit div{font-size:12px;color:#4a5262;margin-top:2px}
@@ -43,7 +43,7 @@ function relMeuImprimir(BM){const w=window.open("","_blank");if(!w){toast("O nav
     .st{display:inline-block;border-radius:10px;padding:1px 8px;font-size:10.5px;font-weight:600;white-space:nowrap}.ok{color:#0f7b3f;font-weight:600}
     footer{margin-top:18px;border-top:1px solid #e3e7ee;padding-top:10px;text-align:center}footer img{max-width:520px;max-height:56px}footer div{font-size:10px;color:#8a92a3;margin-top:6px}
     @media screen{body{max-width:820px;margin:20px auto;padding:0 16px}}</style></head><body>
-    <header><img src="${esc(main)}" alt=""><div class="tit"><h1>Relatório de entregas</h1><div>Escola Profissional da Ilha de São Jorge</div></div>${right?`<img src="${esc(right)}" alt="">`:`<span style="width:120px"></span>`}</header>
+    <header><img src="${esc(main)}" alt=""><div class="tit"><h1>Documentos em falta</h1><div>Escola Profissional da Ilha de São Jorge</div></div>${right?`<img src="${esc(right)}" alt="">`:`<span style="width:120px"></span>`}</header>
     <div class="meta"><span>Formador: <b>${esc(nome)}</b></span><span>Análise da Box: <b>${esc(BM.nome||"")}</b>${BM.t?" ("+esc(new Date(BM.t).toLocaleDateString("pt-PT"))+")":""}</span><span>${RELM.so==="falta"?"Só os documentos em falta":"Todos os documentos"}</span><span>Emitido a ${esc(hoje)}</span></div>
     <div class="bxs">${caixa("Documentação entregue",pct+"%")}${caixa("Documentos em falta",tot-ent,tot-ent?"#b42318":"")}${caixa("Entregues",ent+" de "+tot)}${caixa("Módulos completos",BM.m.filter(m=>m.it.length&&m.it.every(x=>okS(x[1]))).length+" de "+BM.m.length)}</div>
     <div class="barra"><i style="width:${pct}%"></i></div>${tabelas}
@@ -58,10 +58,10 @@ function renderRelMeu(BM){const sec=$("#rel");if(!sec)return;let box=$("#relMeu"
       if(b.dataset.rm==="cp")copy(relMeuTexto(BM2));else relMeuImprimir(BM2)})}
   [...sec.querySelectorAll(".cols,.tiles,.card,.blk")].forEach(x=>{if(!x.contains(box)&&!box.contains(x))x.hidden=true});box.hidden=false;
   const SEL=boxSelHTML();
-  if(BM.vazio||!(BM.m||[]).length){box.innerHTML=`<div class="card"><h2>O meu relatório de entregas</h2>${SEL?`<div class="row">${SEL}</div>`:""}<p class="hint">Ainda não há dados seus publicados pela Direção (a Direção tem de analisar a Box e ter módulos atribuídos a si).</p></div>`;return}
+  if(BM.vazio||!(BM.m||[]).length){box.innerHTML=`<div class="card"><h2>Documentos em falta</h2>${SEL?`<div class="row">${SEL}</div>`:""}<p class="hint">Ainda não há dados seus publicados pela Direção (a Direção tem de analisar a Box e ter módulos atribuídos a si).</p></div>`;return}
   const okS=s=>s==="ok"||s==="warn"||s==="modelo",it=BM.m.flatMap(m=>m.it),tot=it.length,ent=it.filter(x=>okS(x[1])).length,nc=it.filter(x=>x[1]==="blank").length,conf=it.filter(x=>x[1]==="warn"||x[1]==="modelo").length;
   const st=(l,v,c)=>`<div class="ay-st"><small>${esc(l)}</small><b${c?` style="color:${c}"`:""}>${v}</b></div>`;
-  box.innerHTML=`<div class="card"><h2>O meu relatório de entregas</h2><p class="hint">Os documentos dos módulos atribuídos a si, ${esc(BM.nome?"na análise «"+BM.nome+"»":"")}${BM.t?" de "+new Date(BM.t).toLocaleDateString("pt-PT"):""}. Atualizado quando a Direção analisa a Box.</p>
+  box.innerHTML=`<div class="card"><h2>Documentos em falta</h2><p class="hint">Os documentos dos módulos atribuídos a si, ${esc(BM.nome?"na análise «"+BM.nome+"»":"")}${BM.t?" de "+new Date(BM.t).toLocaleDateString("pt-PT"):""}. Atualizado quando a Direção analisa a Box.</p>
     <div class="ay-stats" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:8px 0 12px">${st("documentação entregue",(tot?Math.round(ent*100/tot):0)+"%")}${st("em falta",tot-ent,tot-ent?"var(--bad)":"")}${st("entregues (de "+tot+")",ent)}${st("a confirmar",conf,conf?"#b45309":"")}${st("não contam (vazios/falsos)",nc,nc?"var(--bad)":"")}</div>
     <div class="row" style="align-items:flex-end">${SEL}<label style="width:200px">Mostrar<select id="rmSo"><option value="falta"${RELM.so==="falta"?" selected":""}>Só o que falta</option><option value="tudo"${RELM.so!=="falta"?" selected":""}>Todos os documentos</option></select></label>
       <label class="grow">Procurar<input type="text" id="rmQ" value="${esc(RELM.q)}" placeholder="turma, módulo ou documento"></label><button class="b s" data-rm="cp" type="button">Copiar</button><button class="b s" data-rm="pdf" type="button">Imprimir / guardar PDF</button></div></div>

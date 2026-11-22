@@ -352,17 +352,34 @@ function calMarcosUI(a){const ed=calPodeEditar(),hj=calHoje(),E=escData(),T=turm
     <label class="grow">Marco<input type="text" name="nome" placeholder="ex.: 3.º Momento de avaliação" required></label><label>De<input type="date" name="de" required></label><label>Até<input type="date" name="ate"></label><button class="b" type="submit" style="align-self:flex-end">Acrescentar marco</button></form>`;
   $("#calMarcos").innerHTML=h}
 // linha do tempo das turmas: FCT em barra, marcos em losango, interrupções a sombreado, hoje a traço
+// 0.9.159: modo ampliado (body.callamplo) — ecrã inteiro com períodos letivos e dias letivos, interrupções e feriados com o nome,
+// semanas marcadas, nome do curso de cada turma, o nome e a data de cada marco escritos ao lado e a duração da FCT
 function calLinha(a,NL){const el=$("#calLinha");if(!el)return;const y0=+a.ini,i0=a.inicio||y0+"-09-01",f0=a.fim||(y0+1)+"-07-31",tot=Math.max(1,calDias(i0,f0)+1),hj=calHoje();
+  const amp=document.body.classList.contains("callamplo");calLAmpSync();
   const x=d=>Math.max(0,Math.min(100,calDias(i0,d)/tot*100)),W=(d0,d1)=>Math.max(.35,(calDias(d0,d1)+1)/tot*100);
-  const T=turmasDoAno(a).filter(t=>!CAL_T||t.id===CAL_T),ints=(a.ferias||[]).filter(f=>f&&f.de&&!calEhFeriado(f,calFeriados(a)));
-  const meses=[];for(let d=new Date(calD(i0).getFullYear(),calD(i0).getMonth(),1,12);calS(d)<=f0;d.setMonth(d.getMonth()+1)){const s=calS(d)<i0?i0:calS(d);{const n=d.toLocaleDateString("pt-PT",{month:"short"}).replace(".","");meses.push(`<span style="left:${x(s)}%">${n.charAt(0).toUpperCase()+n.slice(1)}</span>`)}}
-  const sombra=ints.map(f=>`<i class="cal-ls" style="left:${x(f.de)}%;width:${W(f.de,f.ate||f.de)}%" title="${esc(f.nome||"Interrupção")}"></i>`).join("")+(hj>=i0&&hj<=f0?`<i class="cal-lh" style="left:${x(hj)}%" title="Hoje"></i>`:"");
+  const T=turmasDoAno(a).filter(t=>!CAL_T||t.id===CAL_T),FER=calFeriados(a),ints=(a.ferias||[]).filter(f=>f&&f.de&&!calEhFeriado(f,FER));
+  const meses=[];let mi=0;for(let d=new Date(calD(i0).getFullYear(),calD(i0).getMonth(),1,12);calS(d)<=f0;d.setMonth(d.getMonth()+1)){const s=calS(d)<i0?i0:calS(d),nx=new Date(d.getFullYear(),d.getMonth()+1,0,12),e=calS(nx)>f0?f0:calS(nx);
+    const n=d.toLocaleDateString("pt-PT",{month:amp&&W(s,e)>=7?"long":"short"}).replace(".","");meses.push(amp?`<span class="${mi++%2?"alt":""}" style="left:${x(s)}%;width:${W(s,e)}%">${n.charAt(0).toUpperCase()+n.slice(1)}${(d.getMonth()===0||!meses.length)&&W(s,e)>=7?" "+d.getFullYear():""}</span>`:`<span style="left:${x(s)}%">${n.charAt(0).toUpperCase()+n.slice(1)}</span>`)}
+  let fundo=ints.map(f=>`<i class="cal-ls" style="left:${x(f.de)}%;width:${W(f.de,f.ate||f.de)}%" title="${esc(f.nome||"Interrupção")}"></i>`).join("");
+  if(amp){const sem=[];for(let d=i0,k=0;d<=f0&&k<60;d=calMais(d,1)){if(calD(d).getDay()===1){sem.push(`<i class="cal-lw" style="left:${x(d)}%"></i>`);k++}}
+    fundo=sem.join("")+fundo+FER.filter(f=>f.data>=i0&&f.data<=f0&&calD(f.data).getDay()%6).map(f=>`<i class="cal-lf" style="left:${x(f.data)}%" title="${esc(f.nome+" · "+calDMA(f.data))}"></i>`).join("")}
+  const sombra=fundo+(hj>=i0&&hj<=f0?`<i class="cal-lh" style="left:${x(hj)}%" title="Hoje"></i>`:"");
   if(!T.length){el.innerHTML=`<p class="hint">Sem turmas neste ano letivo.</p>`;return}
-  el.innerHTML=`<div class="cal-l"><div class="cal-lr cal-lm"><b></b><div class="cal-lt">${meses.join("")}</div></div>${T.map(t=>{const M=calMarcos(a,t.id).filter(m=>!CAL_TIPO||m.tipo===CAL_TIPO);
-    const it=M.map(m=>{const c=(CAL_TIPOS[m.tipo]||CAL_TIPOS.outro)[1],tit=esc(m.nome+" · "+calDatasTxt(m).replace(/<[^>]+>/g,""));
-      if(m.tipo==="fct"&&m.ate&&m.ate!==m.de)return `<i class="cal-lb" style="left:${x(m.de)}%;width:${W(m.de,m.ate)}%;--c:${c}" title="${tit}"><span>FCT</span></i>`;
-      return calDatasDe(m).map(d=>`<i class="cal-ld" style="left:${x(d)}%;--c:${c}" title="${tit}"></i>`).join("")}).join("");
-    return `<div class="cal-lr"><b title="${esc(turmaNome(t))}">${esc(t.cod)}</b><div class="cal-lt">${sombra}${it}</div></div>`}).join("")}</div>`}
+  let topo=`<div class="cal-lr cal-lm"><b></b><div class="cal-lt">${meses.join("")}</div></div>`;
+  if(amp){const P=calPeriodos(a),dm=d=>calDM(d,{day:"numeric",month:"numeric"});
+    topo+=`<div class="cal-lr cal-lp"><b>Períodos</b><div class="cal-lt">${P.map(p=>`<span style="left:${x(p.ini)}%;width:${W(p.ini,p.fim)}%" class="p${p.n}" title="${esc(p.n+".º período · "+calDMA(p.ini)+" a "+calDMA(p.fim))}">${p.n}.º período · ${calLetivos(a,p.ini,p.fim,NL)} dias letivos</span>`).join("")||`<em class="hint">Sem períodos no calendário</em>`}</div></div>`;
+    topo+=`<div class="cal-lr cal-li2"><b>Interrupções</b><div class="cal-lt">${ints.map(f=>`<span style="left:${x(f.de)}%;width:${W(f.de,f.ate||f.de)}%" title="${esc((f.nome||"Interrupção")+" · "+dm(f.de)+(f.ate&&f.ate!==f.de?" a "+dm(f.ate):""))}">${W(f.de,f.ate||f.de)>=2.5?esc(f.nome||"Interrupção"):""}</span>`).join("")}${hj>=i0&&hj<=f0?`<i class="cal-lhj" style="left:${x(hj)}%">hoje · ${esc(dm(hj))}</i>`:""}</div></div>`}
+  el.innerHTML=(amp?`<div class="cal-lleg">${Object.entries(CAL_TIPOS).map(([k,v])=>`<span><i style="--c:${esc(v[1])}" class="${k==="fct"?"b":""}"></i>${esc(v[0])}</span>`).join("")}<span><i class="s"></i>Interrupção letiva</span><span><i class="f"></i>Feriado</span><span><i class="h"></i>Hoje</span></div>`:"")+
+  `<div class="cal-l${amp?" amp":""}">${topo}${T.map(t=>{const M=calMarcos(a,t.id).filter(m=>!CAL_TIPO||m.tipo===CAL_TIPO).slice().sort((p,q)=>String(p.de).localeCompare(String(q.de)));let k=0;
+    const it=M.map(m=>{const c=(CAL_TIPOS[m.tipo]||CAL_TIPOS.outro)[1],txt=calDatasTxt(m).replace(/<[^>]+>/g,""),tit=esc(m.nome+" · "+txt);
+      if(m.tipo==="fct"&&m.ate&&m.ate!==m.de){const dl=amp?calLetivos(a,m.de,m.ate,NL):0;return `<i class="cal-lb" style="left:${x(m.de)}%;width:${W(m.de,m.ate)}%;--c:${c}" title="${tit}"><span>${amp?`FCT · ${esc(calDM(m.de,{day:"numeric",month:"numeric"}))} a ${esc(calDM(m.ate,{day:"numeric",month:"numeric"}))} · ${dl} dias úteis`:"FCT"}</span></i>`}
+      const D=calDatasDe(m),cls=amp?(k++%2?" bx":" cm"):"";
+      return D.map((d,di)=>`<i class="cal-ld${cls}" style="left:${x(d)}%;--c:${c}" title="${tit}"></i>`).join("")+(amp?`<em class="cal-ldt${cls}" style="left:${x(D[0])}%;--c:${c}" title="${tit}">${esc(m.nome)} <small>${esc(D.length>1?calDM(D[0],{day:"numeric",month:"numeric"})+"…":calDM(D[0],{day:"numeric",month:"numeric"}))}</small></em>`:"")}).join("");
+    return `<div class="cal-lr"><b title="${esc(turmaNome(t))}">${esc(t.cod)}${amp?`<small>${esc((()=>{const c=cursoById(t.cursoId);const n=c?c.nome:turmaNome(t);return n===t.cod?"":String(n).replace(new RegExp("^"+String(t.cod).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\s*[-–·]\\s*"),"")})())}</small>`:""}</b><div class="cal-lt">${sombra}${it}</div></div>`}).join("")}</div>`}
+function calLAmpSync(){const b=document.getElementById("calLAmp");if(b)b.textContent=document.body.classList.contains("callamplo")?"Sair do modo ampliado":"Ampliar"}
+function calLAmpSet(on){document.body.classList.toggle("callamplo",!!on);try{const a=calAnoSel();calLinha(a,calNaoLetivos(a))}catch(e){calLAmpSync()}}
+(function(){const b=document.getElementById("calLAmp");if(b)b.onclick=()=>calLAmpSet(!document.body.classList.contains("callamplo"));
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.body.classList.contains("callamplo"))calLAmpSet(false)})})();
 
 /* ---------- PDF e Outlook (.ics) ---------- */
 async function calPdf(){const a=calAnoSel(),cal=calDe(a),NL=calNaoLetivos(a),P=calPeriodos(a),FER=calFeriados(a),J=await loadPDF(),doc=new J({unit:"mm",format:"a4"});

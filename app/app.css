@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.158 */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.159 */
 /* ===== src/css/fontes.css ===== */
 @font-face{font-family:Poppins;font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/poppins-latin-400.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:Poppins;font-style:normal;font-weight:500;font-display:swap;src:url(../fonts/poppins-latin-500.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -1700,6 +1700,32 @@ table.hsf tfoot .nm{z-index:2;font-weight:600;color:var(--muted)}
 .mzh .a.h3a{border-left:3px solid;border-radius:6px}.mzh .a.h3a b{font-weight:700}.mzh .a.h3a span{color:#4a5262;opacity:1}
 /* Horários360 › Comunicar: estado da conta da Microsoft (0.9.156) */
 .h3ms{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--muted)}.h3ms b{color:var(--ink)}
+/* 0.9.159: Linha do tempo das turmas — modo ampliado */
+body.callamplo{overflow:hidden}
+body.callamplo #calLinhaCard{position:fixed;inset:0;z-index:60;margin:0;border:0;border-radius:0;overflow:auto;padding:18px 28px 28px;box-shadow:none}
+body.callamplo #calLinhaCard .dh{display:none}
+.cal-lleg{display:flex;flex-wrap:wrap;gap:6px 16px;margin:0 0 10px;font-size:12.5px;color:var(--muted)}.cal-lleg span{display:inline-flex;align-items:center;gap:6px}
+.cal-lleg i{width:10px;height:10px;background:var(--c);transform:rotate(45deg);border-radius:2px;display:inline-block}.cal-lleg i.b{transform:none;width:18px;height:9px;border-radius:3px}
+.cal-lleg i.s{transform:none;width:16px;height:12px;background:repeating-linear-gradient(135deg,#fde7c4 0 4px,#fff4e2 4px 8px);border-radius:2px}
+.cal-lleg i.f{transform:none;width:0;height:13px;background:none;border-left:1.5px dashed #dc2626;border-radius:0}.cal-lleg i.h{transform:none;width:2px;height:13px;background:var(--brand);border-radius:0}
+.cal-l.amp .cal-lr{grid-template-columns:240px 1fr;height:52px;min-width:1200px}
+.cal-l.amp .cal-lr>b{font-size:14px;display:flex;flex-direction:column;justify-content:center;line-height:1.2;padding-right:10px;overflow:hidden}
+.cal-l.amp .cal-lr>b small{font-weight:400;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-l.amp .cal-lm{height:30px;position:sticky;top:0;z-index:5;background:var(--card,#fff)}
+.cal-l.amp .cal-lm span{top:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--ink);border-left:1px solid var(--line);padding:0;overflow:hidden;white-space:nowrap}
+.cal-l.amp .cal-lm span.alt{background:#f6f8fb}
+.cal-l.amp .cal-lp,.cal-l.amp .cal-li2{height:30px}.cal-l.amp .cal-lp>b,.cal-l.amp .cal-li2>b{font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.cal-lp span{position:absolute;top:5px;bottom:5px;border-radius:6px;font-size:11.5px;font-weight:600;display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden;padding:0 6px}
+.cal-lp span.p1{background:#e3edff;color:#1e40af}.cal-lp span.p2{background:#fdf1dc;color:#92400e}.cal-lp span.p3{background:#f0e8ff;color:#5b21b6}
+.cal-li2 span{position:absolute;top:5px;bottom:5px;background:repeating-linear-gradient(135deg,#fde7c4 0 4px,#fff4e2 4px 8px);border:1px solid #f5c78a;border-radius:5px;font-size:10.5px;font-weight:600;color:#7a4300;display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden;min-width:4px}
+.cal-lhj{position:absolute;top:6px;transform:translateX(-50%);background:var(--brand);color:#fff;font-size:10.5px;font-weight:700;font-style:normal;border-radius:999px;padding:2px 8px;white-space:nowrap;z-index:3}
+.cal-lw{position:absolute;top:0;bottom:0;width:1px;background:#eef1f6}
+.cal-lf{position:absolute;top:0;bottom:0;width:0;border-left:1.5px dashed #dc2626;opacity:.4;z-index:1}
+.cal-l.amp .cal-lb{top:16px;height:20px;font-size:11.5px;border-radius:6px}.cal-l.amp .cal-lb span{padding:0 8px;white-space:nowrap}
+.cal-l.amp .cal-ld{width:12px;height:12px;margin-left:-6px;top:20px}
+.cal-l.amp .cal-ld.cm{top:4px}.cal-l.amp .cal-ld.bx{top:36px}
+.cal-ldt{position:absolute;font-style:normal;font-size:10.5px;font-weight:600;color:color-mix(in srgb,var(--c) 70%,#000);margin-left:10px;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;line-height:14px;z-index:2;background:rgba(255,255,255,.85);border-radius:3px;padding:0 3px}
+.cal-ldt small{font-weight:500;color:var(--muted)}.cal-ldt.cm{top:2px}.cal-ldt.bx{top:35px}
 /* ===== src/css/temas.css ===== */
 /* 0.9.94: Definições › Temas. «360» é o aspeto original (sem atributo). «Cobalto» é inspirado no aspeto da Box:
    menu lateral azul-cobalto com texto branco, conteúdo branco, linhas finas, cabeçalhos de tabela em maiúsculas pequenas

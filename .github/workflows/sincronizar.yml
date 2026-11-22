@@ -1,7 +1,7 @@
 # EPISJ 360 em episj360.episj.com
 # A app continua a ser publicada em EduSpruce/eduspruce.github.io (pasta boxdoc/).
 # Este fluxo traz essa pasta para aqui (de 10 em 10 minutos, ou à mão em Actions › Sincronizar › Run workflow).
-# Não mexer nos ficheiros deste repositório à mão: são substituídos na sincronização seguinte (exceto CNAME, .nojekyll, LEIA-ME.md e .github).
+# Não mexer nos ficheiros deste repositório à mão: são substituídos na sincronização seguinte (exceto README.md, CNAME, .nojekyll e .github).
 name: Sincronizar
 on:
   schedule:
@@ -21,7 +21,7 @@ jobs:
         run: |
           git clone --depth 1 --filter=blob:none --sparse https://github.com/EduSpruce/eduspruce.github.io /tmp/origem
           git -C /tmp/origem sparse-checkout set boxdoc esm
-          rsync -a --delete --exclude .git --exclude .github --exclude CNAME --exclude .nojekyll --exclude LEIA-ME.md --exclude esm /tmp/origem/boxdoc/ ./
+          rsync -a --delete --exclude .git --exclude .github --exclude CNAME --exclude .nojekyll --exclude README.md --exclude LEIA-ME.md --exclude esm /tmp/origem/boxdoc/ ./
           mkdir -p esm && cp /tmp/origem/esm/supabase-2.117.3.min.js esm/
           echo "episj360.episj.com" > CNAME
           touch .nojekyll

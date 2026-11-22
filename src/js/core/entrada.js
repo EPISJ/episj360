@@ -132,7 +132,7 @@ function sairFechar(){const bg=$("#sairBg");if(bg)bg.hidden=true}
 async function sairLocais(){ // [peça na nuvem, rótulo, data da cópia local]
   const kv=async k=>{try{const v=await DB.get("kv",k);return v&&+v.t||0}catch(e){return 0}};
   return [["estado","Configuração da escola",cfgT()],["ES","Horários360",await kv("esched")],["CR","Crono360",await kv("crono")],["PAP","PAP360",await kv("pap")],
-    ["FD","Folder360",await kv("folder")],["EC","Econo360",await kv("econo")],["PW","Pass360",await kv("pw")]]}
+    ["FD","Folder360",await kv("folder")],["EC","Econo360",await kv("econo")],["PW","Pass360",await kv("pw")],["H3","Horários360 (avisos e contactos)",await kv("h3")]]}
 async function sairVerificar(msg){
   if(!navigator.onLine)return{ok:false,porque:"Este computador está sem Internet: não dá para confirmar que está tudo na nuvem."};
   let L=await sairLocais();

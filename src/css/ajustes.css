@@ -237,3 +237,12 @@ body.callamplo #calLinhaCard .dh{display:none}
 
 /* 0.9.166: cargo que vem do Plano Curricular (Escola › Turmas) */
 .tcargo{padding:6px 2px;font-size:14px;line-height:1.25}.tcargo small{display:block;font-size:11.5px;color:var(--muted)}
+/* 0.9.168: linha do tempo ampliada ocupa a altura toda do ecrã — as linhas das turmas esticam (mínimo 52 px; com muitas turmas o ecrã desliza) */
+body.callamplo #calLinhaCard{display:flex;flex-direction:column}
+body.callamplo #calLinha{flex:1 0 auto;display:flex;flex-direction:column}
+body.callamplo #calLinha>.cal-l.amp{flex:1 0 auto;display:flex;flex-direction:column}
+.cal-l.amp>.cal-lr:not(.cal-lm):not(.cal-lp):not(.cal-li2){flex:1 0 52px;height:auto}
+.cal-l.amp .cal-lb{top:50%;transform:translateY(-50%)}
+.cal-l.amp .cal-ld{top:calc(50% - 6px)}
+.cal-l.amp .cal-ld.cm{top:4px}.cal-l.amp .cal-ld.bx{top:auto;bottom:4px}
+.cal-l.amp .cal-ldt.bx{top:auto;bottom:3px}

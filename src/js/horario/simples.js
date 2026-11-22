@@ -275,19 +275,20 @@ function h3EmailHtml(x){const st=mhEstado();if(!st)return "";const hj=calHoje(),
 function h3SmsLink(L){L=L.filter(x=>!x.tlOk);const nums=L.map(x=>h3Tel(H3.tel[(x.p||{}).id])).filter(Boolean);if(!nums.length)return "";
   const body=encodeURIComponent(L.length===1?h3Preencher(H3.msg.curta,L[0]):"EPISJ 360: o seu horário mudou. Veja em "+h3Lig()),ios=/iPhone|iPad|Macintosh/.test(navigator.userAgent);
   return ios?`sms:/open?addresses=${nums.join(",")}&body=${body}`:`sms:${nums.join(",")}?body=${body}`}
-async function h3Enviar(L,canais,msg){if(H3_ENVIO||!L.length)return;H3_ENVIO=true;let ok=0,erros=[];
+async function h3Enviar(L,canais,msg,forcar){ // 0.9.164: forcar = envio pedido à mão (manda a todos os escolhidos, também a quem já tinha recebido por essa via)
+if(H3_ENVIO||!L.length)return;H3_ENVIO=true;let ok=0,erros=[],nomes=[];
   // 0.9.155: a sessão do Office 365 é pedida logo no início (ainda no clique, para a janela da Microsoft não ser bloqueada);
   // se não houver sessão, diz uma vez porquê em vez de falhar formador a formador
-  if(canais.includes("email")&&L.some(x=>!x.emOk)){try{await msToken()}catch(e){H3_ENVIO=false;const m=typeof msErro==="function"?msErro(e):(e.message||String(e));
+  if(canais.includes("email")&&L.some(x=>forcar||!x.emOk)){try{await msToken()}catch(e){H3_ENVIO=false;const m=typeof msErro==="function"?msErro(e):(e.message||String(e));
     return{ok:0,erros:["Os emails não saíram: "+m+" Carregue em «Ligar a conta da Microsoft» (por cima dos botões) e depois envie outra vez."]}}}
   try{for(let i=0;i<L.length;i++){const x=L[i],feito=[];if(msg)msg(`A enviar ${i+1} de ${L.length}…`);
-      const fazEm=canais.includes("email")&&!x.emOk,fazTl=canais.includes("push")&&!x.tlOk;
+      const fazEm=canais.includes("email")&&(forcar||!x.emOk),fazTl=canais.includes("push")&&(forcar||!x.tlOk);
       if(fazEm)try{await h3Email1(x);feito.push("email")}catch(e){erros.push((x.t.name||"")+": email — "+(e.message||e))}
       if(fazTl)try{await h3Push(x);feito.push("push")}catch(e){erros.push((x.t.name||"")+": notificação — "+(e.message||e))}
-      if(feito.length){h3Marcar(x,feito);ok++}
+      if(feito.length){h3Marcar(x,feito);ok++;nomes.push(((x.p&&x.p.nome)||x.t.name||"")+" ("+feito.map(c=>c==="email"?"email para "+h3Email(x.p):"notificação").join(" e ")+")")}
       if(fazEm&&i<L.length-1)await new Promise(r=>setTimeout(r,2100))}}
   finally{H3_ENVIO=false;h3Guardar()}
-  return{ok,erros}}
+  return{ok,erros,nomes}}
 // avisos automáticos: do navegador de quem é da Direção, alguns minutos depois de o horário mudar (um computador de cada vez)
 async function h3AutoVer(){try{if(!H3||!H3.auto.on||RO||H3_ENVIO||!podePublicar())return;const a=anoAtivo(),x=ESD.porAno&&ESD.porAno[a.id];if(!x||!x.quando)return;
     if(Date.now()-x.quando<(+H3.auto.min||10)*60000||curTab==="esch")return;const L=h3Pendentes();if(!L.length)return;
@@ -348,7 +349,7 @@ async function hsComRender(){await null;try{await esdPronto}catch(e){}await h3Ca
   const m=t=>{const e=$("#h3Msg");if(e)e.textContent=t};
   const go=async can=>{const S=sel();if(!S.length){toast("Escolha pelo menos um formador");return}
     if(!confirm(`Enviar ${can.map(c=>c==="email"?"email":"notificação").join(" e ")} a ${S.length} formador${S.length===1?"":"es"}?`))return;
-    const r=await h3Enviar(S,can,m);if(!r)return;toast(`${r.ok} formador${r.ok===1?"":"es"} avisado${r.ok===1?"":"s"}`);hsComRender().then(()=>{if(r.erros.length){const e=$("#h3Msg");if(e)e.innerHTML=`<span style="color:var(--bad)">${r.erros.slice(0,8).map(esc).join("<br>")}</span>`}})};
+    const r=await h3Enviar(S,can,m,true);if(!r)return;toast(`${r.ok} formador${r.ok===1?"":"es"} avisado${r.ok===1?"":"s"}`);hsComRender().then(()=>{const e=$("#h3Msg");if(!e)return;e.innerHTML=(r.nomes&&r.nomes.length?`<span style="color:var(--ok,#1a7f45)">Enviado: ${r.nomes.slice(0,10).map(esc).join("; ")}${r.nomes.length>10?" e mais "+(r.nomes.length-10):""}.</span>`:"")+(r.erros.length?`${r.nomes&&r.nomes.length?"<br>":""}<span style="color:var(--bad)">${r.erros.slice(0,8).map(esc).join("<br>")}</span>`:"")})};
   // 0.9.156: o botão liga a conta da Microsoft logo no clique (a janela não é bloqueada); sem conta carregada, tenta recuperá-la da sessão do navegador
   const bl=$("#h3MsLig");if(bl)bl.onclick=async()=>{try{await msLoginPopup();toast("Conta da Microsoft ligada");hsComRender()}catch(e){m(typeof msErro==="function"?msErro(e):String(e.message||e))}};
   if(!ms&&!window.__h3MsTent){window.__h3MsTent=1;msInit().then(()=>{if(MSACC)hsComRender()}).catch(()=>{})}

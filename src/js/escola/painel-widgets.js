@@ -52,7 +52,8 @@ const WIDGETS=[
  {id:"cnq",mod:"escola",nome:"Cursos e Catálogo",desc:"Cursos por ligar ao Catálogo Nacional de Qualificações ou com UFCD opcionais por escolher",r(){
    const C=escData().cursos;if(!C.length)return wgVazio("Ainda não há cursos.")+wgIr("cur","Criar cursos");
    const L=C.map(c=>{const it=c.itens||[],op=it.filter(i=>i.opc),es=new Set(c.opcEsc||[]),hE=hSoma(op.filter(i=>es.has(i.cod))),req=c.opcH||0;
-     return{c,p:!c.qual?"por ligar ao Catálogo":op.length&&req&&hE<req?`opcionais: ${hE} h de ${req} h`:""}}).filter(x=>x.p);
+     const tp=op.length&&req?escData().turmas.filter(t=>t.cursoId===c.id&&turmaPlanoProprio(t)&&!opcEscolhidasOk(c,t.planoCur)).map(t=>t.cod):[];
+     return{c,p:!c.qual?"por ligar ao Catálogo":op.length&&req&&hE<req?`opcionais: ${hE} h de ${req} h`:tp.length?`opcionais por escolher: ${tp.join(", ")}`:""}}).filter(x=>x.p);
    if(!L.length)return `<div class="wg-okm">✓ Os ${C.length} cursos estão ligados ao Catálogo e com as opcionais escolhidas.</div>`;
    return `<div class="wg-lst">${L.map(x=>`<div class="wg-li"><span class="wg-el">${esc(x.c.nome)}</span><i class="wg-tag w">${esc(x.p)}</i></div>`).join("")}</div>`+wgIr("cur","Abrir Cursos")}},
  {id:"profs",mod:"escola",nome:"Formadores",desc:"Total, sem email do Office 365 (não conseguem entrar) e orientadores educativos",r(){

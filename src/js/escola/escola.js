@@ -75,7 +75,7 @@ function epPontos(){const e=escData(),a=anoAtivo(),T=turmasDoAno(a),P=cfg.profs|
   add({k:"pc",t:"Turmas com plano curricular",ok:T.filter(t=>{try{return pcDe(t.id,a.id)}catch(x){return false}}).length,tot:T.length,ir:"pc",fx:"Fazer planos",p:3});
   add({k:"cnq",t:"Cursos ligados ao Catálogo",ok:e.cursos.filter(c=>c.qual).length,tot:e.cursos.length,ir:"cur",fx:"Ligar ao Catálogo",p:2});
   const op=e.cursos.filter(c=>(c.itens||[]).some(i=>i.opc)&&c.opcH);
-  add({k:"opc",t:"Cursos com as UFCD opcionais escolhidas",ok:op.filter(c=>{const es=new Set(c.opcEsc||[]);return hSoma((c.itens||[]).filter(i=>i.opc&&es.has(i.cod)))>=c.opcH}).length,tot:op.length,ir:"cur",fx:"Escolher opcionais",p:2});
+  add({k:"opc",t:"Cursos com as UFCD opcionais escolhidas",ok:op.filter(c=>cursoOpcOk(c)).length,tot:op.length,ir:"cur",fx:"Escolher opcionais",p:2});
   if(modOn("eduschedule")){const st=mhEstado();if(st){const C=st.cards||[];add({k:"hor",t:"Blocos colocados no horário",ok:C.filter(c=>c.day!=null).length,tot:C.length,ir:"esch",fx:"Abrir o Horários360",p:3})}
     else if(T.length)L.push({k:"hor",t:`Horário de ${a.nome}`,ok:0,tot:1,ir:"esch",fx:"Começar o horário",p:3,txt:"por fazer"})}
   if(modOn("crono")){try{const M=crMotor(a),me=crMeuId();let n=0,tot=0;for(const X of M.turmas.values()){const r=crTurmaRes(X,me);for(const o of r.L){tot++;if(o.est==="risco"||o.est==="semhorario")n++}}

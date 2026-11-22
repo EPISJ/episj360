@@ -1,20 +1,27 @@
 /* ---------- cursos (com o Catálogo Nacional de Qualificações) ---------- */
 const hSoma=a=>a.reduce((s,i)=>s+(i.h||0),0);
+// Plano próprio de uma turma (0.9.137): turmas do mesmo curso podem ter escolhas diferentes (TIC ou oferta de escola,
+// UFCD/UC opcionais). Fica em t.planoCur={cursoId,gEsc,opcEsc,ofertaEsc}; só vale enquanto a turma for desse curso.
+function turmaPlanoProprio(t){const p=t&&t.planoCur;return p&&p.cursoId&&p.cursoId===t.cursoId?p:null}
+function planoEscolhas(t){const c=t&&cursoById(t.cursoId);return turmaPlanoProprio(t)||c||null}
+function opcEscolhidasOk(c,o){const es=new Set(o.opcEsc||[]);return hSoma((c.itens||[]).filter(i=>i.opc&&es.has(i.cod)))>=(c.opcH||0)}
+function cursoOpcOk(c){return opcEscolhidasOk(c,c)&&escData().turmas.every(t=>t.cursoId!==c.id||!turmaPlanoProprio(t)||opcEscolhidasOk(c,t.planoCur))}
+let CUR_PT=new Map();
 function grupoEsc(c,g){const ch=(c.gEsc||{})[g.nome];return g.discs.find(d=>d.cod===ch)||g.discs.find(d=>d.h)||g.discs[0]}
-function cursoPlanoHTML(c){const it=c.itens||[],U=c.qual&&c.qual.conceito==="RA"?"UC":"UFCD",ab=k=>CUR_ABERTOS.has(c.id+"|"+k)?" open":"";
+function cursoPlanoHTML(c,o){o=o||c;const it=c.itens||[],U=c.qual&&c.qual.conceito==="RA"?"UC":"UFCD",ab=k=>CUR_ABERTOS.has(c.id+"|"+k)?" open":"";
   if(!it.length&&!(c.escolar||[]).length)return "";
   const li=(cod,nome,h,extra)=>`<span><b>${esc(cod)}</b> ${esc(nome)}${h?` · ${h} h`:""}${extra||""}</span>`;let out="";
   for(const [ci,comp] of (c.escolar||[]).entries()){let hc=0;
-    const gs=comp.grupos.map((g,gi)=>{const d0=grupoEsc(c,g);hc+=d0&&d0.h||0;
+    const gs=comp.grupos.map((g,gi)=>{const d0=grupoEsc(o,g);hc+=d0&&d0.h||0;
       if(g.discs.length>1&&/\sou\s/i.test(g.nome)){ // a escola escolhe (ex.: TIC ou Oferta de Escola)
         const oe=/oferta de escola/i.test(d0.nome);
         return `<div class="cpg"><div class="cpgn">${esc(g.nome)} <span class="tag" style="background:var(--brandbg);color:var(--brand)">escolha da escola</span></div>
           <div class="snqh"><select data-gesc="${esc(g.nome)}" style="max-width:420px">${g.discs.map(d=>`<option value="${esc(d.cod)}" ${d===d0?"selected":""}>${esc(d.nome)}${d.h?` · ${d.h} h`:""}</option>`).join("")}</select>
-          ${oe?`<input type="text" data-oesc="${esc(g.nome)}" value="${esc((c.ofertaEsc||{})[g.nome]||"")}" placeholder="Designação da oferta de escola" style="flex:1;min-width:200px">`:""}</div></div>`}
+          ${oe?`<input type="text" data-oesc="${esc(g.nome)}" value="${esc((o.ofertaEsc||{})[g.nome]||"")}" placeholder="Designação da oferta de escola" style="flex:1;min-width:200px">`:""}</div></div>`}
       const alt=g.discs.filter(d=>d!==d0);
       return `<div class="cpg"><div class="cpgn">${esc(g.nome||comp.nome)}</div><div class="snqi">${li(d0.cod,d0.nome,d0.h)}${alt.length?`<span class="hint" style="margin:0">Alternativas: ${alt.map(d=>esc(d.nome)).join(" · ")}</span>`:""}</div></div>`}).join("");
     out+=`<details class="cpc" data-dk="e${ci}"${ab("e"+ci)}><summary><b>${esc(comp.nome)}</b><span class="hint" style="margin:0">${hc?hc+" h":""}</span></summary>${gs}</details>`}
-  if(it.length){const ob=it.filter(i=>!i.opc),op=it.filter(i=>i.opc),es=new Set(c.opcEsc||[]),hE=hSoma(op.filter(i=>es.has(i.cod))),req=c.opcH||0;
+  if(it.length){const ob=it.filter(i=>!i.opc),op=it.filter(i=>i.opc),es=new Set(o.opcEsc||[]),hE=hSoma(op.filter(i=>es.has(i.cod))),req=c.opcH||0;
     const st=!op.length?"":req?(hE===req?`<span class="tag" style="background:var(--okbg);color:var(--ok)">${hE} de ${req} h escolhidas</span>`:`<span class="tag ${hE>req?"bad":"exc"}">${hE} de ${req} h escolhidas</span>`):`<span class="tag" style="background:#eef1f5;color:#4a5260">${hE} h escolhidas</span>`;
     const bol=[...new Set(op.map(i=>i.bolsa||""))];
     out+=`<details class="cpc" data-dk="tec"${ab("tec")}><summary><b>Formação Tecnológica</b><span class="hint" style="margin:0">${hSoma(ob)} h obrigatórias${op.length?` + ${req?req+" h":""} opcionais`:""}</span>${st}</summary>
@@ -37,8 +44,18 @@ function renderCursos(){const e=escData(),q=norm($("#curFilter").value||"");
       <div class="snqh" style="margin-top:8px">${c.qual?`<a href="https://catalogo.snq.gov.pt/qualificacoesDetalhe/${c.qual.id}" target="_blank" rel="noopener">${esc(c.qual.nome)}</a><span class="tag" style="background:#eef1f5;color:#4a5260">${esc(c.qual.cod)} · nível ${esc(c.qual.nivel||"?")} · ${c.qual.conceito==="RA"?"UC":"UFCD"} · referencial de ${esc(c.qual.data||"?")}</span>`:`<span class="tag bad">sem ligação ao catálogo</span>`}
       <span class="grow"></span>${c.cands&&c.cands.length>1?`<select data-pick style="max-width:320px"><option value="">outra qualificação…</option>${c.cands.map(x=>`<option value="${esc(x.cod)}">${esc(x.nome)} (${esc(x.cod)}, nível ${esc(x.nivel)})</option>`).join("")}</select>`:""}
       <button class="b s" data-cnq>${c.qual?"Atualizar do catálogo":"Procurar no catálogo"}</button></div>
-      ${cursoPlanoHTML(c)}</div>`}).join("")
+      ${cursoPlanosTurmas(c)}</div>`}).join("")
     ||`<p class="hint">${e.cursos.length?"Nenhum curso corresponde à procura.":"Ainda sem cursos — crie um acima ou importe as turmas da Box."}</p>`}
+function cursoPlanosTurmas(c){const E=escData(),T=E.turmas.filter(t=>t.cursoId===c.id).sort((x,y)=>COLL_PTN.compare(String(x.cod),String(y.cod)));
+  const base=cursoPlanoHTML(c);if(!base)return "";if(!T.length)return `<div data-pt="">${base}</div>`;
+  let sel=CUR_PT.get(c.id)||"";if(sel&&!T.some(t=>t.id===sel))sel="";
+  const prop=T.filter(t=>turmaPlanoProprio(t)),tn=t=>`${t.cod}${t.anoIni&&t.anoFim?` (${String(t.anoIni).slice(-2)}-${String(t.anoFim).slice(-2)})`:""}`;
+  const bar=`<div class="snqh cpt"><label>Plano de<select data-ptsel><option value="">Curso — turmas que seguem o plano do curso</option>${T.map(t=>`<option value="${t.id}" ${t.id===sel?"selected":""}>${esc(tn(t))}${turmaPlanoProprio(t)?" · plano próprio":""}</option>`).join("")}</select></label>
+    <span class="hint" style="margin:0">${prop.length?`Com plano próprio: <b>${prop.map(t=>esc(t.cod)).join(", ")}</b>`:"Todas as turmas seguem o plano do curso"}</span></div>`;
+  if(!sel)return bar+`<div data-pt="">${base}</div>`;
+  const t=T.find(x=>x.id===sel),pp=turmaPlanoProprio(t);
+  if(!pp)return bar+`<div class="msg info cptm"><span>A turma <b>${esc(tn(t))}</b> segue o plano do curso (as escolhas acima, em «Curso»). Se esta turma tem um plano curricular diferente (outra escolha da escola ou outras ${c.qual&&c.qual.conceito==="RA"?"UC":"UFCD"} opcionais), crie um plano próprio.</span><button class="b s" type="button" data-ptcria>Criar plano próprio para ${esc(t.cod)}</button></div>`;
+  return bar+`<div class="msg info cptm"><span>A turma <b>${esc(tn(t))}</b> tem <b>plano próprio</b>: as escolhas abaixo valem só para ela; as outras turmas continuam com o plano do curso.</span><button class="b s" type="button" data-ptvolta>Voltar a seguir o plano do curso</button></div><div data-pt="${t.id}">${cursoPlanoHTML(c,pp)}</div>`}
 $("#curFilter").addEventListener("input",debounce(()=>renderCursos(),120));
 $("#curForm").addEventListener("submit",e=>{e.preventDefault();const nome=$("#cNome").value.trim();if(!nome)return;const E=escData();
   if(E.cursos.some(c=>norm(c.nome)===norm(nome))){toast("Esse curso já existe");return}
@@ -46,12 +63,21 @@ $("#curForm").addEventListener("submit",e=>{e.preventDefault();const nome=$("#cN
   if($("#cCnq").checked)cursoCnq(c.id)});
 $("#curList").addEventListener("change",e=>{const box=e.target.closest("[data-cur]");if(!box)return;const c=cursoById(box.dataset.cur);if(!c)return;
   if(e.target.matches("[data-pick]")){if(e.target.value)cursoCnq(c.id,e.target.value);return}
-  if(e.target.matches("[data-opc]")){const s=new Set(c.opcEsc||[]);e.target.checked?s.add(e.target.dataset.opc):s.delete(e.target.dataset.opc);c.opcEsc=[...s];save();renderCursos();return}
-  if(e.target.matches("[data-gesc]")){(c.gEsc=c.gEsc||{})[e.target.dataset.gesc]=e.target.value;save();renderCursos();return}
-  if(e.target.matches("[data-oesc]")){(c.ofertaEsc=c.ofertaEsc||{})[e.target.dataset.oesc]=e.target.value.trim();save();return}
+  if(e.target.matches("[data-ptsel]")){CUR_PT.set(c.id,e.target.value);renderCursos();return}
+  const ptEl=e.target.closest("[data-pt]"),ptT=ptEl&&ptEl.dataset.pt?escData().turmas.find(t=>t.id===ptEl.dataset.pt):null,o=ptT&&turmaPlanoProprio(ptT)||c;
+  const depois=()=>{save();if(o!==c&&curTab==="pc")renderPC()};
+  if(e.target.matches("[data-opc]")){const s=new Set(o.opcEsc||[]);e.target.checked?s.add(e.target.dataset.opc):s.delete(e.target.dataset.opc);o.opcEsc=[...s];depois();renderCursos();return}
+  if(e.target.matches("[data-gesc]")){(o.gEsc=o.gEsc||{})[e.target.dataset.gesc]=e.target.value;depois();renderCursos();return}
+  if(e.target.matches("[data-oesc]")){(o.ofertaEsc=o.ofertaEsc||{})[e.target.dataset.oesc]=e.target.value.trim();depois();return}
   const k=e.target.dataset.k;if(!k)return;c[k]=e.target.value.trim();save();if(k==="nome"){renderTurmas();esRecarregar()}if(k==="tipo"&&c.qual)cursoCnq(c.id,c.qual.cod)});
 $("#curList").addEventListener("click",e=>{const box=e.target.closest("[data-cur]");if(!box)return;const E=escData(),c=cursoById(box.dataset.cur);if(!c)return;
   if(e.target.hasAttribute("data-cnq")){cursoCnq(c.id);return}
+  if(e.target.hasAttribute("data-ptcria")||e.target.hasAttribute("data-ptvolta")){const t=E.turmas.find(x=>x.id===CUR_PT.get(c.id));if(!t)return;
+    if(e.target.hasAttribute("data-ptcria")){const ant=t.planoCur&&t.planoCur.cursoId===c.id?t.planoCur:null;
+      t.planoCur={cursoId:c.id,gEsc:Object.assign({},c.gEsc||{}),opcEsc:(c.opcEsc||[]).slice(),ofertaEsc:Object.assign({},c.ofertaEsc||{})};if(ant)Object.assign(t.planoCur,ant);
+      save();renderCursos();toast(`${t.cod} tem agora plano próprio (começa com as escolhas do curso)`);return}
+    if(!confirm(`A turma ${t.cod} deixa o plano próprio e volta a seguir as escolhas do curso ${c.nome}?`))return;
+    ponto(`Antes de ${t.cod} voltar ao plano do curso`);delete t.planoCur;save();renderCursos();toast(`${t.cod} segue o plano do curso (pode anular)`);return}
   if(e.target.hasAttribute("data-del")){const nT=E.turmas.filter(t=>t.cursoId===c.id).length;if(nT&&!confirm(`O curso ${c.nome} tem ${nT} turma(s). Apagar na mesma? As turmas ficam sem curso.`))return;
     ponto("Antes de apagar o curso "+c.nome);E.cursos=E.cursos.filter(x=>x!==c);E.turmas.forEach(t=>{if(t.cursoId===c.id)t.cursoId=""});save();escRender();toast("Curso apagado (pode anular)")}});
 $("#curCnqTodos").onclick=async()=>{const L=escData().cursos.filter(c=>!c.qual);if(!L.length){toast("Todos os cursos já estão ligados ao catálogo");return}
@@ -70,6 +96,7 @@ async function cursoCnq(id,forcar,calado){const c=cursoById(id);if(!c)return;
     if(es.length){const v=await snqVersao(es,ini);if(v){c.qual={cod:v.qual.cod,nome:v.qual.nome,nivel:v.qual.nivel,id:v.id,data:v.data,conceito:v.conceito};
       const T=await snqTec(v.id,v.conceito);c.itens=T.itens;c.opcH=T.opcH;
       if(c.opcEsc)c.opcEsc=c.opcEsc.filter(k=>c.itens.some(i=>i.opc&&i.cod===k));
+      escData().turmas.forEach(t=>{const pp=t.cursoId===c.id&&turmaPlanoProprio(t);if(pp&&pp.opcEsc)pp.opcEsc=pp.opcEsc.filter(k=>c.itens.some(i=>i.opc&&i.cod===k))});
       const mod=SNQ_MOD[c.tipo||"Profissional"];c.escolar=[];if(mod){try{c.escolar=await snqEscolar(v.id,mod)}catch(x){}}}}
     else c.qual=null;
     save();if(!calado){$("#curMsg").textContent=c.qual?`${c.nome} → ${c.qual.nome} (${c.itens.filter(i=>!i.opc).length} ${c.qual.conceito==="RA"?"UC":"UFCD"} obrigatórias${c.itens.some(i=>i.opc)?` + ${c.itens.filter(i=>i.opc).length} opcionais`:""}${(c.escolar||[]).length?" · "+c.escolar.map(x=>x.nome.replace(/^Formação /,"")).join(", "):""}).`:`${c.nome}: não encontrado no catálogo.`}}
@@ -84,7 +111,7 @@ function renderTurmas(){const e=escData(),a=anoAtivo(),q=norm($("#turFilter").va
     .filter(t=>!q||norm(t.cod+" "+turmaNome(t)+" "+((cursoById(t.cursoId)||{}).nome||"")+" "+profName(t.dt)+" "+(t.fse||"")).includes(q));
   $("#tbTur").innerHTML=L.map(t=>{const ac=anoCurricular(t,a);return `<tr data-id="${t.id}">
     <td><input type="text" data-k="cod" value="${esc(t.cod)}" style="width:70px"></td>
-    <td><select data-k="cursoId">${curOpts(t.cursoId)}</select></td>
+    <td><select data-k="cursoId">${curOpts(t.cursoId)}</select>${turmaPlanoProprio(t)?`<span class="tag" style="margin-top:4px;background:var(--brandbg);color:var(--brand)" title="Esta turma tem escolhas diferentes das do curso (Escola360 › Cursos)">plano próprio</span>`:""}</td>
     <td><input type="number" data-k="anoIni" value="${t.anoIni||""}" min="2000" max="2100" style="width:84px"></td>
     <td><input type="number" data-k="anoFim" value="${t.anoFim||""}" min="2000" max="2100" style="width:84px"></td>
     <td class="hm">${ac?esc(ac):`<span class="hint" style="margin:0">fora de ${esc(a.nome)}</span>`}</td>

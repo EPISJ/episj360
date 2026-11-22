@@ -20,7 +20,9 @@ const pcSemana=(h,p)=>{const s=+p.semanas||0;return s?h/s:0};
 function pcDiscs(p,area){const o=[];for(const l of p.linhas)if(l.area===area&&!o.includes(l.disc))o.push(l.disc);return o}
 function pcCurso(t){return cursoById(t.cursoId)}
 function pcModOpcoes(t){const c=pcCurso(t);if(!c||!Array.isArray(c.itens))return "";const ra=c.qual&&c.qual.conceito==="RA";
-  return c.itens.map(i=>{const cod=/^\d/.test(String(i.cod))?(ra?"UC":"UFCD ")+i.cod:i.cod;return `<option value="${esc(cod+" - "+i.nome)}">${i.h?esc(i.h+" h"):""}</option>`}).join("")}
+  // primeiro as obrigatórias e as opcionais escolhidas para esta turma (plano próprio ou do curso), depois as outras opcionais
+  const es=new Set((planoEscolhas(t)||c).opcEsc||[]),ord=i=>!i.opc||es.has(i.cod)?0:1;
+  return c.itens.slice().sort((x,y)=>ord(x)-ord(y)).map(i=>{const cod=/^\d/.test(String(i.cod))?(ra?"UC":"UFCD ")+i.cod:i.cod;return `<option value="${esc(cod+" - "+i.nome)}">${i.h?esc(i.h+" h"):""}</option>`}).join("")}
 function pcHorasCatalogo(t,mod){const c=pcCurso(t);if(!c||!Array.isArray(c.itens))return null;const m=String(mod).match(/^(?:UFCD\s*|UC\s*)?(\d{3,6})/i);if(!m)return null;
   const i=c.itens.find(x=>String(x.cod).replace(/\D/g,"")===m[1]);return i&&i.h?+i.h:null}
 
@@ -41,7 +43,7 @@ function renderPC(){const e=escData(),a=anoAtivo(),T=turmasDoAno(a),out=$("#pcOu
       ${outros.length?`<label class="grow">ou copiar o plano de<select id="pcCopSel">${outros.map(o=>`<option value="${o.x.id}">${esc(o.tt.cod)} em ${esc(o.aa.nome)} — ${esc(anoCurricular(o.tt,o.aa)||"")} · ${pcNum(pcH(o.x.linhas))} h</option>`).join("")}</select></label><button class="b s" data-pccop style="align-self:flex-end">Copiar (sem formadores)</button><label class="chip" style="align-self:flex-end"><input type="checkbox" id="pcCopF"> com os formadores</label>`:""}</div>`+pcResumoAno();return}
   pcNorm(p);const c=pcCurso(t),ac=anoCurricular(t,a),semF=p.linhas.filter(l=>!l.f).length+p.cargos.filter(x=>!x.f).length,sem=+p.semanas||0;
   const tot=pcH(p.linhas),fct=+p.fct.horas||0;
-  let h=`<div class="pchead"><div><b>${esc(turmaNome(t))}</b><span>${c?esc(c.nome):"sem curso"}${ac?" · "+esc(ac):""}${t.fse?" · Projeto n.º "+esc(t.fse):""}${t.dt?" · Orientador educativo: "+esc(profName(t.dt)):""}</span></div>
+  let h=`<div class="pchead"><div><b>${esc(turmaNome(t))}</b><span>${c?esc(c.nome):"sem curso"}${turmaPlanoProprio(t)?" · plano próprio":""}${ac?" · "+esc(ac):""}${t.fse?" · Projeto n.º "+esc(t.fse):""}${t.dt?" · Orientador educativo: "+esc(profName(t.dt)):""}</span></div>
     <label>Semanas de aulas<input type="number" min="0" step="1" data-pk="semanas" value="${p.semanas??""}" placeholder="ex.: 28"></label>
     <label>FCT (horas)<input type="number" min="0" step="1" data-pk="fct.horas" value="${p.fct.horas??""}"></label>
     <label>FCT (semanas)<input type="number" min="0" step="1" data-pk="fct.semanas" value="${p.fct.semanas??""}"></label>

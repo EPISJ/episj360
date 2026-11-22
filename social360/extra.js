@@ -113,7 +113,7 @@ const Inbox = {
   html(ws) {
     const l = Inbox.list(ws); const it = S.inbox[UI.inboxSel];
     const plats = [...new Set(ws.pages.map(p => p.platform))];
-    return `<div class="ibx"><div class="ibl"><div class="f">
+    return `<div class="ibx${it ? ' sel' : ''}"><div class="ibl"><div class="f">
       <div class="seg">${[['open', 'Por tratar'], ['mine', 'Minhas'], ['done', 'Tratadas'], ['all', 'Todas']].map(([k, n]) => `<button class="${UI.inboxF === k ? 'on' : ''}" data-act="ibf" data-v="${k}">${n}</button>`).join('')}</div>
       <select class="inp" style="width:auto;height:30px" data-ch="ibplat"><option value="">Todas as redes</option>${plats.map(p => `<option value="${p}" ${UI.inboxPlat === p ? 'selected' : ''}>${PLAT[p].n}</option>`).join('')}</select>
       <select class="inp" style="width:auto;height:30px" data-ch="ibsort"><option value="prio" ${UI.inboxSort === 'prio' ? 'selected' : ''}>Prioridade</option><option value="new" ${UI.inboxSort === 'new' ? 'selected' : ''}>Mais recentes</option></select>
@@ -124,7 +124,7 @@ const Inbox = {
   detail(it, ws) {
     const pg = pageOf(ws, it.pageId); const post = it.postId && S.posts[it.postId];
     const ids = [...new Set([...(ws.members || []).map(m => m.id), Store.me])];
-    return `<div class="h"><span class="avatar" style="background:${colorFor(it.author)}">${esc(initials(it.author))}</span><div><b>${esc(it.author)}</b><div class="muted">${pg ? esc(PLAT[pg.platform].n + ' · ' + pg.name) : ''} · ${esc(IB_T[it.type] || '')}</div></div><div style="flex:1"></div>
+    return `<button class="btn sm ghost ibvolta" data-act="ibvolta">‹ Mensagens</button><div class="h"><span class="avatar" style="background:${colorFor(it.author)}">${esc(initials(it.author))}</span><div><b>${esc(it.author)}</b><div class="muted">${pg ? esc(PLAT[pg.platform].n + ' · ' + pg.name) : ''} · ${esc(IB_T[it.type] || '')}</div></div><div style="flex:1"></div>
       <select class="inp" style="width:auto;height:30px" data-ch="ibsent" data-id="${it.id}" ${canEdit(ws) ? '' : 'disabled'}>${[['pos', 'Positivo'], ['neu', 'Neutro'], ['neg', 'Negativo']].map(([k, n]) => `<option value="${k}" ${it.sentiment === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
       <select class="inp" style="width:auto;height:30px" data-ch="ibassign" data-id="${it.id}" ${canEdit(ws) ? '' : 'disabled'}><option value="">Sem responsável</option>${ids.map(id => `<option value="${id}" ${it.assignee === id ? 'selected' : ''}>${esc(Store.name(id))}</option>`).join('')}</select>
       ${canEdit(ws) ? `<button class="btn sm ${it.done ? '' : 'ok'}" data-act="ibdone" data-id="${it.id}">${it.done ? 'Reabrir' : I.check + ' Marcar como tratada'}</button>` : ''}</div>
@@ -558,6 +558,7 @@ const A = {
   },
   /* caixa de entrada */
   ibf(el) { UI.inboxF = el.dataset.v; saveUI(); render(); },
+  ibvolta() { UI.inboxSel = ''; render(); }, // 0.9.216: no telemóvel, volta da conversa para a lista
   ibsel(el) { UI.inboxSel = el.dataset.id; const it = S.inbox[el.dataset.id]; if (it && !it.read && canEdit(curWS())) { const n = clone(it); n.read = true; Store.put('inbox', n); } render(); },
   ibdone(el) { const n = clone(S.inbox[el.dataset.id]); n.done = !n.done; n.read = true; Store.put('inbox', n); toast(n.done ? 'Marcada como tratada.' : 'Reaberta.'); },
   ibsend(el) { const t = $('#ibr').value.trim(); if (!t) return; const n = clone(S.inbox[el.dataset.id]); n.replies = [...(n.replies || []), { id: uid('r'), by: Store.me, text: t, at: nowISO() }]; n.read = true; Store.put('inbox', n); toast('Resposta registada (envio simulado).'); },

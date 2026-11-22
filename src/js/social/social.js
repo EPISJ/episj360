@@ -2,7 +2,7 @@
    A página do módulo está em social360/ e abre numa janela dentro da EPISJ 360 (como o Horários360).
    A EPISJ 360 dá-lhe só o que precisa: a sessão do Office 365 (para ler e gravar na tabela s360_docs do Supabase,
    protegida por regras: a Direção vê tudo, os outros só os espaços onde foram juntados), quem é a conta e a lista de formadores. */
-var S3_VER="0.4",S3_OK=false,S3_PEND="feed",S3_RES=null; // var e funções: o arranque pode abrir o Social360 antes de este bloco correr
+var S3_VER="0.5",S3_OK=false,S3_PEND="feed",S3_RES=null; // var e funções: o arranque pode abrir o Social360 antes de este bloco correr
 function s3View(t){return ({s3feed:"feed",s3cal:"calendario",s3grid:"grelha",s3list:"lista",s3ap:"aprovacoes",s3inbox:"inbox",s3an:"analise",s3media:"media",s3def:"definicoes"})[t]||"feed"}
 function s3Tab(v){return ({feed:"s3feed",calendario:"s3cal",grelha:"s3grid",lista:"s3list",aprovacoes:"s3ap",inbox:"s3inbox",analise:"s3an",media:"s3media",definicoes:"s3def"})[v]||""}
 document.querySelectorAll("[data-s3ver]").forEach(e=>e.textContent=S3_VER);

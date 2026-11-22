@@ -174,7 +174,8 @@ function crAno(){const a=crAnoSel(),asof=CR_SEL.asof||calHoje(),M=crMotor(a,asof
   const m0=D[0].slice(0,7),m1=D[N-1].slice(0,7),meses=[];for(let y=+m0.slice(0,4),m=+m0.slice(5,7),g=0;g<24;g++){const key=`${y}-${String(m).padStart(2,"0")}`;meses.push({y,m,key});if(key===m1)break;m++;if(m>12){m=1;y++}}
   const nomeMes=(y,m)=>{const n=calD(`${y}-${String(m).padStart(2,"0")}-01`).toLocaleDateString("pt-PT",{month:"long"});return n.charAt(0).toUpperCase()+n.slice(1)};
   let h=`<div class="tw crano-w"><table class="crano"><colgroup><col class="cm">${"<col>".repeat(31)}<col class="cdf"></colgroup><tbody>`;
-  for(const mm of meses){const nd=new Date(mm.y,mm.m,0).getDate();let r1="",r2="",dfm=0,last=-1;
+  const MOV=typeof mvLigado==="function"&&mvLigado();let hm=""; // 0.9.216: no telemóvel, um calendário por mês (semanas × dias)
+  for(const mm of meses){const nd=new Date(mm.y,mm.m,0).getDate();let r1="",r2="",dfm=0,last=-1;const cm=[];
     for(let d=1;d<=31;d++){if(d>nd){r1+=`<td class="nx"></td>`;r2+=`<td class="nx"></td>`;continue}
       const x=`${mm.key}-${String(d).padStart(2,"0")}`,i=M.ix.get(x),wd=(calD(x).getDay()+6)%7,nl=NL.get(x),fds=wd>=M.nD,aula=i!=null&&R.v[i]>1e-6;
       let c=i==null?"out":"";const red=i!=null&&o&&(i===R.ini||i===R.fim),fct=!fds&&!nl&&emFct(x);
@@ -183,10 +184,14 @@ function crAno(){const a=crAnoSel(),asof=CR_SEL.asof||calHoje(),M=crMotor(a,asof
       const dm=o&&o.diaM&&i!=null?o.diaM.get(i):null;if(dm)c+=" dman";if(i!=null&&aula)dfm++;if(i!=null)last=i;
       const tt=`${calDMA(x)} (${CR_DSEM[wd]})${nl?" · "+nl.n:""}${fct?" · FCT":""}${papD.has(x)?" · PAP":""}${aula?` · ${crNum(Math.round(R.v[i]*10)/10)} tempo(s)`:""}${red?(i===R.ini?" · início":" · fim"):""}${dm?` · acerto à mão${dm.nota?": "+dm.nota:""}`:""}`;
       const at=i!=null?` data-crad="${x}" title="${esc(tt)}"`:"";
+      if(MOV)cm.push({d,wd,c,at,v:aula?crNum(Math.round(R.v[i]*10)/10):fct?"FCT":papD.has(x)?"PAP":""});
       r1+=`<td class="d${c}"${at}><span class="dn">${d}</span><span class="dw">${x===HJ?"hoje":CR_DCUR[wd]}</span></td>`;
       r2+=`<td class="d t${c}"${at}>${aula?crNum(Math.round(R.v[i]*10)/10):fct?"FCT":papD.has(x)?"PAP":""}</td>`}
-    h+=`<tr class="r1"><td class="crm" rowspan="2"><b>${esc(nomeMes(mm.y,mm.m))}</b><small>${mm.y}</small></td>${r1}<td class="df" title="Dias com aulas neste mês">${dfm?dfm+" d":"—"}</td></tr><tr class="r2">${r2}<td class="df dft" title="Total de horas no fim do mês">${last>=0?h1(R.ac[last])+" h":""}</td></tr>`}
-  $("#crAnoOut").innerHTML=h+`</tbody></table></div>`;
+    h+=`<tr class="r1"><td class="crm" rowspan="2"><b>${esc(nomeMes(mm.y,mm.m))}</b><small>${mm.y}</small></td>${r1}<td class="df" title="Dias com aulas neste mês">${dfm?dfm+" d":"—"}</td></tr><tr class="r2">${r2}<td class="df dft" title="Total de horas no fim do mês">${last>=0?h1(R.ac[last])+" h":""}</td></tr>`;
+    if(MOV){const w0=new Date(mm.y,mm.m-1,1).getDay(),pre=(w0+6)%7;
+      hm+=`<div class="mv-crm${mm.key===HJ.slice(0,7)?" atual":""}" data-mvmes="${mm.key}"><div class="mv-crmh"><b>${esc(nomeMes(mm.y,mm.m))} <small>${mm.y}</small></b><span>${dfm?dfm+" dias com aulas":"sem aulas"}${last>=0?" · "+h1(R.ac[last])+" h no fim do mês":""}</span></div>
+        <div class="mv-crmg">${CR_DSEM.map(n=>`<i>${n}</i>`).join("")}${"<span></span>".repeat(pre)}${cm.map(z=>`<button type="button" class="d${z.c}"${z.at}><b>${z.d}</b><small>${esc(z.v)}</small></button>`).join("")}</div></div>`}}
+  $("#crAnoOut").innerHTML=MOV?`<div class="mv-cra">${hm}</div>`:h+`</tbody></table></div>`;
   crAnoDia(M,T,o,ed)}
 
 // 0.9.128: horário semanal da turma — disciplinas × dias da semana, gravado como «dias de aula» de cada disciplina

@@ -10,7 +10,7 @@
 var MV=null;
 var MV_MQ="(max-width:760px), (pointer:coarse) and (max-height:500px) and (max-width:1000px)";
 // separadores principais de cada módulo (os primeiros que o perfil pode ver vão para a barra de baixo; o resto fica em «Mais»)
-var MV_PRIM={escola:["esc","tur","prof","for"],boxcheck:["box","meu","rel","est"],eduschedule:["hsSem","mh","hsFor","hsVer"],roomcheck:["rcMapa","rcLista","rcEsp"],
+var MV_PRIM={escola:["esc","tur","prof","for"],boxcheck:["box","meu","rel","est"],eduschedule:["esch","hsSem","mh","hsFor","hsVer"],roomcheck:["rcMapa","rcLista","rcEsp"],
   crono:["crPs","crCron","crAno","crHist"],social:["s3feed","s3cal","s3ap","s3inbox"],pap:["papInicio","papProva","papGrelha","papDocs"],pass:["pwCofre","pwGerar","pwSaude","pwDef"],
   folder:["foInicio","foMapa","foMov","foConf"],econo:["ecoInicio","ecoFat","ecoMovs","ecoReq"]};
 // nomes curtos para a barra de baixo (o título do ecrã usa sempre o nome completo)
@@ -31,7 +31,10 @@ var MV_ICO={mais:'<path d="M4 7h16M4 12h16M4 17h16"/>',voltar:'<path d="M15 18l-
 function mvSvg(p,cls){return `<svg viewBox="0 0 24 24" class="${cls||""}" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`}
 function mvLigado(){return !!(MV&&MV.on)}
 function mvTabBtn(t){return document.querySelector(`#nav button[data-t="${t}"]`)}
-function mvTabNome(t){const b=mvTabBtn(t);if(!b)return "";const s=b.querySelector("[data-mhlbl]");return ((s||b).textContent||"").replace(/\s+/g," ").trim()}
+function mvTabNome(t){const b=mvTabBtn(t);if(!b)return "";const s=b.querySelector("[data-mhlbl]");if(s)return (s.textContent||"").replace(/\s+/g," ").trim();
+  const c=b.cloneNode(true);c.querySelectorAll("[data-s3b],.badge,.bdg,.cnt,.mv").forEach(x=>x.remove());return (c.textContent||"").replace(/\s+/g," ").trim()}
+// contador do separador (ex.: aprovações e mensagens por tratar no Social360), para mostrar na barra de baixo
+function mvTabCont(t){const b=mvTabBtn(t),x=b&&b.querySelector("[data-s3b]");return x?(x.textContent||"").trim():""}
 function mvTabVis(t){const b=mvTabBtn(t);if(!b||b.hidden)return false;try{return podeVer(t)}catch(e){return true}}
 function mvModNome(m){const M=(typeof MODULOS!=="undefined"?MODULOS:[]).find(x=>x.id===m);return M?M.nome:""}
 function mvModSvg(m){const b=document.querySelector(`#mods button[data-m="${m}"] svg`);return b?b.outerHTML:""}
@@ -56,7 +59,8 @@ function mvIniciar(){if(MV)return;MV={on:false,mq:null,tab:null,pop:false,scroll
     if(b.dataset.mvmais)mvFolhaMais()});
   window.addEventListener("popstate",mvPop);
   window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();MV.inst=e});
-  const f=()=>mvModo(MV.mq.matches);MV.mq.addEventListener?MV.mq.addEventListener("change",f):MV.mq.addListener(f);
+  // ao passar de telemóvel para ecrã largo (ou ao contrário, ex.: rodar o telemóvel) os ecrãs com desenho próprio para telemóvel são redesenhados
+  const f=()=>{mvModo(MV.mq.matches);try{if(curTab)show(curTab)}catch(e){}};MV.mq.addEventListener?MV.mq.addEventListener("change",f):MV.mq.addListener(f);
   mvModo(MV.mq.matches)}
 function mvModo(on){if(!MV)return;MV.on=!!on;const H=document.documentElement;H.classList.toggle("mv",MV.on);
   if(!MV.on){mvFolhaFechar(true);document.body.classList.remove("navopen");return}
@@ -65,7 +69,7 @@ function mvModo(on){if(!MV)return;MV.on=!!on;const H=document.documentElement;H.
   mvAtualizar();mvArrumarJa();
   if(!MV.obs){const m=document.querySelector("main");if(m){MV.obs=new MutationObserver(()=>{if(MV.on&&!MV.arr)MV.arr=requestAnimationFrame(mvArrumarJa)});MV.obs.observe(m,{childList:true,subtree:true})}}
   // o estado de «guardado» e o utilizador mudam sem passar por show(): acompanhar de vez em quando (barato)
-  if(!MV.tick)MV.tick=setInterval(()=>{if(MV.on&&!document.hidden)mvConta0()},4000)}
+  if(!MV.tick)MV.tick=setInterval(()=>{if(MV.on&&!document.hidden){mvConta0();try{mvBarra(curMod,curTab)}catch(e){}}},4000)}
 
 /* ---------- chamado por show() a cada mudança de separador ---------- */
 function mvShow(t){if(!MV||!MV.on)return;
@@ -106,7 +110,7 @@ function mvBarra(m,t){const bar=document.getElementById("mvTabs");if(!bar)return
   const vis=mvTabsDoMod(m),F=mvFab(),max=F?3:4;
   let prim=(MV_PRIM[m]||[]).filter(x=>vis.includes(x));for(const x of vis){if(prim.length>=max)break;if(!prim.includes(x))prim.push(x)}prim=prim.slice(0,max);
   // o separador aberto, se não estiver na barra, aparece no «Mais» realçado
-  const btn=x=>{const b=mvTabBtn(x),sv=b&&b.querySelector("svg");return `<button type="button" data-t="${x}" class="${x===t||MV_PAI[t]===x?"on":""}" aria-label="${esc(mvTabNome(x))}"${x===t?' aria-current="page"':""}>${sv?sv.outerHTML:""}<span>${esc(MV_CURTO[x]||mvTabNome(x))}</span></button>`};
+  const btn=x=>{const b=mvTabBtn(x),sv=b&&b.querySelector("svg");const n=mvTabCont(x);return `<button type="button" data-t="${x}" class="${x===t||MV_PAI[t]===x?"on":""}" aria-label="${esc(mvTabNome(x)+(n?" ("+n+")":""))}"${x===t?' aria-current="page"':""}>${sv?sv.outerHTML:""}${n?`<i class="mv-cont">${esc(n)}</i>`:""}<span>${esc(MV_CURTO[x]||mvTabNome(x))}</span></button>`};
   const L=prim.map(btn);if(F)L.splice(Math.min(2,L.length),0,`<button type="button" class="mv-fab" data-mvfab="1" aria-label="${esc(F.nome)}">${mvSvg(F.ico)}</button>`);
   const noMais=!prim.includes(t)&&!prim.includes(MV_PAI[t]);
   L.push(`<button type="button" data-mvmais="1" class="${noMais?"on":""}" aria-label="Mais separadores e módulos">${mvSvg(MV_ICO.mais)}<span>Mais</span></button>`);
@@ -185,10 +189,40 @@ function mvArrumarJa(){if(!MV)return;MV.arr=0;if(!MV.on)return;const m=document.
   m.querySelectorAll("table:not([data-mvc])").forEach(mvTabela);
   for(const id in MV_FORM){const f=document.getElementById(id);if(f&&!f.dataset.mvf)mvForm(f,MV_FORM[id])}
   m.querySelectorAll("section .card>h2+p.hint:not([data-mvh]),section .card>h2+.hint:not([data-mvh])").forEach(mvAjuda);
-  m.querySelectorAll(".row:not(.mv-filt),.fd-filtros:not(.mv-filt)").forEach(mvFiltros)}
+  m.querySelectorAll(".row:not(.mv-filt),.fd-filtros:not(.mv-filt)").forEach(mvFiltros);
+  m.querySelectorAll(".mzh2:not([data-mvd])").forEach(mvDia)}
+
+/* ---------- horários no telemóvel: um dia de cada vez ----------
+   mvDiasHtml(lista,sel,chave) desenha a fila de dias (Seg 23 · Ter 24 …); tocar num dia ou deslizar no horário muda de dia.
+   As grelhas semanais .mzh2 (Semana, O meu horário, Horários) passam a mostrar só o dia escolhido sem serem redesenhadas;
+   os ecrãs com desenho próprio (Por formadores) registam em MV_DIA_R[chave] a função que os volta a desenhar. */
+var MV_DIA_R={};
+function mvDiaSel(chave,n,hojeI){if(!MV)return Math.max(0,hojeI);const v=MV["dia_"+chave];if(typeof v==="number"&&v<n)return v;return hojeI>=0?hojeI:0}
+function mvDiaMudar(chave,i){if(!MV)return;MV["dia_"+chave]=i;const f=MV_DIA_R[chave];if(f)try{f()}catch(e){console.warn(e)}}
+function mvDiasHtml(L,sel,chave){return `<div class="mv-dias" role="tablist" aria-label="Dia da semana" data-mvdc="${esc(chave)}">${L.map((d,i)=>`<button type="button" role="tab" data-mvdia="${i}" aria-selected="${i===sel}" class="${i===sel?"on":""}${d.hj?" hj":""}${d.nl?" nl":""}"><b>${esc(d.n)}</b>${d.s?`<small>${esc(d.s)}</small>`:""}</button>`).join("")}</div>`}
+function mvDiasLigar(cx,chave,n,get){ // fila de dias + deslizar para o lado no elemento cx
+  const bar=cx.previousElementSibling&&cx.previousElementSibling.matches(".mv-dias")?cx.previousElementSibling:cx.parentElement.querySelector(`.mv-dias[data-mvdc="${chave}"]`);
+  if(bar){bar.addEventListener("click",e=>{const b=e.target.closest("[data-mvdia]");if(b)mvDiaMudar(chave,+b.dataset.mvdia)});const on=bar.querySelector(".on");if(on)try{on.scrollIntoView({block:"nearest",inline:"center"})}catch(e){}}
+  let x0=null,y0=0;cx.addEventListener("touchstart",e=>{x0=e.touches[0].clientX;y0=e.touches[0].clientY},{passive:true});
+  cx.addEventListener("touchend",e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;x0=null;
+    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.6){const i=get()+(dx<0?1:-1);if(i>=0&&i<n)mvDiaMudar(chave,i)}},{passive:true})}
+function mvDia(g){g.dataset.mvd="1";
+  const H=[...g.children].filter(c=>c.classList.contains("h")&&/grid-row:\s*1\b/.test(c.getAttribute("style")||"")).map(c=>({c,col:+(/grid-column:\s*(\d+)/.exec(c.getAttribute("style")||"")||[])[1]})).filter(x=>x.col>=2).sort((a,b)=>a.col-b.col);
+  if(H.length<2)return;
+  const L=H.map(x=>{const t=[...x.c.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join("").trim(),sm=x.c.querySelector("small");
+    return {n:t.slice(0,3)||t,s:sm?sm.textContent.trim():"",hj:x.c.classList.contains("hj"),nl:!!x.c.querySelector("em")}});
+  let hjI=L.findIndex(d=>d.hj);if(hjI<0){const w=(new Date().getDay()+6)%7;hjI=w<L.length?w:0}
+  const chave="mzh",sel=mvDiaSel(chave,L.length,hjI);
+  // as células do dia escolhido passam para a 2.ª coluna; as outras escondem-se (as regras estão em movel.css)
+  g.classList.add("mv-um");g.dataset.d=String(H[sel].col);
+  g.querySelectorAll(":scope>div").forEach(c=>{const m=/grid-column:\s*(\d+)/.exec(c.getAttribute("style")||"");c.dataset.col=m?m[1]:"1"});
+  const old=g.previousElementSibling;if(old&&old.matches(".mv-dias"))old.remove();
+  g.insertAdjacentHTML("beforebegin",mvDiasHtml(L,sel,chave));
+  MV_DIA_R[chave]=()=>{document.querySelectorAll(".mzh2[data-mvd]").forEach(x=>{x.removeAttribute("data-mvd");x.classList.remove("mv-um")});mvArrumarJa()};
+  mvDiasLigar(g,chave,L.length,()=>mvDiaSel(chave,L.length,hjI))}
 // filas de filtros com várias listas: a caixa de procura fica à vista, as listas ficam atrás de «Filtros» (com o n.º dos que estão escolhidos)
 function mvFiltros(r){const k=String(r.children.length);if(r.dataset.mvfi===k)return;r.dataset.mvfi=k;if(r.closest("form,.fd-modal,.wa-bg,.rc-dw,.mv-folha,table"))return;
-  const labs=[...r.children].filter(c=>c.tagName==="LABEL"&&c.querySelector("select")&&!c.querySelector("input[type=text],input[type=search]"));
+  const labs=[...r.children].filter(c=>c.tagName==="LABEL"&&c.style.display!=="none"&&!c.hidden&&c.querySelector("select")&&!c.querySelector("input[type=text],input[type=search]"));
   const proc=[...r.children].some(c=>c.tagName==="LABEL"&&c.querySelector("input[type=text],input[type=search]"));
   if(labs.length<3&&!(proc&&labs.length>=2))return;
   labs.forEach(l=>l.classList.add("mv-fl"));r.classList.add("mv-filt");

@@ -178,9 +178,26 @@ async function hsForRender(){await null;try{await esdPronto}catch(e){}try{await 
         r+=`<td class="${cl} on" colspan="${len}"><div class="hsb" style="--sc:${esc(cor)};background:${h3Tinta(cor,.16)};color:${h3Escuro(cor)}" title="${esc(tit)}"><b>${esc(x.tu||x.disc)}${L.length>1?` <i>+${L.length-1}</i>`:""}</b><span>${esc([x.tu?x.disc:"",x.sala].filter(Boolean).join(" · "))}${len>1?` · ${len} t`:""}</span></div></td>`;pi+=len}});
     tot+=n;h+=`<tr class="${eu(t)?"eu":""}${n?"":" vz"}">${r}<td class="tt">${n||`<span class="z">0</span>`}</td></tr>`}
   h+=`</tbody><tfoot><tr><td class="nm">Formadores em aula</td>${dias.map((d,di)=>ocup[di].map((v,pi)=>`<td class="${pi===0?"dsep":""}${di%2?" alt":""}${d.dt===hj?" hj":""}">${v||""}</td>`).join("")).join("")}<td class="tt">${tot}</td></tr></tfoot></table></div>`;
+  const MOV=typeof mvLigado==="function"&&mvLigado();if(MOV)h=hsForMovel(st,dias,P,mostra,cel,hj,eu); // 0.9.216: no telemóvel, um dia de cada vez
   hero.innerHTML=`<div class="ay-hero"><div class="ay-top"><div><h1>Por formadores</h1><div class="sub">Semana de ${esc(calDM(H3S.seg,{day:"numeric",month:"short"}))} a ${esc(calDM(fim,{day:"numeric",month:"short"}))}${H3S.seg===h3Seg(hj)?" · esta semana":""}${me?" · o seu horário aparece primeiro":""}</div></div><span class="grow"></span><div class="ay-pct"><b>${comAulas.length}</b>com aulas, de ${TT.length} formador${TT.length===1?"":"es"} · ${tot} tempo${tot===1?"":"s"}</div></div></div>`;
   const seg=comAulas.length&&semAulas.length?`<div class="hsfbar"><div class="frseg" role="group" aria-label="Formadores a mostrar"><button type="button" data-hsft="0" class="${H3F.todos?"":"on"}">Com aulas (${comAulas.length})</button><button type="button" data-hsft="1" class="${H3F.todos?"on":""}">Todos (${TT.length})</button></div>${H3F.todos?"":`<span class="hint" style="margin:0">${semAulas.length} sem aulas nesta semana: ${esc(semAulas.slice(0,6).map(x=>x.t.name||x.t.short).join(", "))}${semAulas.length>6?"…":""}</span>`}</div>`:"";
-  out.innerHTML=TT.length?seg+h+`<p class="hint">Carregue no nome de um formador para ver a semana dele em pormenor. Passe o rato por cima de uma aula para ver a disciplina, a turma, a sala e as horas.</p>`:`<p class="hint">Nenhum formador com este nome.</p>`}
+  out.innerHTML=TT.length?seg+h+(MOV?`<p class="hint">Toque no nome de um formador para ver a semana dele. Deslize para o lado para mudar de dia.</p>`:`<p class="hint">Carregue no nome de um formador para ver a semana dele em pormenor. Passe o rato por cima de uma aula para ver a disciplina, a turma, a sala e as horas.</p>`):`<p class="hint">Nenhum formador com este nome.</p>`;
+  if(MOV){const g=out.querySelector(".mv-hsf");if(g){const n=dias.length,hjI=dias.findIndex(d=>d.dt===hj);MV_DIA_R.hsfor=hsForRender;mvDiasLigar(g,"hsfor",n,()=>mvDiaSel("hsfor",n,hjI))}}}
+/* 0.9.216: «Por formadores» no telemóvel — fila de dias e, para cada formador, os tempos desse dia numa só linha */
+function hsForMovel(st,dias,P,mostra,cel,hj,eu){const NP=P.length,n=dias.length,hjI=dias.findIndex(d=>d.dt===hj),di=mvDiaSel("hsfor",n,hjI),d=dias[di];
+  const bar=mvDiasHtml(dias.map(x=>({n:String(x.nome).slice(0,3),s:calDM(x.dt),hj:x.dt===hj,nl:!!(x.nl||x.fora)})),di,"hsfor");
+  const cols=`grid-template-columns:repeat(${NP},minmax(0,1fr))`;
+  const cab=`<div class="mv-hsfh" style="${cols}">${P.map((p,pi)=>`<span>${esc(p.start||p.label||pi+1)}</span>`).join("")}</div>`;
+  const aviso=d.nl?`<div class="msg info" style="margin:0 0 10px">${esc(calDM(d.dt,{weekday:"long",day:"numeric",month:"long"}))}: ${esc(d.nl.n)}</div>`:d.fora?`<div class="msg info" style="margin:0 0 10px">Fora do ano letivo.</div>`:"";
+  let emAula=0;const linhas=mostra.map(({t,n:nt})=>{const m=cel(t,d);let r="",tem=0;
+    for(let pi=0;pi<NP;){const L=m&&m.get(d.i+"|"+pi);if(!L){r+=`<i></i>`;pi++;continue}
+      const x=L[0],k=L.map(y=>[y.tu,y.disc,y.sala].join("|")).join("~");let len=1;
+      while(pi+len<NP){const L2=m.get(d.i+"|"+(pi+len));if(!L2||L2.map(y=>[y.tu,y.disc,y.sala].join("|")).join("~")!==k)break;len++}
+      const cor=h3Cor(st,x,"t"),pa=P[pi]||{},pz=P[pi+len-1]||{};tem+=len;
+      r+=`<div class="on" style="grid-column:span ${len};--sc:${esc(cor)};background:${h3Tinta(cor,.18)};color:${h3Escuro(cor)}" title="${esc([x.nome||x.disc,x.tu,x.sala,(pa.start||"")+(pz.end?"–"+pz.end:"")].filter(Boolean).join(" · "))}"><b>${esc(x.tu||x.disc)}</b>${x.sala&&len>1?`<span>${esc(x.sala)}</span>`:""}</div>`;pi+=len}
+    if(tem)emAula++;
+    return `<div class="mv-hsfr${eu(t)?" eu":""}${tem?"":" vz"}"><div class="mv-hsfn"><a href="#" data-hsver="${esc(t.id)}">${esc(t.name||t.short||"—")}</a><small>${tem?tem+" tempo"+(tem>1?"s":"")+" neste dia":"sem aulas neste dia"} · ${nt} na semana</small></div><div class="mv-hsfs" style="${cols}">${r}</div></div>`}).join("");
+  return bar+aviso+`<div class="mv-hsf"><div class="mv-hsft">${emAula} formador${emAula===1?"":"es"} em aula · ${esc(calDM(d.dt,{weekday:"long",day:"numeric",month:"long"}))}</div>${cab}${linhas}</div>`}
 $("#hsForOut").addEventListener("click",e=>{const b=e.target.closest("[data-hsft]");if(!b)return;H3F.todos=b.dataset.hsft==="1";hsForRender()});
 $("#hsForQ").oninput=debounce(()=>{H3F.q=$("#hsForQ").value;hsForRender()},200);
 $("#hsForData").onchange=e=>{if(e.target.value){H3S.seg=h3Seg(e.target.value);hsForRender()}};

@@ -1,6 +1,6 @@
 /* Social360 (EPISJ 360) — núcleo: utilitários, plataformas, armazenamento, dados de exemplo */
 'use strict';
-const S360_VER = '0.4';
+const S360_VER = '0.5';
 const EMBED = window.parent !== window;
 /* ponte com a EPISJ 360 (mesma origem): sessão do Office 365, pessoas, vista ativa */
 const Bridge = {

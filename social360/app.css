@@ -489,3 +489,49 @@ number-flow{--number-flow-char-height:1.05em;font-variant-numeric:tabular-nums}
 .eic svg{width:26px;height:26px;stroke-width:1.65}
 .pv .icons span,.pv .acts span{display:inline-flex;align-items:center;gap:5px}
 .pv .vside .ii{width:26px;height:26px}
+
+/* 0.9.216: telemóvel (dentro da versão para telemóvel da EPISJ 360) */
+.ibvolta{display:none}
+@media (max-width:600px){
+  html,body{-webkit-text-size-adjust:100%}
+  .top h2{display:none}
+  .top .wssel{max-width:none;flex:1}
+  input.inp,select.inp,textarea.inp,.inp{font-size:16px}
+  .btn{min-height:38px}
+  /* caixa de entrada: lista OU conversa */
+  .ibx{display:block}
+  .ibx:not(.sel) .ibd{display:none}
+  .ibx.sel .ibl{display:none}
+  .ibx.sel .ibvolta{display:inline-flex;margin:10px 12px 0;align-self:flex-start}
+  .ibd .h{flex-wrap:wrap;gap:8px}
+  .ibl .f{flex-wrap:wrap}
+  .ibl .f .seg{overflow-x:auto;max-width:100%;flex-wrap:nowrap}
+  .ibi .b{min-width:0}
+  /* calendário do mês: cabe no ecrã; cada publicação é uma pequena etiqueta com a hora (toque para abrir) */
+  .cal{min-width:0!important;margin:0 8px 24px}
+  .cal .dh{padding:6px 2px;font-size:10px;text-align:center}
+  .cal .cell{min-height:70px;padding:3px;gap:2px}
+  .cal .dn{width:20px;height:20px;font-size:11px}
+  .cal .cell .plus{display:none}
+  .cal .ev{padding:2px 3px;font-size:10px;box-shadow:none;cursor:pointer}
+  .cal .ev .x,.cal .ev .th,.cal .ev .acts,.cal .ev .pfs{display:none!important}
+  .cal .ev .t{font-weight:600;font-size:10px;gap:2px;white-space:nowrap;overflow:hidden}
+  .cal.week{grid-template-columns:repeat(7,minmax(0,1fr))}
+  .cal.week .cell{min-height:300px}
+  .calbar{flex-wrap:wrap;gap:6px}
+  /* janelas (compositor e outras): ecrã inteiro, botões em baixo a quebrar linha */
+  .ov{padding:0;align-items:flex-end}
+  .ov>.comp{border-radius:0!important;width:100%!important;height:100%!important;max-height:none!important}
+  .ov>.modal,.ov>.nm{width:100%!important;max-width:none!important;max-height:92vh!important;border-radius:16px 16px 0 0!important}
+  .modal .mf{flex-wrap:wrap;padding-bottom:calc(10px + env(safe-area-inset-bottom))}.modal .mf .btn{flex:1 1 auto;justify-content:center}
+  .comp .ce{border-right:0;padding:12px}
+  .comp .ch{height:auto;min-height:52px;flex-wrap:wrap;padding:6px 10px}
+  .comp .cf{height:auto;flex-wrap:wrap;padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:6px}
+  .comp .cf .sp{display:none}
+  .comp .cf .btn{flex:1 1 auto;justify-content:center}
+  /* aprovações (quadro): uma coluna de cada vez, a deslizar */
+  .kb{gap:10px;padding:12px;scroll-snap-type:x mandatory;scroll-padding:12px}
+  .kcol{width:calc(100vw - 48px);scroll-snap-align:start}
+  .frow{gap:8px}
+  .filters{flex-wrap:wrap}
+}

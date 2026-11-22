@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.144 */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.145 */
 /* ===== src/css/fontes.css ===== */
 @font-face{font-family:Poppins;font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/poppins-latin-400.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:Poppins;font-style:normal;font-weight:500;font-display:swap;src:url(../fonts/poppins-latin-500.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -1609,7 +1609,7 @@ body.calamplo #calAnoCard .dh{display:none}
 .h3modo[hidden]{display:none}
 nav.side .h3modo button,.h3modo button{flex:1;justify-content:center;border-radius:0;border:0;background:transparent;font:inherit;font-size:12px;font-weight:600;padding:5px 8px;color:var(--muted);cursor:pointer;height:auto;min-height:0}
 nav.side .h3modo button+button{border-left:1px solid var(--line)}
-nav.side .h3modo button.on,.h3modo button.on{background:var(--brand);color:#fff}
+nav.side .h3modo button.sel,.h3modo button.sel{background:var(--brand);color:#fff}
 .hsnav{display:inline-flex;gap:4px}
 .hsw .h small{display:block;font-weight:500;color:var(--muted);font-size:11px}
 .hsw .h em{display:block;font-style:normal;font-weight:500;font-size:10.5px;color:#b45309;line-height:1.2;margin-top:2px}
@@ -1666,6 +1666,24 @@ nav.side .h3modo button.on,.h3modo button.on{background:var(--brand);color:#fff}
 .gptn{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .gpte{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.gpte .gpt{font-size:13px;padding:5px 12px}
 @media (prefers-reduced-motion:reduce){.gptl{transition:none}}
+/* 0.9.142: Horários360 › Por formadores */
+.hsfw{max-height:72vh;overflow:auto;border:1px solid var(--line);border-radius:10px}
+table.hsf{border-collapse:separate;border-spacing:0;font-size:11.5px;min-width:100%}
+table.hsf th,table.hsf td{border-bottom:1px solid var(--line);padding:3px 4px;text-align:center;white-space:nowrap;background:var(--card,#fff)}
+table.hsf thead th{position:sticky;top:0;z-index:2;font-weight:600;color:var(--ink)}
+table.hsf thead tr+tr th{top:26px;font-weight:500;color:var(--muted)}
+table.hsf th small{font-weight:500;color:var(--muted)}table.hsf th em{display:block;font-style:normal;font-weight:500;color:#b45309;font-size:10.5px}
+table.hsf .nm{position:sticky;left:0;z-index:1;text-align:left;min-width:170px;border-right:1px solid var(--line)}
+table.hsf thead .nm{z-index:3}
+table.hsf .nm a{color:var(--ink);text-decoration:none;font-weight:500}table.hsf .nm a:hover{color:var(--brand);text-decoration:underline}
+table.hsf .dsep{border-left:2px solid var(--line2,#d3d9e3)}
+table.hsf td.on{background:color-mix(in srgb,var(--sc) 16%,#fff);box-shadow:inset 3px 0 0 var(--sc);min-width:44px;line-height:1.15}
+table.hsf td.on b{display:block;font-size:11px}table.hsf td.on span{display:block;font-size:10px;color:var(--muted)}
+table.hsf td.nl{background:repeating-linear-gradient(135deg,#fdf1dc 0 4px,#fff8ec 4px 9px)}
+table.hsf th.hj{color:var(--brand)}table.hsf td.hj:not(.on){background:#f6f9ff}
+table.hsf tr.eu td{border-bottom-color:var(--brand)}table.hsf tr.eu .nm a{font-weight:700;color:var(--brand)}
+table.hsf .tt{font-weight:600;font-variant-numeric:tabular-nums;border-left:1px solid var(--line)}
+table.hsf tbody td:not(.nm):not(.tt),table.hsf thead tr+tr th{min-width:46px;width:46px}
 /* ===== src/css/temas.css ===== */
 /* 0.9.94: Definições › Temas. «360» é o aspeto original (sem atributo). «Cobalto» é inspirado no aspeto da Box:
    menu lateral azul-cobalto com texto branco, conteúdo branco, linhas finas, cabeçalhos de tabela em maiúsculas pequenas
@@ -1916,3 +1934,11 @@ table.eco-forn input{width:100%;min-width:90px;border:1px solid transparent;back
 .tema .tnm{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
 .tema .tnm .tag{margin-left:auto}
 .tema .tds{font-size:12.5px;color:var(--muted);line-height:1.4}
+/* 0.9.142: Horários360 — Simples / Completa no tema Cobalto (antes ficava branco sobre branco) */
+html[data-tema="cobalto"] nav.side .h3modo{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.28)}
+html[data-tema="cobalto"] nav.side .mgrp .h3modo button,html[data-tema="cobalto"] nav.side .h3modo button{color:rgba(255,255,255,.82)!important;background:transparent!important;border-radius:0!important;box-shadow:none!important;font-weight:600}
+html[data-tema="cobalto"] nav.side .mgrp .h3modo button:hover,html[data-tema="cobalto"] nav.side .h3modo button:hover{background:rgba(255,255,255,.12)!important}
+html[data-tema="cobalto"] nav.side .mgrp .h3modo button.sel,html[data-tema="cobalto"] nav.side .h3modo button.sel{background:#fff!important;color:var(--side,#1f3f8f)!important}
+html[data-tema="cobalto"] nav.side .h3modo button+button{border-left-color:rgba(255,255,255,.28)}
+/* 0.9.142: no Cobalto o bloco do logótipo fica fixo à esquerda — o aviso por cima do editor começa depois dele */
+@media (min-width:1024px){html[data-tema="cobalto"] body.esch #esMsg:not(:empty){margin-left:var(--navwe,220px)}}

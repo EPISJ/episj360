@@ -247,3 +247,11 @@ table.eco-forn input{width:100%;min-width:90px;border:1px solid transparent;back
 .tema .tnm{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
 .tema .tnm .tag{margin-left:auto}
 .tema .tds{font-size:12.5px;color:var(--muted);line-height:1.4}
+/* 0.9.142: Horários360 — Simples / Completa no tema Cobalto (antes ficava branco sobre branco) */
+html[data-tema="cobalto"] nav.side .h3modo{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.28)}
+html[data-tema="cobalto"] nav.side .mgrp .h3modo button,html[data-tema="cobalto"] nav.side .h3modo button{color:rgba(255,255,255,.82)!important;background:transparent!important;border-radius:0!important;box-shadow:none!important;font-weight:600}
+html[data-tema="cobalto"] nav.side .mgrp .h3modo button:hover,html[data-tema="cobalto"] nav.side .h3modo button:hover{background:rgba(255,255,255,.12)!important}
+html[data-tema="cobalto"] nav.side .mgrp .h3modo button.sel,html[data-tema="cobalto"] nav.side .h3modo button.sel{background:#fff!important;color:var(--side,#1f3f8f)!important}
+html[data-tema="cobalto"] nav.side .h3modo button+button{border-left-color:rgba(255,255,255,.28)}
+/* 0.9.142: no Cobalto o bloco do logótipo fica fixo à esquerda — o aviso por cima do editor começa depois dele */
+@media (min-width:1024px){html[data-tema="cobalto"] body.esch #esMsg:not(:empty){margin-left:var(--navwe,220px)}}

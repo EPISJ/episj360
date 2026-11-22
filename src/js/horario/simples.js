@@ -31,20 +31,21 @@ function h3Modo(){if(H3&&H3.t)return H3.modo;try{return localStorage.getItem("h3
 function h3EschOk(){return h3Modo()==="completa"||H3_IMP}
 function h3ModoAplicar(){const m=h3Modo();try{localStorage.setItem("h360_modo",m)}catch(e){}
   const M=MODULOS.find(x=>x.id==="eduschedule");if(M)M.inicio=m==="completa"?"esch":"hsSem";
-  const box=document.querySelector("[data-h3modo]");if(box){box.hidden=!(typeof podePublicar==="function"&&podePublicar()&&!RO);box.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.h3m===m))}
+  const box=document.querySelector("[data-h3modo]");if(box){box.hidden=!(typeof podePublicar==="function"&&podePublicar()&&!RO);box.querySelectorAll("button").forEach(b=>{b.classList.toggle("sel",b.dataset.h3m===m);b.setAttribute("aria-pressed",b.dataset.h3m===m?"true":"false")})}
   const b=document.querySelector('#nav button[data-t="esch"]');if(b)b.hidden=!podeVer("esch");
   h3EsMenuAtual();
   if(curTab==="esch"&&!h3EschOk())show("hsSem")}
-document.addEventListener("click",e=>{const b=e.target.closest("[data-h3m]");if(!b||RO)return;h3Carregar().then(()=>{H3.modo=b.dataset.h3m;h3Guardar();h3ModoAplicar();
+document.addEventListener("click",e=>{const b=e.target.closest("[data-h3m]");if(!b||RO)return;h3Carregar().then(()=>{H3.modo=b.dataset.h3m;H3_IMP=false;try{$("#esMsg").innerHTML=""}catch(x){}h3Guardar();h3ModoAplicar();
   toast(H3.modo==="completa"?"Versão completa: o editor de horários está em «Horários»":"Versão simples: mostra os horários vindos do Untis e comunica-os aos formadores");show(H3.modo==="completa"?"esch":"hsSem")})});
 
 // no editor (versão completa) o menu da EPISJ 360 está escondido: o menu do editor ganha Simples / Completa e Semana / Comunicar
 function h3EsMenu(d){if(!d||!d.body||d.getElementById("h3ir"))return;const cab=d.querySelector(".g-mh");const cx=cab&&cab.parentElement;if(!cx)return;
   const x=d.createElement("div");x.id="h3ir";x.style.cssText="display:flex;flex-direction:column;gap:6px;margin:2px 4px 8px";
-  const bt=(t,on,f,tit)=>{const b=d.createElement("button");b.type="button";b.textContent=t;if(tit)b.title=tit;b.style.cssText="flex:1;border:0;font:inherit;font-size:12px;font-weight:600;padding:5px 8px;cursor:pointer;background:"+(on?"var(--g-brand,#163269)":"transparent")+";color:"+(on?"#fff":"var(--g-muted,#6b7385)");b.onclick=f;return b};
-  const lig=(t,f)=>{const a=d.createElement("a");a.href="#";a.textContent=t;a.style.cssText="font-size:12.5px;font-weight:500;color:var(--g-brand,#163269);text-decoration:none;padding:3px 7px";a.onclick=e=>{e.preventDefault();f()};return a};
-  const modo=d.createElement("div");modo.style.cssText="display:flex;border:1px solid var(--g-line,#e3e7ee);border-radius:999px;overflow:hidden;background:#fff";
-  const m=h3Modo(),dir=podePublicar()&&!RO,mudar=v=>h3Carregar().then(()=>{H3.modo=v;H3_IMP=false;h3Guardar();h3ModoAplicar();aplicarPerfil();show(v==="completa"?"esch":"hsSem")});
+  const bt=(t,on,f,tit)=>{const b=d.createElement("button");b.type="button";b.textContent=t;if(tit)b.title=tit;if(on)b.className="sel";b.style.cssText="flex:1;border:0;font:inherit;font-size:12px;font-weight:600;padding:5px 8px;cursor:pointer;background:"+(on?"var(--g-brand,#163269)":"transparent")+";color:"+(on?"#fff":"var(--g-muted,#6b7385)");b.onclick=f;return b};
+  if(!d.getElementById("h3irCss")){const c=d.createElement("style");c.id="h3irCss";c.textContent="#h3ir a{font-size:12.5px;font-weight:600;color:var(--g-brand,#163269);text-decoration:none;padding:3px 7px;border-radius:6px}#h3ir a:hover{background:rgba(22,50,105,.08)}[data-gtema=cobalto] #h3ir a{color:rgba(255,255,255,.88)}[data-gtema=cobalto] #h3ir a:hover{background:rgba(255,255,255,.12)}[data-gtema=cobalto] #h3ir .h3m{background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.28)!important}[data-gtema=cobalto] #h3ir .h3m button{color:rgba(255,255,255,.82)!important}[data-gtema=cobalto] #h3ir .h3m button.sel{background:#fff!important;color:var(--g-side,#1f3f8f)!important}";d.head.appendChild(c)}
+  const lig=(t,f)=>{const a=d.createElement("a");a.href="#";a.textContent=t;a.onclick=e=>{e.preventDefault();f()};return a};
+  const modo=d.createElement("div");modo.className="h3m";modo.style.cssText="display:flex;border:1px solid var(--g-line,#e3e7ee);border-radius:999px;overflow:hidden;background:#fff";
+  const m=h3Modo(),dir=podePublicar()&&!RO,mudar=v=>h3Carregar().then(()=>{H3.modo=v;H3_IMP=false;$("#esMsg").innerHTML="";h3Guardar();h3ModoAplicar();aplicarPerfil();show(v==="completa"?"esch":"hsSem")});
   if(dir){modo.append(bt("Simples",m==="simples",()=>mudar("simples"),"Mostra os horários vindos do Untis e comunica-os aos formadores"),bt("Completa",m==="completa",()=>{if(m!=="completa")mudar("completa")},"O editor de horários completo"));x.append(modo)}
   const ls=d.createElement("div");ls.style.cssText="display:flex;flex-wrap:wrap;gap:2px";ls.append(lig("Semana",()=>{H3_IMP=false;$("#esMsg").innerHTML="";show("hsSem")}));if(dir)ls.append(lig("Comunicar",()=>{H3_IMP=false;$("#esMsg").innerHTML="";show("hsCom")}));x.append(ls);
   cab.after(x)}
@@ -69,7 +70,7 @@ function h3Celulas(st,V,tipo,id){const T=new Map((st.teachers||[]).map(t=>[t.id,
 /* ---------- Semana ---------- */
 async function hsRender(){await null;try{await esdPronto}catch(e){}try{await h3Carregar()}catch(e){}
   const out=$("#hsOut"),hero=$("#hsHero");if(!out)return;const st=mhEstado(),a=anoAtivo(),pf=perfilAtual(),dir=podePublicar()&&!RO;
-  $("#hsImp").style.display=dir?"":"none";$("#hsAvisos").innerHTML=pf==="prof"?h3AvisosFormador():"";
+  $("#hsImp").style.display=dir?"":"none";$("#hsImpTudo").style.display=dir?"":"none";$("#hsAvisos").innerHTML=pf==="prof"?h3AvisosFormador():"";
   if(!st){hero.innerHTML=`<div class="ay-hero"><div class="ay-top"><div><h1>Horários</h1><div class="sub">${esc(a.nome)}</div></div></div></div>`;
     out.innerHTML=`<div class="pp-vz">${ICO.cal}<p>${RO?"A Direção ainda não publicou o horário de "+esc(a.nome)+".":"Ainda não há horário para "+esc(a.nome)+". Importe os PDF do Untis (botão verde acima)."}</p></div>`;$("#hsQuem").innerHTML="";return}
   const T=(st.teachers||[]).slice().sort((x,y)=>COLL_PT.compare(String(x.name),String(y.name))),C=(st.classes||[]).slice().sort((x,y)=>COLL_PTN.compare(String(x.name),String(y.name))),R=(st.rooms||[]).slice().sort((x,y)=>COLL_PTN.compare(String(x.name),String(y.name)));
@@ -111,12 +112,45 @@ $("#hsAnt").onclick=()=>{H3S.seg=calMais(H3S.seg||h3Seg(calHoje()),-7);hsRender(
 $("#hsSeg").onclick=()=>{H3S.seg=calMais(H3S.seg||h3Seg(calHoje()),7);hsRender()};
 $("#hsHoje").onclick=()=>{H3S.seg="";hsRender()};
 $("#hsImp").onclick=()=>h3Importar();
+$("#hsImpTudo").onclick=()=>h3Importar(true);
 document.addEventListener("click",e=>{const b=e.target.closest("[data-h3cp]");if(!b)return;try{navigator.clipboard.writeText(b.dataset.h3cp);toast("Copiado")}catch(x){}});
+
+/* ---------- Por formadores (0.9.142): todos os formadores numa semana, lado a lado ---------- */
+const H3F={q:""};
+async function hsForRender(){await null;try{await esdPronto}catch(e){}try{await h3Carregar()}catch(e){}
+  const out=$("#hsForOut"),hero=$("#hsForHero");if(!out)return;const st=mhEstado(),a=anoAtivo(),hj=calHoje();
+  if(!H3S.seg){let d=hj;const w=calD(d).getDay();if(w===6)d=calMais(d,2);else if(w===0)d=calMais(d,1);H3S.seg=h3Seg(d)}
+  $("#hsForData").value=H3S.seg;
+  if(!st){hero.innerHTML=`<div class="ay-hero"><div class="ay-top"><div><h1>Por formadores</h1><div class="sub">${esc(a.nome)}</div></div></div></div>`;out.innerHTML=`<div class="pp-vz">${ICO.cal}<p>${RO?"A Direção ainda não publicou o horário de "+esc(a.nome)+".":"Ainda não há horário para "+esc(a.nome)+"."}</p></div>`;return}
+  const VL=cpVersoes(st).slice().sort((p,q)=>String(p.de||"").localeCompare(String(q.de||""))),D=st.days||["Seg","Ter","Qua","Qui","Sex"],P=st.periods||[],NL=calNaoLetivos(a);
+  const dias=D.map((d,i)=>{const dt=calMais(H3S.seg,i);let V=cpVersaoEm(VL,dt);if(!V&&VL.length===1)V=VL[0];return{i,nome:d,dt,V,nl:NL.get(dt),fora:(a.inicio&&dt<a.inicio)||(a.fim&&dt>a.fim)}});
+  const em=String(EU&&EU.email||"").toLowerCase(),me=(cfg.profs||[]).find(p=>String(p.email||"").toLowerCase()===em),eu=t=>!!me&&(t.id===me.id||(ESD.mapaT||{})[t.id]===me.id);
+  const q=norm(H3F.q||"");let T=(st.teachers||[]).filter(t=>!q||norm((t.name||"")+" "+(t.short||"")).includes(q)).sort((x,y)=>(eu(y)-eu(x))||COLL_PT.compare(String(x.name),String(y.name)));
+  const cache=new Map();const cel=(t,d)=>{if(!d.V||d.nl||d.fora)return null;const k=t.id+"|"+(VL.indexOf(d.V));if(!cache.has(k))cache.set(k,h3Celulas(st,d.V,"t",t.id));return cache.get(k)};
+  let tot=0;const fim=calMais(H3S.seg,D.length-1);
+  let h=`<div class="tw hsfw"><table class="hsf"><thead><tr><th class="nm" rowspan="2">Formador</th>${dias.map(d=>`<th colspan="${P.length}" class="dsep${d.dt===hj?" hj":""}${d.nl||d.fora?" nl":""}">${esc(d.nome)} <small>${esc(calDM(d.dt))}</small>${d.nl?`<em>${esc(d.nl.n)}</em>`:""}</th>`).join("")}<th rowspan="2" class="tt">Tempos</th></tr><tr>${dias.map(d=>P.map((p,pi)=>`<th class="${pi===0?"dsep":""}" title="${esc((p.start||"")+(p.end?"–"+p.end:""))}">${esc(p.label||pi+1)}</th>`).join("")).join("")}</tr></thead><tbody>`;
+  for(const t of T){let n=0;let r=`<td class="nm"><a href="#" data-hsver="${esc(t.id)}" title="Ver a semana de ${esc(t.name||"")}">${esc(t.name||t.short||"—")}</a>${t.short&&t.short!==t.name?` <span class="hint">${esc(t.short)}</span>`:""}</td>`;
+    for(const d of dias){const m=cel(t,d);P.forEach((p,pi)=>{const L=m&&m.get(d.i+"|"+pi),cl=(pi===0?"dsep":"")+(d.nl||d.fora?" nl":"")+(d.dt===hj?" hj":"");
+      if(!L){r+=`<td class="${cl}"></td>`;return}n+=L.length;const x=L[0],cor=x.s.color||"#2f5fb8";
+      r+=`<td class="${cl} on" style="--sc:${esc(cor)}" title="${esc(L.map(y=>[y.nome||y.disc,y.tu,y.sala].filter(Boolean).join(" · ")).join("\n"))}"><b>${esc(x.tu||x.disc)}</b><span>${esc(x.tu?x.disc:x.sala)}</span></td>`})}
+    tot+=n;h+=`<tr class="${eu(t)?"eu":""}">${r}<td class="tt">${n}</td></tr>`}
+  h+=`</tbody></table></div>`;
+  hero.innerHTML=`<div class="ay-hero"><div class="ay-top"><div><h1>Por formadores</h1><div class="sub">Semana de ${esc(calDM(H3S.seg,{day:"numeric",month:"short"}))} a ${esc(calDM(fim,{day:"numeric",month:"short"}))} · todos os formadores lado a lado${me?" · o seu horário aparece primeiro":""}</div></div><span class="grow"></span><div class="ay-pct"><b>${T.length}</b>formador${T.length===1?"":"es"} · ${tot} tempos</div></div></div>`;
+  out.innerHTML=T.length?h+`<p class="hint">Carregue no nome de um formador para ver a semana dele em pormenor.</p>`:`<p class="hint">Nenhum formador com este nome.</p>`}
+$("#hsForQ").oninput=debounce(()=>{H3F.q=$("#hsForQ").value;hsForRender()},200);
+$("#hsForData").onchange=e=>{if(e.target.value){H3S.seg=h3Seg(e.target.value);hsForRender()}};
+$("#hsForAnt").onclick=()=>{H3S.seg=calMais(H3S.seg||h3Seg(calHoje()),-7);hsForRender()};
+$("#hsForSeg").onclick=()=>{H3S.seg=calMais(H3S.seg||h3Seg(calHoje()),7);hsForRender()};
+$("#hsForHoje").onclick=()=>{H3S.seg="";hsForRender()};
+$("#hsForOut").addEventListener("click",e=>{const l=e.target.closest("[data-hsver]");if(!l)return;e.preventDefault();H3S.tipo="t";H3S.quem=l.dataset.hsver;show("hsSem")});
 
 /* ---------- Importar do Untis a partir da versão simples ----------
    Os PDF escolhem-se aqui e são entregues ao importador do editor (o mesmo da versão completa), onde se confirma a importação. */
-function h3Importar(){const inp=document.createElement("input");inp.type="file";inp.multiple=true;inp.accept=".pdf,.zip,application/pdf,application/zip";inp.style.display="none";document.body.append(inp);
-  inp.onchange=async()=>{const fs=[...inp.files];inp.remove();if(!fs.length)return;H3_IMP=true;aplicarPerfil();show("esch");
+function h3Importar(pasta){const inp=document.createElement("input");inp.type="file";inp.multiple=true;if(pasta)inp.webkitdirectory=true;else inp.accept=".pdf,.zip,application/pdf,application/zip";inp.style.display="none";document.body.append(inp);
+  inp.onchange=async()=>{let fs=[...inp.files];inp.remove();
+    // 0.9.142: «Importar tudo» — a pasta toda do Untis (e subpastas): só os PDF e .zip; as versões repetidas resolvem-se no importador (fica a mais recente)
+    if(pasta){const n0=fs.length;fs=fs.filter(f=>/\.(pdf|zip)$/i.test(f.name)&&!/(^|\/)(__MACOSX|\.)/.test(f.webkitRelativePath||f.name));if(!fs.length){toast(n0?"Essa pasta não tem nenhum PDF.":"Pasta vazia.");return}toast(`A importar ${fs.length} ficheiro${fs.length===1?"":"s"} da pasta…`)}
+    if(!fs.length)return;H3_IMP=true;aplicarPerfil();show("esch");
     const fr=$("#esFr");let w=null;for(let i=0;i<100;i++){try{w=fr.contentWindow;if(w&&typeof w.updfEscolher==="function"&&fr.classList.contains("pronto"))break}catch(e){}w=null;await new Promise(r=>setTimeout(r,200))}
     if(!w){toast("O editor de horários não abriu — tente outra vez");return}
     const Pr=w.HTMLInputElement.prototype,orig=Pr.click;

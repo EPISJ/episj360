@@ -115,7 +115,7 @@ body.calamplo #calAnoCard .dh{display:none}
 .h3modo[hidden]{display:none}
 nav.side .h3modo button,.h3modo button{flex:1;justify-content:center;border-radius:0;border:0;background:transparent;font:inherit;font-size:12px;font-weight:600;padding:5px 8px;color:var(--muted);cursor:pointer;height:auto;min-height:0}
 nav.side .h3modo button+button{border-left:1px solid var(--line)}
-nav.side .h3modo button.on,.h3modo button.on{background:var(--brand);color:#fff}
+nav.side .h3modo button.sel,.h3modo button.sel{background:var(--brand);color:#fff}
 .hsnav{display:inline-flex;gap:4px}
 .hsw .h small{display:block;font-weight:500;color:var(--muted);font-size:11px}
 .hsw .h em{display:block;font-style:normal;font-weight:500;font-size:10.5px;color:#b45309;line-height:1.2;margin-top:2px}
@@ -172,3 +172,21 @@ nav.side .h3modo button.on,.h3modo button.on{background:var(--brand);color:#fff}
 .gptn{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .gpte{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.gpte .gpt{font-size:13px;padding:5px 12px}
 @media (prefers-reduced-motion:reduce){.gptl{transition:none}}
+/* 0.9.142: Horários360 › Por formadores */
+.hsfw{max-height:72vh;overflow:auto;border:1px solid var(--line);border-radius:10px}
+table.hsf{border-collapse:separate;border-spacing:0;font-size:11.5px;min-width:100%}
+table.hsf th,table.hsf td{border-bottom:1px solid var(--line);padding:3px 4px;text-align:center;white-space:nowrap;background:var(--card,#fff)}
+table.hsf thead th{position:sticky;top:0;z-index:2;font-weight:600;color:var(--ink)}
+table.hsf thead tr+tr th{top:26px;font-weight:500;color:var(--muted)}
+table.hsf th small{font-weight:500;color:var(--muted)}table.hsf th em{display:block;font-style:normal;font-weight:500;color:#b45309;font-size:10.5px}
+table.hsf .nm{position:sticky;left:0;z-index:1;text-align:left;min-width:170px;border-right:1px solid var(--line)}
+table.hsf thead .nm{z-index:3}
+table.hsf .nm a{color:var(--ink);text-decoration:none;font-weight:500}table.hsf .nm a:hover{color:var(--brand);text-decoration:underline}
+table.hsf .dsep{border-left:2px solid var(--line2,#d3d9e3)}
+table.hsf td.on{background:color-mix(in srgb,var(--sc) 16%,#fff);box-shadow:inset 3px 0 0 var(--sc);min-width:44px;line-height:1.15}
+table.hsf td.on b{display:block;font-size:11px}table.hsf td.on span{display:block;font-size:10px;color:var(--muted)}
+table.hsf td.nl{background:repeating-linear-gradient(135deg,#fdf1dc 0 4px,#fff8ec 4px 9px)}
+table.hsf th.hj{color:var(--brand)}table.hsf td.hj:not(.on){background:#f6f9ff}
+table.hsf tr.eu td{border-bottom-color:var(--brand)}table.hsf tr.eu .nm a{font-weight:700;color:var(--brand)}
+table.hsf .tt{font-weight:600;font-variant-numeric:tabular-nums;border-left:1px solid var(--line)}
+table.hsf tbody td:not(.nm):not(.tt),table.hsf thead tr+tr th{min-width:46px;width:46px}

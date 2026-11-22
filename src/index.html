@@ -67,6 +67,7 @@
     <div class="mh">Horários360</div>
     <div class="h3modo" data-h3modo hidden role="group" aria-label="Versão do Horários360"><button type="button" data-h3m="simples" title="Mostra os horários vindos do Untis e comunica-os aos formadores">Simples</button><button type="button" data-h3m="completa" title="O editor de horários completo">Completa</button></div>
     <button data-t="hsSem"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M7 14h3M7 18h3M14 14h3"/></svg>Semana</button>
+    <button data-t="hsFor"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c.5-3.4 2.9-5.4 6-5.4s5.5 2 6 5.4"/><path d="M16 4.5a3 3 0 0 1 0 6M18 14.8c1.7.7 2.7 2.4 3 5.2"/></svg>Por formadores</button>
     <button data-t="mh"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="12" cy="16" r="2.5"/></svg><span data-mhlbl>O meu horário</span></button>
     <button data-t="esch"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h2M14 14h2M8 18h2M14 18h2"/></svg>Horários</button>
     <button data-t="hsCom"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Comunicar</button>
@@ -557,10 +558,22 @@
       <span class="hsnav"><button class="b s" id="hsAnt" type="button" aria-label="Semana anterior" title="Semana anterior">‹</button><button class="b s" id="hsHoje" type="button">Esta semana</button><button class="b s" id="hsSeg" type="button" aria-label="Semana seguinte" title="Semana seguinte">›</button></span>
       <label style="width:160px">Semana de<input type="date" id="hsData"></label>
       <button class="b imp" id="hsImp" type="button" hidden title="Ler os horários em PDF do Untis (formadores e turmas), vários PDF ou um .zip">Importar do Untis (PDF)</button>
+      <button class="b imp" id="hsImpTudo" type="button" hidden title="Escolher a pasta dos horários do Untis: entram todos os PDF dela e das subpastas (formadores e turmas); das versões repetidas fica a mais recente">Importar tudo (pasta)</button>
     </div>
     <div id="hsOut"></div>
   </div>
   <div id="hsAvisos"></div>
+</section>
+<section id="hsFor">
+  <div id="hsForHero"></div>
+  <div class="card">
+    <div class="row hsbar" style="margin-bottom:12px;align-items:flex-end;flex-wrap:wrap;gap:10px">
+      <label class="grow" style="min-width:200px">Procurar formador<input type="text" id="hsForQ" placeholder="Nome ou sigla"></label>
+      <span class="hsnav"><button class="b s" id="hsForAnt" type="button" aria-label="Semana anterior" title="Semana anterior">‹</button><button class="b s" id="hsForHoje" type="button">Esta semana</button><button class="b s" id="hsForSeg" type="button" aria-label="Semana seguinte" title="Semana seguinte">›</button></span>
+      <label style="width:160px">Semana de<input type="date" id="hsForData"></label>
+    </div>
+    <div id="hsForOut"></div>
+  </div>
 </section>
 <section id="hsCom">
   <div id="hsComHero"></div>

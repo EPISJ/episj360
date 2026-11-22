@@ -32,10 +32,8 @@ html[data-tema="cobalto"] input[type=search],html[data-tema="cobalto"] input[typ
 /* 0.9.95: ícones por tema — no Cobalto a barra de cima é azul (como o menu): os monogramas ficam brancos com a letra
    azul-cobalto (a barra de cor de cada módulo mantém-se); fora da barra azul (Apps, entrada, Definições) ficam
    azul-cobalto com letra branca. O logótipo da app segue o mesmo: quadrado branco com o logótipo da escola a azul. */
-html[data-tema="cobalto"] svg.mseal>path:first-child{fill:var(--side)}
+/* 0.9.178: os ícones dos módulos voltam ao original — fundo azul da app (#163269), letra branca e a barra de cor do módulo */
 html[data-tema="cobalto"] .top{background:var(--side)!important;-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom-color:var(--side2)}
-html[data-tema="cobalto"] .top svg.mseal>path:first-child{fill:#fff}
-html[data-tema="cobalto"] .top svg.mseal text{fill:var(--side)}
 html[data-tema="cobalto"] .top .brand{color:#fff}
 html[data-tema="cobalto"] .top .brand b{color:#d8e4ff}
 html[data-tema="cobalto"] .top .brand svg{filter:none}

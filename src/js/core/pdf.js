@@ -106,7 +106,8 @@ async function pdfLgImg(src){try{const b=await (await fetch(src)).blob();const d
   const im=new Image();await new Promise(ok=>{im.onload=ok;im.onerror=ok;im.src=d});return im.naturalWidth?{src:d,w:im.naturalWidth,h:im.naturalHeight}:null}catch(e){return null}}
 async function pdfLgPadrao(){if(!PDF_LG){const[m,f]=await Promise.all([pdfLgImg("img/logo-episj.png"),pdfLgImg(LG_FUNDOS_PADRAO.src)]);PDF_LG={main:m,foot:f}}return PDF_LG}
 function pdfLogos(fse){try{lgDoNavegador()}catch(e){}const P=PDF_LG||{};let f=fse?lgProj(fse):undefined;if(!f)f=lgGet("foot");if(f===undefined)try{f=lgFootBarra()}catch(e){}if(f===undefined)f=P.foot;
-  return{m:LOGOS.main||P.main||null,r:LOGOS.right||null,f:f||null}}
+  let m=LOGOS.main,r=LOGOS.right;try{m=m||lgGet("main");r=r||lgGet("right")}catch(e){} // 0.9.219: formadores usam os publicados pela Direção
+  return{m:m||P.main||null,r:r||null,f:f||null}}
 // as fontes base do PDF só têm caracteres latinos: troca os tipográficos por equivalentes simples
 const pdfTxt=s=>String(s??"").replace(/[—–]/g,"-").replace(/[“”«»]/g,'"').replace(/[‘’]/g,"'").replace(/…/g,"...").replace(/[›→]/g,">").replace(/•/g,"-").replace(/⚠/g,"!").replace(/[^\x00-\xff]/g,"");
 const lgFmt=L=>/^data:image\/jpe?g/.test(L.src)?"JPEG":"PNG";
@@ -195,30 +196,74 @@ function pdfAgrupar(t){const G=new Map(),FS=new Map(),fse=n=>{if(!FS.has(n))FS.s
     if(r.state==="blank")g.obs.push(fdNome(r.falta)+": o ficheiro entregue não conta ("+motivoBad(r.item)+")")}
   return[...G.values()].map(g=>{const loc=g.folhas.length===1&&g.locPasta?g.locPasta:g.loc;
     const pj=fse(g.turma);return[g.turma,discShort(g.disc),g.mod,faltaTexto(g),loc,[pj?"Projeto n.º "+pj:"",...g.obs].filter(Boolean).join("; ")].map(pdfTxt)})}
-function pdfFormadorSec(doc,t,y,geral){const H=doc.internal.pageSize.getHeight();
-  if(y>H-PDF_BOT-24){doc.addPage();y=PDF_TOP+4}
-  doc.setFont("helvetica","bold");doc.setFontSize(geral?10.5:11.5);doc.setTextColor(25);doc.text(pdfTxt(t.p.nome+(t.p.cod?` (${t.p.cod})`:"")),14,y);
-  const nm=doc.getTextWidth(pdfTxt(t.p.nome+(t.p.cod?` (${t.p.cod})`:"")));
-  doc.setFont("helvetica","normal");doc.setFontSize(8.5);doc.setTextColor(95);
-  doc.text(pdfTxt(`${t.p.email?t.p.email+" · ":""}${t.miss} documento(s) em falta · ${t.ok} de ${t.tot} entregue(s)`),14+nm+4,y);
-  return pdfTabela(doc,y+3,["Turma","Disciplina","Módulo/UFCD","Em falta","Localização na Box","Observações"],pdfAgrupar(t),
-    {0:{cellWidth:44},1:{cellWidth:20},2:{cellWidth:26},3:{cellWidth:72,fontStyle:"bold"},4:{cellWidth:52}},true)+7}
-async function pdfFormador(t){const J=await loadPDF(),doc=pdfA4L(J);
-  const y=pdfTitulo(doc,"Documentação em falta na Box",pdfSub());pdfFormadorSec(doc,t,y,false);
-  pdfMoldura(doc,"Escola Profissional da Ilha de São Jorge · EPISJ 360 · Box360");return doc}
-async function pdfGeral(){const J=await loadPDF(),doc=pdfA4L(J),T=byTeacher(evaluate());
-  const tot=T.reduce((a,t)=>a+t.tot,0),ok=T.reduce((a,t)=>a+t.ok,0);
-  let y=pdfTitulo(doc,"Relatório de documentação não entregue",pdfSub()+` · Entregue: ${ok}/${tot} (${tot?Math.round(ok/tot*100):0}%) · Em falta: ${tot-ok}`);
-  const res=T.filter(t=>t.tot).map(t=>[t.p.nome,t.p.email||"",String(t.miss),`${t.tot?Math.round(t.ok/t.tot*100):0}%`].map(pdfTxt));
-  doc.setFont("helvetica","bold");doc.setFontSize(11.5);doc.setTextColor(25);doc.text("Resumo por formador",14,y);
-  y=pdfTabela(doc,y+3,["Formador","Email","Em falta","Entregue"],res,{2:{halign:"right",cellWidth:22},3:{halign:"right",cellWidth:22}},true)+10;
-  // 0.9.50: com muitos formadores, barra de progresso e a página não congela
-  const F=T.filter(t=>t.miss),muitos=F.length>20;if(muitos)ovAbrir("A preparar o relatório geral");
-  try{for(let i=0;i<F.length;i++){y=pdfFormadorSec(doc,F[i],y,true);if(muitos&&i%10===9)await ovPasso(5+i/F.length*88,`Formador ${i+1} de ${F.length}…`)}
-    if(muitos)await ovPasso(95,"A pôr cabeçalhos e rodapés…");
-    pdfMoldura(doc,"Escola Profissional da Ilha de São Jorge · EPISJ 360 · Box360 · Relatório geral")}
+/* 0.9.219: «Documentos em falta» — um só modelo de relatório para a Direção (por formador, geral, anexo dos emails) e para o formador:
+   A4 ao alto, logótipos, título ao centro, formador e análise, quatro caixas de resumo com barra, e uma tabela por turma e módulo
+   com o estado de cada documento a cores (Estado · Documento · Pasta · Entregue a). */
+const ENT_COR={ok:[15,123,63],warn:[161,92,0],modelo:[161,92,0],blank:[180,35,24],missing:[180,35,24],naoconf:[161,92,0]};
+const ENT_FUNDO={ok:[230,244,234],warn:[255,244,224],modelo:[255,244,224],blank:[253,236,236],missing:[253,236,236],naoconf:[255,244,224]};
+const ENT_TXT={ok:"entregue",warn:"entregue — a confirmar",modelo:"entregue — não segue o modelo",blank:"não conta (vazio ou falso)",missing:"em falta",naoconf:"por confirmar"};
+// D = {nome,cod,email,analise,t,so,grupos:[{tu,di,mo,proj,it:[{st,tipo,onde,obs,d}]}],todos:[{it}]} → acrescenta os totais
+function entDados(D){const all=(D.todos||D.grupos).flatMap(g=>g.it);D.tot=all.length;D.ent=all.filter(x=>boxOkS(x.st)).length;D.nf=all.filter(x=>boxFaltaS(x.st)).length;
+  D.mods=(D.todos||D.grupos).length;D.modsOk=(D.todos||D.grupos).filter(g=>g.it.length&&g.it.every(x=>boxOkS(x.st))).length;return D}
+// dados do relatório de um formador na Direção (byTeacher), com os mesmos documentos que o formador vê
+function entDeProf(t,so){const FS=new Map(),fse=n=>{if(!FS.has(n))FS.set(n,pdfFseTurma(n));return FS.get(n)};
+  const todos=t.list.map(e=>{const mo=modTitle(e.mod);return{tu:e.mod.turma||"",di:discShort(e.mod.disc)||e.mod.disc||"",mo,proj:fse(e.mod.turma||""),it:e.items.map(i=>boxItem(boxItemPub(i,e.mod),{mo}))}})
+    .sort((a,b)=>COLL_PTN.compare(a.tu+" "+a.mo,b.tu+" "+b.mo));
+  const grupos=todos.map(g=>({...g,it:so==="tudo"?g.it:g.it.filter(x=>!boxOkS(x.st))})).filter(g=>g.it.length);
+  let an="";try{an=lastListing?nomePasta(lastListing.pasta):""}catch(e){}
+  return entDados({nome:t.p.nome||"",cod:t.p.cod||"",email:t.p.email||"",analise:an,t:lastListing&&lastListing.t,so:so||"falta",grupos,todos})}
+function entSec(doc,D,y,geral){const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),X=14,LW=W-28;
+  if(y>H-PDF_BOT-60){doc.addPage();y=PDF_TOP+4}
+  const pct=D.tot?Math.round(D.ent*100/D.tot):0,dt=x=>x?new Date(x+"T12:00").toLocaleDateString("pt-PT"):"—";
+  // formador e análise
+  doc.setFont("helvetica","bold");doc.setFontSize(geral?11:12);doc.setTextColor(22,50,105);const nm=pdfTxt((D.cod?D.cod+" · ":"")+D.nome);doc.text(nm,X,y);
+  doc.setFont("helvetica","normal");doc.setFontSize(8.5);doc.setTextColor(90);
+  doc.text(pdfTxt([D.email,D.analise?"Análise da Box: "+D.analise+(D.t?" ("+new Date(D.t).toLocaleDateString("pt-PT")+")":""):"",D.so==="tudo"?"Todos os documentos":"Só os documentos em falta"].filter(Boolean).join("  ·  ")),X,y+5);
+  y+=9;
+  // caixas de resumo
+  const bx=[["Documentação entregue",pct+"%",null],["Documentos em falta",String(D.nf),D.nf?[180,35,24]:null],["Entregues",D.ent+" de "+D.tot,null],["Módulos completos",D.modsOk+" de "+D.mods,null]],gw=(LW-9)/4;
+  bx.forEach(([l,v,c],k)=>{const x=X+k*(gw+3);doc.setDrawColor(227,231,238);doc.setLineWidth(.25);doc.roundedRect(x,y,gw,13,1.6,1.6,"S");
+    doc.setFont("helvetica","normal");doc.setFontSize(7.2);doc.setTextColor(107,115,133);doc.text(pdfTxt(l),x+3,y+4.6);
+    doc.setFont("helvetica","bold");doc.setFontSize(12);doc.setTextColor(...(c||[27,35,51]));doc.text(pdfTxt(v),x+3,y+10.6)});
+  y+=15.5;doc.setFillColor(238,241,246);doc.roundedRect(X,y,LW,1.8,.9,.9,"F");
+  if(pct){doc.setFillColor(...(pct===100?[31,157,85]:pct>=50?[217,154,24]:[214,69,69]));doc.roundedRect(X,y,LW*pct/100,1.8,.9,.9,"F")}
+  y+=5.5;
+  if(!D.grupos.length){doc.setFont("helvetica","bold");doc.setFontSize(10);doc.setTextColor(15,123,63);doc.text(pdfTxt(D.so==="tudo"?"Sem documentos.":"Não falta entregar nenhum documento nesta análise."),X,y+4);return y+12}
+  const nL=D.grupos.reduce((a,g)=>a+g.it.length,0),cp=nL>25,body=[];
+  for(const g of D.grupos){const f=g.it.filter(x=>boxFaltaS(x.st)).length;
+    body.push([{content:pdfTxt([g.tu,g.mo].filter(Boolean).join(" · ")+(g.di?"   "+g.di:"")+(g.proj?"   ·   Projeto n.º "+g.proj:"")),colSpan:3,_g:1},{content:pdfTxt(f?f+" em falta":"completo"),_g:2,_f:f}]);
+    for(const x of g.it)body.push([{content:pdfTxt(ENT_TXT[x.st]||x.st),_st:x.st},pdfTxt(x.tipo+(x.obs?"\n"+x.obs:"")),pdfTxt(x.onde||"—"),pdfTxt(dt(x.d))])}
+  doc.autoTable({startY:y,head:[["Estado","Documento","Pasta","Entregue a"]],body,margin:{top:PDF_TOP,bottom:PDF_BOT+2,left:X,right:X},theme:"plain",rowPageBreak:"avoid",
+    styles:{font:"helvetica",fontSize:cp?7.4:8.4,cellPadding:cp?{top:.8,bottom:.8,left:1.6,right:1.6}:{top:1.5,bottom:1.5,left:1.8,right:1.8},textColor:[27,35,51],valign:"top",lineColor:[238,241,246],lineWidth:{bottom:.2}},
+    headStyles:{fontSize:7,textColor:[107,115,133],fontStyle:"bold",lineColor:[214,219,228],lineWidth:{bottom:.3}},
+    columnStyles:{0:{cellWidth:36},2:{cellWidth:44,textColor:[74,82,98]},3:{cellWidth:20,textColor:[74,82,98]}},
+    didParseCell:h=>{if(h.section!=="body")return;const r=h.row.raw,c=r[h.column.index];
+      if(r[0]&&r[0]._g){h.cell.styles.fillColor=[243,245,249];h.cell.styles.fontStyle="bold";h.cell.styles.textColor=[22,50,105];h.cell.styles.fontSize=cp?7.8:8.8;
+        if(c&&c._g===2){h.cell.styles.halign="right";h.cell.styles.textColor=c._f?[180,35,24]:[15,123,63]}return}
+      if(h.column.index===0&&c&&c._st){h.cell.styles.textColor=ENT_COR[c._st]||[60,60,60];h.cell.styles.fillColor=ENT_FUNDO[c._st]||[238,241,246];h.cell.styles.fontStyle="bold";h.cell.styles.fontSize=cp?6.8:7.6}
+      if(h.column.index===1){const t=String(h.cell.raw||"");if(t.includes("\n"))h.cell.styles.textColor=[27,35,51]}}});
+  return doc.lastAutoTable.finalY+(geral?9:4)}
+// título ao centro, entre os logótipos (só na 1.ª página)
+function entTitulo(doc,t,sub){const W=doc.internal.pageSize.getWidth();doc.setFont("helvetica","bold");doc.setFontSize(15);doc.setTextColor(22,50,105);doc.text(pdfTxt(t),W/2,17,{align:"center"});
+  doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(74,82,98);doc.text(pdfTxt(sub),W/2,23,{align:"center"});return PDF_TOP+4}
+async function pdfEntregas(L,geral){const J=await loadPDF(),doc=new J({unit:"mm",format:"a4"});
+  const emit="Emitido a "+new Date().toLocaleDateString("pt-PT",{day:"numeric",month:"long",year:"numeric"});
+  let y=entTitulo(doc,geral?"Documentos em falta — relatório geral":"Documentos em falta","Escola Profissional da Ilha de São Jorge  ·  "+emit);
+  if(geral){const res=geral.map(D=>[pdfTxt((D.cod?D.cod+" · ":"")+D.nome),pdfTxt(D.email||""),String(D.nf),(D.tot?Math.round(D.ent*100/D.tot):0)+"%"]);
+    const tot=geral.reduce((a,D)=>a+D.tot,0),ent=geral.reduce((a,D)=>a+D.ent,0),nf=geral.reduce((a,D)=>a+D.nf,0);
+    doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(22,50,105);doc.text(pdfTxt(`Resumo por formador — entregue ${ent} de ${tot} (${tot?Math.round(ent*100/tot):0}%) · em falta ${nf}`),14,y);
+    doc.autoTable({startY:y+3,head:[["Formador","Email","Em falta","Entregue"]],body:res,margin:{top:PDF_TOP,bottom:PDF_BOT+2,left:14,right:14},theme:"plain",
+      styles:{font:"helvetica",fontSize:8,cellPadding:1.3,lineColor:[238,241,246],lineWidth:{bottom:.2}},headStyles:{fontSize:7,textColor:[107,115,133],lineColor:[214,219,228],lineWidth:{bottom:.3}},
+      columnStyles:{2:{halign:"right",cellWidth:20},3:{halign:"right",cellWidth:20}},didParseCell:h=>{if(h.section==="body"&&h.column.index===2&&+h.cell.raw>0)h.cell.styles.textColor=[180,35,24]}});
+    y=doc.lastAutoTable.finalY+10}
+  const muitos=L.length>20;if(muitos)ovAbrir("A preparar o relatório");
+  try{for(let i=0;i<L.length;i++){y=entSec(doc,L[i],y,!!geral);if(muitos&&i%10===9)await ovPasso(5+i/L.length*88,`Formador ${i+1} de ${L.length}…`)}
+    pdfMoldura(doc,"Escola Profissional da Ilha de São Jorge · EPISJ 360 · Box360"+(geral?" · Relatório geral":""))}
   finally{if(muitos){ovPassoSync(100,"Pronto");ovFechar(300)}}
   return doc}
+async function pdfFormador(t){return pdfEntregas([entDeProf(t,"falta")])}
+async function pdfGeral(){const T=byTeacher(evaluate()).filter(t=>t.tot).sort((a,b)=>cmpProf(a.p,b.p));const L=T.map(t=>entDeProf(t,"falta"));
+  return pdfEntregas(L.filter(D=>D.grupos.length),L)}
 const ficheiroNome=s=>String(s).replace(/[\\/:*?"<>|]+/g,"-").replace(/\s+/g," ").trim();
 const pdfNomeF=t=>ficheiroNome(`Documentos em falta - ${t.p.nome} - ${anoLetivo().replace("/","-")}.pdf`);
 const pdfNomeG=()=>ficheiroNome(`Relatório de documentação não entregue - ${hoje()}.pdf`);

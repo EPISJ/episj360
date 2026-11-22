@@ -22,40 +22,10 @@ function relMeuTexto(BM){const L=relMeuDados(BM);return `DOCUMENTOS EM FALTA —
   L.map(g=>`${[g.m.tu,g.m.di,g.m.mo].filter(Boolean).join(" · ")}\n`+g.it.map(x=>`  [${(RELM_EST[x.st]||["",x.st])[1]}] ${[x.tipo,x.onde].filter(Boolean).join(" › ")}${x.obs?" ("+x.obs+")":""}${x.d?" — "+new Date(x.d+"T12:00").toLocaleDateString("pt-PT"):""}`).join("\n")).join("\n\n")}
 /* 0.9.208: relatório de entregas para imprimir / guardar em PDF — A4, com os logótipos da escola e do ano letivo, resumo e
    uma tabela por turma e módulo com o estado de cada documento a cores */
-function relMeuImprimir(BM){const w=window.open("","_blank");if(!w){toast("O navegador bloqueou a janela — permita janelas deste site");return}
-  const abs=u=>new URL(u,location.href).href;let lm=null,lr=null,lf=null;try{lm=lgGet("main");lr=lgGet("right")}catch(e){}try{lf=lgFootBarra()}catch(e){}
-  const PL=(PUB&&PUB.logos)||{},main=lm&&lm.src||PL.main&&PL.main.src||abs("img/logo-episj.png"),right=lr&&lr.src||PL.right&&PL.right.src||"",foot=lf&&lf.src||abs("img/fundos-2026-2027.png");
-  const okS=boxOkS,it=BM.m.flatMap(m=>m.it),tot=it.length,ent=it.filter(x=>okS(x[1])).length,nf=it.filter(x=>boxFaltaS(x[1])).length,pct=tot?Math.round(ent*100/tot):0;
-  const L=relMeuDados(BM),cor={ok:"#0f7b3f",warn:"#a15c00",modelo:"#a15c00",blank:"#b42318",missing:"#b42318",naoconf:"#a15c00"},fundo={ok:"#e6f4ea",warn:"#fff4e0",modelo:"#fff4e0",blank:"#fdecec",missing:"#fdecec",naoconf:"#fff4e0"};
-  const hoje=new Date().toLocaleDateString("pt-PT",{day:"numeric",month:"long",year:"numeric"}),nome=(BM.me&&BM.me.nome)||"";
-  const caixa=(l,v,c)=>`<div class="bx"><small>${esc(l)}</small><b style="color:${c||"#1b2333"}">${v}</b></div>`;
-  const nLin=L.reduce((a,g)=>a+g.it.length,0),compacto=nLin>25; // 0.9.210: com muitas linhas, uma só tabela compacta
-  const tabelas=compacto?`<table class="cp"><thead><tr><th style="width:132px">Estado</th><th>Documento</th><th style="width:150px">Pasta</th><th style="width:88px">Entregue a</th></tr></thead><tbody>${L.map(g=>{const f=g.it.filter(x=>boxFaltaS(x.st)).length;
-      return `<tr class="gh"><td colspan="4">${esc([g.m.tu,g.m.mo].filter(Boolean).join(" · "))}<span class="di">${esc(g.m.di||"")}</span><span class="pl" style="color:${f?"#b42318":"#0f7b3f"}">${f?f+" em falta":"completo"}</span></td></tr>`+g.it.map(x=>`<tr><td><span class="st" style="background:${fundo[x.st]||"#eef1f6"};color:${cor[x.st]||"#333"}">${esc((RELM_EST[x.st]||["",x.st])[1])}</span></td><td>${esc(x.tipo||"")}${x.obs?`<div class="mu" style="font-size:.9em">${esc(x.obs)}</div>`:""}</td><td class="mu">${esc(x.onde||"—")}</td><td class="mu">${x.d?esc(new Date(x.d+"T12:00").toLocaleDateString("pt-PT")):"—"}</td></tr>`).join("")}).join("")}</tbody></table>`:L.length?"":`<p class="ok">${RELM.so==="falta"?"Não falta entregar nenhum documento nesta análise.":"Sem documentos."}</p>`;
-  const tabelasN=compacto||!L.length?"":L.map(g=>{const f=g.it.filter(x=>boxFaltaS(x.st)).length;return `<section class="g"><h3>${esc([g.m.tu,g.m.mo].filter(Boolean).join(" · "))}<span class="di">${esc(g.m.di||"")}</span><span class="pl" style="background:${f?"#fdecec":"#e6f4ea"};color:${f?"#b42318":"#0f7b3f"}">${f?f+" em falta":"completo"}</span></h3>
-    <table><thead><tr><th style="width:130px">Estado</th><th>Documento</th><th style="width:170px">Pasta</th><th style="width:90px">Entregue a</th></tr></thead><tbody>${g.it.map(x=>`<tr><td><span class="st" style="background:${fundo[x.st]||"#eef1f6"};color:${cor[x.st]||"#333"}">${esc((RELM_EST[x.st]||["",x.st])[1])}</span></td><td>${esc(x.tipo||"")}${x.obs?`<div class="mu" style="font-size:.9em">${esc(x.obs)}</div>`:""}</td><td class="mu">${esc(x.onde||"—")}</td><td class="mu">${x.d?esc(new Date(x.d+"T12:00").toLocaleDateString("pt-PT")):"—"}</td></tr>`).join("")}</tbody></table></section>`}).join("");
-  w.document.write(`<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><title>Documentos em falta — ${esc(nome)}</title><style>
-    @page{size:A4;margin:14mm 12mm 16mm}*{box-sizing:border-box}body{font:11.5px/1.45 "Segoe UI",Helvetica,Arial,sans-serif;color:#1b2333;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    header{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #163269;padding-bottom:10px;margin-bottom:14px}header img{max-height:52px;max-width:200px}
-    .tit{text-align:center;flex:1}.tit h1{font-size:18px;margin:0;color:#163269}.tit div{font-size:12px;color:#4a5262;margin-top:2px}
-    .meta{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:12px;margin:0 0 12px}.meta b{color:#163269}
-    .bxs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 16px}.bx{border:1px solid #e3e7ee;border-radius:8px;padding:8px 10px}.bx small{display:block;font-size:10.5px;color:#6b7385}.bx b{font-size:18px}
-    .barra{height:8px;border-radius:4px;background:#eef1f6;overflow:hidden;margin:-6px 0 16px}.barra i{display:block;height:100%;background:${pct===100?"#1f9d55":pct>=50?"#d99a18":"#d64545"}}
-    section.g{break-inside:avoid;margin:0 0 14px}h3{font-size:13px;margin:0 0 6px;display:flex;align-items:center;gap:8px;color:#163269}h3 .di{font-weight:400;color:#6b7385;font-size:11.5px}h3 .pl{margin-left:auto;font-size:10.5px;border-radius:10px;padding:2px 9px}
-    table{width:100%;border-collapse:collapse;table-layout:fixed}th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#6b7385;border-bottom:1px solid #d6dbe4;padding:4px 6px}td{border-bottom:1px solid #eef1f6;padding:5px 6px;vertical-align:top}td.mu{color:#4a5262}
-    .st{display:inline-block;border-radius:10px;padding:1px 8px;font-size:10.5px;font-weight:600;white-space:nowrap}.ok{color:#0f7b3f;font-weight:600}
-    footer{margin-top:18px;border-top:1px solid #e3e7ee;padding-top:10px;text-align:center}footer img{max-width:520px;max-height:56px}footer div{font-size:10px;color:#8a92a3;margin-top:6px}
-    table.cp{font-size:10.5px}table.cp td{padding:2px 6px;line-height:1.3}table.cp .st{font-size:9.5px;padding:0 7px}
-    table.cp tr.gh td{background:#f3f5f9;color:#163269;font-weight:700;font-size:11px;padding:4px 6px;border-top:6px solid #fff;break-after:avoid}table.cp tr.gh .di{font-weight:400;color:#6b7385;margin-left:8px}table.cp tr.gh .pl{float:right;font-weight:600;font-size:10px}
-    table.cp tr{break-inside:avoid}
-    @media screen{body{max-width:820px;margin:20px auto;padding:0 16px}}</style></head><body>
-    <header><img src="${esc(main)}" alt=""><div class="tit"><h1>Documentos em falta</h1><div>Escola Profissional da Ilha de São Jorge</div></div>${right?`<img src="${esc(right)}" alt="">`:`<span style="width:120px"></span>`}</header>
-    <div class="meta"><span>Formador: <b>${esc(nome)}</b></span><span>Análise da Box: <b>${esc(BM.nome||"")}</b>${BM.t?" ("+esc(new Date(BM.t).toLocaleDateString("pt-PT"))+")":""}</span><span>${RELM.so==="falta"?"Só os documentos em falta":"Todos os documentos"}</span><span>Emitido a ${esc(hoje)}</span></div>
-    <div class="bxs">${caixa("Documentação entregue",pct+"%")}${caixa("Documentos em falta",nf,nf?"#b42318":"")}${caixa("Entregues",ent+" de "+tot)}${caixa("Módulos completos",BM.m.filter(m=>m.it.length&&m.it.every(x=>okS(x[1]))).length+" de "+BM.m.length)}</div>
-    <div class="barra"><i style="width:${pct}%"></i></div>${tabelas}${tabelasN}
-    <footer><img src="${esc(foot)}" alt=""><div>EPISJ 360 · Box360 — relatório gerado a partir da análise da Box feita pela Direção</div></footer>
-    </body></html>`);w.document.close();w.focus();
-  const imgs=[...w.document.images];Promise.all(imgs.map(i=>i.complete?1:new Promise(r=>{i.onload=i.onerror=r;setTimeout(r,2500)}))).then(()=>setTimeout(()=>{try{w.print()}catch(e){}},200))}
+// 0.9.219: o PDF do formador é o mesmo dos relatórios da Direção (pdfEntregas em core/pdf.js)
+async function relMeuImprimir(BM){try{const so=RELM.so,G=relMeuDados(BM).map(g=>({tu:g.m.tu,di:g.m.di,mo:g.m.mo,it:g.it}));
+    const D=entDados({nome:(BM.me&&BM.me.nome)||"",cod:(BM.me&&BM.me.cod)||"",email:EU&&EU.email||"",analise:BM.nome||"",t:BM.t,so,grupos:G,todos:BM.m.map(m=>({it:m.it.map(x=>boxItem(x,m))}))});
+    const doc=await pdfEntregas([D]);doc.save(ficheiroNome(`Documentos em falta - ${D.nome} - ${D.analise}.pdf`))}catch(e){toast(e.message||"Não foi possível gerar o PDF")}}
 function renderRelMeu(BM){const sec=$("#rel");if(!sec)return;let box=$("#relMeu");
   if(!box){box=document.createElement("div");box.id="relMeu";sec.insertAdjacentElement("afterbegin",box);
     box.addEventListener("input",e=>{if(e.target.id==="rmQ"){RELM.q=e.target.value;relMeuLista()}});
@@ -70,7 +40,7 @@ function renderRelMeu(BM){const sec=$("#rel");if(!sec)return;let box=$("#relMeu"
   box.innerHTML=`<div class="card"><h2>Documentos em falta</h2><p class="hint">Os documentos dos módulos atribuídos a si, ${esc(BM.nome?"na análise «"+BM.nome+"»":"")}${BM.t?" de "+new Date(BM.t).toLocaleDateString("pt-PT"):""}. Atualizado quando a Direção analisa a Box.</p>
     <div class="ay-stats" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:8px 0 12px">${st("documentação entregue",(tot?Math.round(ent*100/tot):0)+"%")}${st("em falta",nf,nf?"var(--bad)":"")}${st("entregues (de "+tot+")",ent)}${st("a confirmar",conf,conf?"#b45309":"")}${st("não contam (vazios/falsos)",nc,nc?"var(--bad)":"")}${npc?st("por confirmar",npc,"#b45309"):""}</div>
     <div class="row" style="align-items:flex-end">${SEL}<label style="width:200px">Mostrar<select id="rmSo"><option value="falta"${RELM.so==="falta"?" selected":""}>Só o que falta</option><option value="tudo"${RELM.so!=="falta"?" selected":""}>Todos os documentos</option></select></label>
-      <label class="grow">Procurar<input type="text" id="rmQ" value="${esc(RELM.q)}" placeholder="turma, módulo ou documento"></label><button class="b s" data-rm="cp" type="button">Copiar</button><button class="b s" data-rm="pdf" type="button">Imprimir / guardar PDF</button></div></div>
+      <label class="grow">Procurar<input type="text" id="rmQ" value="${esc(RELM.q)}" placeholder="turma, módulo ou documento"></label><button class="b s" data-rm="cp" type="button">Copiar</button><button class="b s" data-rm="pdf" type="button">Descarregar PDF</button></div></div>
     <div id="rmLista"></div>`;relMeuLista()}
 function relMeuLista(){const el=$("#rmLista"),BM=boxMeu();if(!el||!BM||BM.vazio)return;const L=relMeuDados(BM);
   el.innerHTML=L.length?L.map(g=>{const f=g.it.filter(x=>boxFaltaS(x.st)).length;
@@ -507,18 +477,20 @@ function boxPublico(){if(!lastListing||!folders||!folders.length)return null;let
     // e a análise é a de «DTP 2025.2026»): procura-a sem as pastas do ano, pelo resto do caminho (turma, disciplina, módulo)
     if(!mf.length){try{const idx=getIdx(),ss=segs(e.mod.pasta).filter(x=>!anoDe(x));if(ss.length){mf=idx.pick(ss,"folders");if(!mf.length){const f=idx.flex(ss);if(f)mf=idx.pick(f.ss,"folders")}if(!mf.length)mf=modPastasOutroAno(ss,idx)}}catch(x){}}
     for(const r of mf)o.raiz.add(r.r.join("/"));
-    o.m.push({tu:e.mod.turma||"",di:e.mod.disc||"",mo:modTitle(e.mod),it:e.items.map(i=>{let d="";for(const f of i.hits||[]){const x=(f.f||f).date||"";if(x>d)d=x}
-      // 0.9.218: [secção, estado, pasta, última entrega, subpasta dentro da pasta do módulo (ex.: «Teste Prático › Ana Silva»), observação]
-      const st=i.state==="missing"&&/^a Box não deixou abrir/.test(i.pastaObs||"")?"naoconf":i.state;
-      const L=String(i.loc||"").split(" > ").concat(i.falta||"").filter(Boolean),mk=modKey(e.mod.cod);let k=-1;L.forEach((c,j)=>{const n=norm(c);if(isModLike(n)&&modKey(n)===mk)k=j});
-      const sub=k>=0?L.slice(k+1).join(" › "):"",obs=i.semPasta?"a pasta deste módulo não existe nesta secção":(st==="blank"?(i.reasons||[]).slice(0,2).join("; "):"");
-      return[(i.doc&&i.doc.nome)||"",st,i.falta||"",d.slice(0,10),sub,obs]})})}
+    o.m.push({tu:e.mod.turma||"",di:e.mod.disc||"",mo:modTitle(e.mod),it:e.items.map(i=>boxItemPub(i,e.mod))})}
   const R={t:lastListing.t||Date.now(),pasta:lastListing.pasta||"",nome:String(lastListing.pasta||"").split("/").filter(Boolean).pop()||"Análise",profs:{}};
   for(const pid in out){const raiz=[...out[pid].raiz],S=new Set();
     for(const p of todas)if(raiz.some(r=>p===r||p.startsWith(r+"/")))S.add(p);
     for(const p of [...S]){const q=p.split("/");for(let i=1;i<q.length;i++)S.add(q.slice(0,i).join("/"))}
     R.profs[pid]={p:[...S].sort().map(p=>[p,own.get(p)||0]),m:out[pid].m}}
   return {id:String(lastListing.rootId||R.nome),d:R}}
+// 0.9.218: um documento do relatório → [secção, estado, pasta, última entrega, subpasta dentro da pasta do módulo (ex.: «Teste Prático › Ana Silva»), observação]
+// (é o que se publica para o formador e o que os PDF de «Documentos em falta» mostram, da Direção e do formador)
+function boxItemPub(i,mod){let d="";for(const f of i.hits||[]){const x=(f.f||f).date||"";if(x>d)d=x}
+  const st=i.state==="missing"&&/^a Box não deixou abrir/.test(i.pastaObs||"")?"naoconf":i.state;
+  const L=String(i.loc||"").split(" > ").concat(i.falta||"").filter(Boolean),mk=modKey(mod.cod);let k=-1;L.forEach((c,j)=>{const n=norm(c);if(isModLike(n)&&modKey(n)===mk)k=j});
+  const sub=k>=0?L.slice(k+1).join(" › "):"",obs=i.doc&&i.doc.id==="sec:modulo"?"não há nenhuma pasta deste módulo na Box":i.semPasta?"a pasta deste módulo não existe nesta secção":(st==="blank"?(i.reasons||[]).slice(0,2).join("; "):"");
+  return[(i.doc&&i.doc.nome)||"",st,i.falta||"",d.slice(0,10),sub,obs]}
 /* todas as análises guardadas neste computador (ex.: DTP 2025.2026 e DTP 2026.2027): cada uma é calculada à vez, trocando por
    momentos a análise carregada, e no fim volta tudo ao que estava (nada é gravado nem apagado) */
 async function boxPublicoTodas(){const out=[],cur=lastListing&&String(lastListing.rootId||"");

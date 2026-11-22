@@ -168,9 +168,11 @@ async function boxGet(path,params,hdr){
     if(r.status>=500){await sleep(Math.min(20,0.5*2**t)*1000);continue}
     if(r.status===400&&hdr&&hdr.__rep){const er=new Error("rep");er.kind="rep";throw er} // 0.9.113: a Box não aceitou as representações na listagem
     // 0.9.207: a resposta da Box diz o motivo (code/message) — mostra-o; um 403 ao confirmar a conta (users/me) não é falta de permissão numa pasta
-    let det="";try{const j=await r.json();det=[j.code,j.message].filter(Boolean).join(": ")}catch(x){}
+    let det="",html=false;try{const tx=await r.text();try{const j=JSON.parse(tx);det=[j.code,j.message].filter(Boolean).join(": ")}catch(x){html=/^\s*</.test(tx)}}catch(x){}
+    // 0.9.211: sem explicação em JSON (página HTML) = bloqueio de segurança da Box à conta ou ao acesso, não falta de permissão numa pasta
+    if(r.status===403&&!det){console.warn("Box 403 em",path,html?"(página HTML)":"(sem corpo)");const er=new Error("A Box bloqueou o acesso por segurança (403"+(html?", página de bloqueio":", sem explicação")+" ao abrir «"+path.split("?")[0]+"»). Costuma acontecer depois de várias entradas seguidas a partir de «aparelhos novos» (janelas privadas, cookies apagados). Espere alguns minutos, entre em box.com numa janela normal com a conta da Box para confirmar o aparelho e depois carregue em «Entrar com a Box».");er.kind="auth";er.status=403;throw er}
     if(tipo==="me"&&(r.status===403||r.status===400)){const er=new Error("A Box recusou a ligação desta conta ("+r.status+(det?" — "+det:"")+"). Carregue em «Entrar com a Box» e volte a entrar. Se repetir, confirme em box.com que a conta não está bloqueada (por exemplo, à espera da verificação em dois passos) e que a aplicação da EPISJ 360 continua autorizada para esta conta.");er.kind="auth";er.status=r.status;throw er} // não apaga a sessão partilhada da Box (pode ser passageiro); só o 401 a dá como morta
-    const er=new Error("A Box respondeu "+r.status+(r.status===403?" (sem permissão para esta pasta)":"")+(det?" — "+det:"")+".");er.kind="http";er.status=r.status;throw er;
+    const er=new Error("A Box respondeu "+r.status+(r.status===403?" (sem permissão para esta pasta)":"")+(det?" — "+det:"")+" [pedido: "+path.split("?")[0]+"].");er.kind="http";er.status=r.status;throw er;
   }
   const er=new Error("A Box está a limitar os pedidos. Tente daqui a pouco.");er.kind="net";throw er;
 }

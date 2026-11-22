@@ -263,7 +263,7 @@ async function h3Enviar(L,canais,msg){if(H3_ENVIO||!L.length)return;H3_ENVIO=tru
   // 0.9.155: a sessão do Office 365 é pedida logo no início (ainda no clique, para a janela da Microsoft não ser bloqueada);
   // se não houver sessão, diz uma vez porquê em vez de falhar formador a formador
   if(canais.includes("email")&&L.some(x=>!x.emOk)){try{await msToken()}catch(e){H3_ENVIO=false;const m=typeof msErro==="function"?msErro(e):(e.message||String(e));
-    return{ok:0,erros:["Os emails não saíram: "+m+" Carregue outra vez em enviar (o navegador pode pedir para entrar na conta da Microsoft)."]}}}
+    return{ok:0,erros:["Os emails não saíram: "+m+" Carregue em «Ligar a conta da Microsoft» (por cima dos botões) e depois envie outra vez."]}}}
   try{for(let i=0;i<L.length;i++){const x=L[i],feito=[];if(msg)msg(`A enviar ${i+1} de ${L.length}…`);
       const fazEm=canais.includes("email")&&!x.emOk,fazTl=canais.includes("push")&&!x.tlOk;
       if(fazEm)try{await h3Email1(x);feito.push("email")}catch(e){erros.push((x.t.name||"")+": email — "+(e.message||e))}
@@ -292,10 +292,11 @@ async function hsComRender(){await null;try{await esdPronto}catch(e){}await h3Ca
     L.map(x=>`<tr><td><input type="checkbox" data-h3sel="${esc(x.t.id)}" checked></td><td>${esc((x.p&&x.p.nome)||x.t.name)}</td><td>${esc(h3Email(x.p)||"—")}</td><td>${esc(h3Tel(H3.tel[(x.p||{}).id])||"—")}</td>
       <td><span class="h3via ${x.emOk?"ok":""}">${x.emOk?"✓ ":""}Email</span> <span class="h3via ${x.tlOk?"ok":""}">${x.tlOk?"✓ ":""}Telemóvel</span></td>
       <td><details><summary>${x.novo?"horário novo ("+x.cur.length+" tempo"+(x.cur.length===1?"":"s")+")":`${x.mais.length?"+"+x.mais.length:""}${x.mais.length&&x.menos.length?" / ":""}${x.menos.length?"−"+x.menos.length:""}`}</summary><pre class="h3dif">${esc(h3Txt(x))}</pre></details> <button class="b s" type="button" data-h3prev="${esc(x.t.id)}" title="Ver o email que este formador vai receber">Ver email</button></td></tr>`).join("")+`</tbody></table></div>
+    <div class="h3ms">${ms?`Os emails saem de <b>${esc(MSACC.username||"")}</b>.`:`<span>Para enviar emails é preciso a sua conta da Microsoft neste navegador.</span><button class="b s" type="button" id="h3MsLig">Ligar a conta da Microsoft</button>`}</div>
     <div class="row" style="margin-top:10px;flex-wrap:wrap;gap:8px">
-      <button class="b" id="h3Em"${ms?"":" disabled title=\"Entre com o Office 365 para enviar emails\""}>Enviar email</button>
+      <button class="b" id="h3Em">Enviar email</button>
       <button class="b" id="h3Pu">Enviar notificação ao telemóvel</button>
-      <button class="b" id="h3EmPu"${ms?"":" disabled"}>Email e notificação</button>
+      <button class="b" id="h3EmPu">Email e notificação</button>
       ${sms?`<a class="b s" id="h3Sms" href="${esc(sms)}">SMS pelo telemóvel</a>`:""}
       <span class="grow"></span><button class="b s" id="h3Marc" title="Dar como avisados sem enviar nada">Marcar como avisados</button></div>
     <p class="hint" id="h3Msg" style="margin:8px 0 0">${ms?"":"Para enviar emails, entre com o Office 365 da escola (como para os outros envios). "}${semEm?semEm+" sem email em Escola360 › Formadores. ":""}</p>`}
@@ -332,6 +333,9 @@ async function hsComRender(){await null;try{await esdPronto}catch(e){}await h3Ca
   const go=async can=>{const S=sel();if(!S.length){toast("Escolha pelo menos um formador");return}
     if(!confirm(`Enviar ${can.map(c=>c==="email"?"email":"notificação").join(" e ")} a ${S.length} formador${S.length===1?"":"es"}?`))return;
     const r=await h3Enviar(S,can,m);if(!r)return;toast(`${r.ok} formador${r.ok===1?"":"es"} avisado${r.ok===1?"":"s"}`);hsComRender().then(()=>{if(r.erros.length){const e=$("#h3Msg");if(e)e.innerHTML=`<span style="color:var(--bad)">${r.erros.slice(0,8).map(esc).join("<br>")}</span>`}})};
+  // 0.9.156: o botão liga a conta da Microsoft logo no clique (a janela não é bloqueada); sem conta carregada, tenta recuperá-la da sessão do navegador
+  const bl=$("#h3MsLig");if(bl)bl.onclick=async()=>{try{await msLoginPopup();toast("Conta da Microsoft ligada");hsComRender()}catch(e){m(typeof msErro==="function"?msErro(e):String(e.message||e))}};
+  if(!ms&&!window.__h3MsTent){window.__h3MsTent=1;msInit().then(()=>{if(MSACC)hsComRender()}).catch(()=>{})}
   const b1=$("#h3Em"),b2=$("#h3Pu"),b3=$("#h3EmPu"),b4=$("#h3Marc"),b5=$("#h3Sms"),all=$("#h3All");
   if(b1)b1.onclick=()=>go(["email"]);if(b2)b2.onclick=()=>go(["push"]);if(b3)b3.onclick=()=>go(["email","push"]);
   if(all)all.onchange=()=>{el.querySelectorAll("[data-h3sel]").forEach(i=>i.checked=all.checked);h3SmsAtual()};

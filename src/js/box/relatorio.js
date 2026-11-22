@@ -453,7 +453,7 @@ async function boxPublicoTodas(){const out=[],cur=lastListing&&String(lastListin
 var BOX_SEL="";
 function boxAnalises(){const A=PUB&&PUB.box&&PUB.box.anal||{};return Object.entries(A).map(([id,d])=>({id,d})).sort((a,b)=>COLL_PTN.compare(String(b.d.nome||""),String(a.d.nome||""))||(b.d.t||0)-(a.d.t||0))}
 // escolha da análise guardada (formador): a mais recente por omissão
-function boxSelHTML(){const L=boxAnalises();if(L.length<2)return "";const cur=boxAtual();
+function boxSelHTML(){const L=boxAnalises();if(!L.length)return "";const cur=boxAtual(); // 0.9.198: sempre à vista (também com uma só análise), para se saber qual está a ser vista
   return `<label class="boxsel" style="width:260px">Análise guardada<select data-boxsel>${L.map(x=>`<option value="${esc(x.id)}"${cur&&cur.id===x.id?" selected":""}>${esc(x.d.nome||x.id)}${x.d.t?" · "+new Date(x.d.t).toLocaleDateString("pt-PT"):""}</option>`).join("")}</select></label>`}
 function boxAtual(){const L=boxAnalises();return L.find(x=>x.id===BOX_SEL)||L[0]||null}
 document.addEventListener("change",e=>{const s=e.target.closest&&e.target.closest("[data-boxsel]");if(!s)return;BOX_SEL=s.value;try{if(curTab==="pas")renderTree();if(curTab==="est")renderEst()}catch(x){}});
@@ -505,7 +505,9 @@ function renderTree(){
    if(h2)h2.textContent=T.meu?"As minhas pastas na Box":h2.dataset.o;
    {let sl=$("#pBoxSel");if(!sl){sl=document.createElement("div");sl.id="pBoxSel";sl.className="row";sl.style.margin="0 0 10px";$("#pTiles").insertAdjacentElement("beforebegin",sl)}sl.innerHTML=boxMeu()?boxSelHTML():"";sl.hidden=!sl.innerHTML}if(hn)hn.textContent=T.meu?"As pastas dos módulos atribuídos a si, com o caminho completo e o número de ficheiros em cada uma (na própria pasta e no total). As pastas sem nenhum ficheiro aparecem a vermelho. Atualizado quando a Direção analisa a Box.":hn.dataset.o}
   $("#pMsg").textContent="";
-  if(!all.length){$("#pTree").innerHTML=`<p class="hint" style="margin:0">${boxMeu()?"Ainda não há pastas atribuídas a si publicadas pela Direção (a Direção tem de analisar a Box e ter módulos atribuídos a si).":"Faça primeiro a análise da Box (em Análise)."}</p>`;return}
+  if(!all.length){const BM=boxMeu();let msg="Faça primeiro a análise da Box (em Análise).";
+    if(BM){const n=(BM.m||[]).length;msg=!boxAnalises().length?"Ainda não há análises publicadas pela Direção (a Direção tem de analisar a Box).":n?`Na análise «${esc(BM.nome||"")}» não foi encontrada nenhuma pasta dos seus ${n} módulo(s) — por exemplo, se são de turmas de outro ano letivo. Escolha outra análise acima, se houver.`+`<div class="em-falta" style="margin-top:8px">${BM.m.slice(0,30).map(m=>`<div>${esc([m.tu,m.mo].filter(Boolean).join(" · "))}</div>`).join("")}</div>`:`Na análise «${esc(BM.nome||"")}» não há módulos atribuídos a si.`}
+    $("#pTree").innerHTML=`<p class="hint" style="margin:0">${msg}</p>`;return}
   const q=norm($("#pTxt").value),lvl=+$("#pLvl").value;
   if($("#pShow").value==="vazias"){
     // só as pastas vazias de nível mais alto (se uma pasta está vazia, as subpastas também estão)

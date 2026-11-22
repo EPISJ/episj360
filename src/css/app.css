@@ -1560,3 +1560,6 @@ table.crano tr.r2 td.out,table.crano tr.r2 td.nx{background-image:none}
 
 /* 0.9.202: relatório do Formador */
 #relMeu .rm-g h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* 0.9.203: quadros só da Direção (ex.: Documentos vazios, falsos ou copiados) nunca aparecem aos outros perfis */
+body:not(.pf-dir) .so-dir,body:not(.pf-dir) .blk:has(> .so-dir){display:none!important}

@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.139 — ecrã do módulo «folder», carregado quando é aberto */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.140 — ecrã do módulo «folder», carregado quando é aberto */
 "use strict";
 // ===== src/js/folder/folder.js =====
 /* Folder360 — ecrã do módulo (carregado só quando o Folder360 é aberto; os dados estão em folder/folder-dados.js) */
@@ -294,7 +294,8 @@ function foScanFechar(){const S=FO_SCAN;FO_SCAN=null;if(!S)return;S.on=false;try
 
 // ----- PDF: lombadas, etiquetas, etiquetas de CD, relatório por arquivo, lista de conferência -----
 function foA4(J,deitada){return new J({unit:"mm",format:"a4",orientation:deitada?"landscape":"portrait",compress:true})}
-function foFoot(d){const E=foDef(),f=E.fins.find(x=>x.n===d.fin);if(foFinLogo(f))return foFinLogo(f); // 1) o logótipo do programa (Folder360 › Definições)
+function foFoot(d){const E=foDef(),f=E.fins.find(x=>x.n===d.fin);{const p=d.proj&&lgProj(d.proj);if(p)return p} // 0) o do n.º de projeto do dossier (Definições › Logótipos)
+  if(foFinLogo(f))return foFinLogo(f); // 1) o logótipo do programa (Folder360 › Definições)
   try{const A=LOGOS.anos||{},anos=escData().anos,y=parseInt(String(d.ano||"").slice(0,4),10);           // 2) o do ano letivo do dossier (Definições › Logótipos)
     const a=anos.find(x=>x.nome===d.ano||x.ini===y);if(a&&A[a.id]&&A[a.id].foot)return A[a.id].foot;if(a&&A[a.id]&&A[a.id].foot===null)return null;
     const L=anos.filter(x=>A[x.id]&&A[x.id].foot&&x.ini<=y).sort((p,q)=>q.ini-p.ini);if(L.length)return A[L[0].id].foot}catch(e){}

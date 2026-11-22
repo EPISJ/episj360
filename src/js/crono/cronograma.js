@@ -221,7 +221,7 @@ async function crAnoPdf(){const a=crAnoSel(),asof=CR_SEL.asof||calHoje(),M=crMot
   const me=crMeuId(),L=[...T.discs.values()].filter(o=>o.P>0&&crDoFormador(o,me)).sort(crOrdArea);if(!L.length){toast("Sem disciplinas");return}
   const J=await loadPDF(),doc=new J({unit:"mm",format:"a4",orientation:"landscape"}),ks=CRA.d==="__t"?["__t",...L.map(o=>o.k)]:[CRA.d];
   ks.forEach((k,n)=>{if(n)doc.addPage();crAnoPdfPag(doc,M,T,k,asof);if(k==="__t"&&M.manual){doc.addPage();crAnoPdfHs(doc,M,T,asof)}});
-  pdfMoldura(doc,`Escola Profissional da Ilha de São Jorge · EPISJ 360 · Crono360 · ano letivo ${a.nome} · situação a ${calDMA(asof)}`);
+  pdfMoldura(doc,`Escola Profissional da Ilha de São Jorge · EPISJ 360 · Crono360 · ano letivo ${a.nome} · situação a ${calDMA(asof)}`,T.t.fse);
   const o=T.discs.get(CRA.d);doc.save(pdfTxt(`Cronograma ${T.t.cod}${o?" - "+o.disc:""} ${asof}.pdf`).replace(/[\\/:*?"<>|]/g,"-"))}
 function crAnoPdfPag(doc,M,T,k,asof){const a=M.a,f=M.fator,o=k==="__t"?null:T.discs.get(k),R=crAnoDados(M,T,k),D=M.D,N=D.length,iA=M.iA,NL=M.NL||new Map(),HJ=calHoje(),P=R.L.reduce((s,x)=>s+x.P,0);
   const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),h1=x=>crNum(Math.round(crH1(x,f)*10)/10),dA=x=>calD(x).toLocaleDateString("pt-PT",{day:"2-digit",month:"2-digit",year:"2-digit"});

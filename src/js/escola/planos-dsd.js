@@ -355,8 +355,8 @@ async function pdfPlano(todos){const a=anoAtivo(),E=escData();
   if(!TT.length){toast("Não há planos curriculares neste ano letivo");return}
   const J=await loadPDF(),doc=new J({unit:"mm",format:"a4"});
   const muitos=TT.length>3;if(muitos)ovAbrir("A preparar os Planos Curriculares");
-  try{for(let i=0;i<TT.length;i++){if(i)doc.addPage();pdfPlanoSec(doc,TT[i],pcDe(TT[i].id),a);if(muitos)await ovPasso(3+85*(i+1)/TT.length,`Turma ${i+1} de ${TT.length}: ${TT[i].cod}`)}}finally{if(muitos)ovFechar(300)}
-  const n=doc.getNumberOfPages();for(let pg=1;pg<=n;pg++){doc.setPage(pg);pdfOfLogos(doc,"Plano Curricular Detalhado",a);pdfDsdRodape(doc,pg,n)}
+  try{for(let i=0;i<TT.length;i++){if(i)doc.addPage();pdfProjDesde(doc,TT[i].fse);pdfPlanoSec(doc,TT[i],pcDe(TT[i].id),a);if(muitos)await ovPasso(3+85*(i+1)/TT.length,`Turma ${i+1} de ${TT.length}: ${TT[i].cod}`)}}finally{if(muitos)ovFechar(300)}
+  const n=doc.getNumberOfPages();for(let pg=1;pg<=n;pg++){doc.setPage(pg);pdfOfLogos(doc,"Plano Curricular Detalhado",a);pdfDsdRodape(doc,pg,n,pdfProjPag(doc,pg))}
   doc.save(pdfTxt(todos?`Planos Curriculares ${a.nome.replace("/","-")} - todas as turmas.pdf`:`Plano Curricular ${TT[0].cod} ${a.nome.replace("/","-")}.pdf`))}
 /* 0.9.31: DSD no formato da folha oficial da escola (cabeçalho com os dois logótipos e o título ao centro, tabela com grelha preta,
    totais da componente letiva/não letiva, código DSD_n.ano, projetos FSE, assinatura do Diretor Pedagógico, data da impressão e paginação) */
@@ -375,8 +375,8 @@ function pdfDsdCab(doc,a,p,areas,primeira){const W=210,{main:m,right:r}=LOGOS;
   if(primeira){doc.setFont("helvetica","normal");doc.text("Formador(a): ",62,33.5);const x=62+doc.getTextWidth("Formador(a): ");doc.setFont("helvetica","bold");doc.text(nome,x,33.5);
     const ar=pdfTxt(areas||"-");doc.text(ar,W-16,33.5,{align:"right"});const wa=doc.getTextWidth(ar);doc.setFont("helvetica","normal");doc.text("Área(s):",W-16-wa-1.2,33.5,{align:"right"})}
   else{doc.setFont("helvetica","normal");doc.text(nome,W/2+18,33.5)}}
-function pdfDsdRodape(doc,pg,tot){const W=210,H=297,f=lgGet("foot");
-  if(f){const[w,h]=lgFit(f,92,11);doc.addImage(f.src,lgFmt(f),(W-w)/2,H-14-h/2,w,h,"lgFoot")}
+function pdfDsdRodape(doc,pg,tot,fse){const W=210,H=297,fp=fse?lgProj(fse):null,f=fp||lgGet("foot");
+  if(f){const[w,h]=lgFit(f,92,11);doc.addImage(f.src,lgFmt(f),(W-w)/2,H-14-h/2,w,h,fp?"lgFoot_"+lgProjK(fse):"lgFoot")}
   doc.setTextColor(0);doc.setFont("helvetica","normal");doc.setFontSize(8);doc.text("Data da Impressão: "+pdfData(),14,H-10);
   doc.setFontSize(10);doc.text(`${pg} de ${tot}`,W-14,H-10,{align:"right"})}
 function pdfDsdSec(doc,id,M,a){const r=M.get(id),p=pcProf(id);if(!p)return null;

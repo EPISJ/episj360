@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.139 — ecrã do módulo «pap», carregado quando é aberto */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.140 — ecrã do módulo «pap», carregado quando é aberto */
 "use strict";
 // ===== src/js/pap/pap.js =====
 /* PAP360 — ecrã do módulo (carregado só quando o PAP360 é aberto; os dados estão em pap/pap-dados.js) */
@@ -299,7 +299,7 @@ async function papPdf(k,P,x){const J=await loadPDF(),doc=new J({unit:"mm",format
   else if(k==="atas")papSessoes(P).forEach(s=>papPdfAta(ctx,P,s));else if(k==="grelha")papPdfGrelha(ctx,P,x);else if(k==="grelhas")I.slice().sort(papOrdNome).forEach(c=>papPdfGrelha(ctx,P,c));
   else if(k==="tudo"){papPdfCham(ctx,P);papPdfPres(ctx,P);papSessoes(P).forEach(s=>papPdfAta(ctx,P,s));I.slice().sort(papOrdNome).forEach(c=>papPdfGrelha(ctx,P,c));papPdfPauta(ctx,P)}
   if(ctx.first){ctx.pg();doc.setFontSize(11);doc.text("Sem formandos para mostrar.",14,PDF_TOP+10)}
-  pdfMoldura(doc,`${escData().nome||"Escola Profissional da Ilha de São Jorge"} · EPISJ 360 · PAP360 · ${pdfTxt(P.curso||"")}`);return doc}
+  pdfMoldura(doc,`${escData().nome||"Escola Profissional da Ilha de São Jorge"} · EPISJ 360 · PAP360 · ${pdfTxt(P.curso||"")}`,papFse(P));return doc}
 const papW=doc=>doc.internal.pageSize.getWidth(),papHt=doc=>doc.internal.pageSize.getHeight();
 function papPdfCab(doc,P,titulo){const W=papW(doc),f=papFse(P);let y=PDF_TOP+3;doc.setTextColor(25);doc.setFont("helvetica","bold");doc.setFontSize(11.5);
   doc.text(pdfTxt(escData().nome||"Escola Profissional da Ilha de São Jorge"),W/2,y,{align:"center"});y+=5;doc.setFont("helvetica","normal");doc.setFontSize(9.5);

@@ -103,3 +103,10 @@ body.calamplo #calAnoCard .dh{display:none}
 .b.s.sair-limpa{color:var(--bad);border-color:var(--bad)}
 #sairMsg:empty{display:none}
 #sairMsg{padding:14px 24px}
+/* Definições › Logótipos: rodapé por n.º de projeto */
+.lgproj{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.lgproj h5{margin:0 0 4px;font-size:13.5px}
+.lgpr{display:flex;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid #f0f2f5;flex-wrap:wrap}
+.lgpr .grow{display:flex;flex-direction:column;gap:2px;min-width:200px}.lgpr code{font-size:12.5px;font-variant-numeric:tabular-nums}
+.lgpb{width:150px;height:44px;border:1px solid var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center;background:#fff;cursor:pointer;overflow:hidden;font-size:11.5px;color:var(--muted)}
+.lgpb img{max-width:94%;max-height:86%;object-fit:contain}.lgpb.vazio{border-style:dashed;background:#fafbfc}

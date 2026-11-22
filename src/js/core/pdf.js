@@ -10,6 +10,14 @@ function lgFootBarra(){const f=lgGet("foot");if(f||f===null)return f;const A=(LO
   const anos=escData().anos.filter(a=>A[a.id]&&A[a.id].foot).sort((a,b)=>(b.ini<=ini)-(a.ini<=ini)||b.ini-a.ini);return anos.length?A[anos[0].id].foot:undefined}
 function lgGet(k){if(k!=="foot")return LOGOS[k];const a=LOGOS.anos&&LOGOS.anos[lgAnoId()];return a?a.foot:undefined}
 function lgSet(k,v){if(k!=="foot"){if(v)LOGOS[k]=v;else delete LOGOS[k];return}const id=lgAnoId();if(!id)return;LOGOS.anos=LOGOS.anos||{};const a=LOGOS.anos[id]=LOGOS.anos[id]||{};if(v)a.foot=v;else{a.foot=null}}
+/* 0.9.140: o logótipo do rodapé também pode ser de cada n.º de projeto (código FSE da turma): LOGOS.proj[código].foot.
+   Nos documentos de uma turma (ou de uma prova, de um dossier) usa-se o do projeto; se não houver, o do ano letivo. */
+function lgProjK(fse){return String(fse||"").trim().toUpperCase().replace(/\s+/g,"").replace(/[\u2010-\u2015]/g,"-")}
+function lgProj(fse){const k=lgProjK(fse);if(!k)return undefined;const o=LOGOS.proj&&LOGOS.proj[k];return o?o.foot:undefined}
+function lgProjSet(fse,v){const k=lgProjK(fse);if(!k)return;LOGOS.proj=LOGOS.proj||{};if(v)LOGOS.proj[k]={foot:v};else LOGOS.proj[k]={foot:null}}
+// marca o n.º de projeto das páginas a partir da página atual (documentos com várias turmas)
+function pdfProjDesde(doc,fse){(doc.__fsePg=doc.__fsePg||{})[doc.getNumberOfPages()]=String(fse||"")}
+function pdfProjPag(doc,i,fse){if(typeof fse==="function")return fse(i);if(fse)return fse;const M=doc.__fsePg;if(!M)return "";let r="",b=0;for(const k in M)if(+k<=i&&+k>=b){b=+k;r=M[k]}return r}
 let LG_MIG=null;function lgMigrar(){if(!LG_MIG)LG_MIG=lgMigrar0().finally(()=>{LG_MIG=null});return LG_MIG}
 async function lgMigrar0(){try{if(LOGOS.anos&&LOGOS.anos.__ok)return;LOGOS.anos=LOGOS.anos||{};const id=lgAnoId();if(!id)return;
   if(LOGOS.foot){if(LOGOS.anos[id]===undefined)LOGOS.anos[id]={foot:LOGOS.foot};delete LOGOS.foot}
@@ -30,6 +38,7 @@ function guardarLogos(){LOGOS.t=Date.now();try{localStorage.setItem(LGKEY,JSON.s
 function lgDoNavegador(){try{const v=JSON.parse(localStorage.getItem(LGKEY)||"null");if(v&&typeof v==="object"&&(v.t||0)>(LOGOS.t||0)){LOGOS=v;aplicarLogos()}}catch(e){}}
 function lgJuntar(n){lgDoNavegador();const tn=+n.t||0,tl=+LOGOS.t||0;if(JSON.stringify(n)===JSON.stringify(LOGOS))return false;
   if(tn>tl){LOGOS=n}else{const j=Object.assign({},n,LOGOS);if(n.anos||LOGOS.anos){j.anos=Object.assign({},n.anos||{},LOGOS.anos||{});for(const k in j.anos)if(n.anos&&LOGOS.anos&&n.anos[k]&&LOGOS.anos[k]&&typeof n.anos[k]==="object")j.anos[k]=Object.assign({},n.anos[k],LOGOS.anos[k])}
+    if(n.proj||LOGOS.proj)j.proj=Object.assign({},n.proj||{},LOGOS.proj||{});
     j.t=tl||Date.now();LOGOS=j;setTimeout(()=>{try{localStorage.setItem("boxcheck_cfg_t",String(Date.now()))}catch(e){}lgEnviarJa()},0)}
   try{localStorage.setItem(LGKEY,JSON.stringify(LOGOS))}catch(e){}aplicarLogos();lgMigrar();try{if(document.querySelector("#lgSlots"))renderDef()}catch(e){}return true}
 function lgEnviarJa(){try{if(nuvDesl()||!NUVOK())return;clearTimeout(nuvH);nuvH=setTimeout(()=>{if(NUV.ocupado){lgEnviarJa();return}nuvemPut("estado",estadoAtual(),cfgT()||Date.now())},1200)}catch(e){}}
@@ -50,19 +59,32 @@ function lerImagem(file){return new Promise((ok,ko)=>{
       if(jpg){x.fillStyle="#fff";x.fillRect(0,0,w,h)}x.drawImage(img,0,0,w,h);
       ok({src:c.toDataURL(jpg?"image/jpeg":"image/png",.9),w,h,nome:file.name})};
     img.src=fr.result};fr.readAsDataURL(file)})}
-async function porLogo(k,file){try{const L=await lerImagem(file);if(k==="main"&&LOGOS.main)L.bg=LOGOS.main.bg;lgSet(k,L);guardarLogos();toast(k==="foot"?"Logótipos guardados para "+(anoAtivo()||{}).nome:"Logótipo guardado")}catch(e){toast(e.message)}}
+async function porLogo(k,file){try{const L=await lerImagem(file);if(k.startsWith("proj:")){lgProjSet(k.slice(5),L);guardarLogos();toast("Logótipo do rodapé guardado para o projeto "+k.slice(5));return}if(k==="main"&&LOGOS.main)L.bg=LOGOS.main.bg;lgSet(k,L);guardarLogos();toast(k==="foot"?"Logótipos guardados para "+(anoAtivo()||{}).nome:"Logótipo guardado")}catch(e){toast(e.message)}}
 function renderDef(){
   $("#lgSlots").innerHTML=LG_SLOTS.map(S=>{const L=lgGet(S.k);
     return `<div class="lgslot${S.k==="main"?" main":""}" data-lg="${S.k}">
       <div class="lgbox${L?"":" vazio"}" data-lgpick title="Escolher imagem">${L?`<img src="${L.src}" alt="">`:`${IC_IMG}Escolher`}</div>
       <div class="grow"><h4>${S.t}${S.ano?`<span class="opt" style="background:#eaf6ee;color:#2f9e57">ano letivo ${esc((anoAtivo()||{}).nome||"")}</span>`:S.opt?`<span class="opt">opcional</span>`:""}</h4><p>${S.d}</p>
       <div class="row">${L?`<button class="b${S.k==="main"?"":" s"}" data-lgpick>${IC_UP}Substituir</button><button class="b rm" data-lgdel>${IC_DEL}Remover</button>`:`<button class="b s" data-lgpick>${IC_UP}Escolher Imagem</button>`}</div>
+      ${S.k==="foot"?lgProjHTML():""}
       ${S.k==="main"&&L?`<label class="chip" style="margin-top:10px;display:inline-flex;border:0;background:none;padding:0;font-weight:600"><input type="checkbox" data-lgbg ${L.bg?"checked":""}> Fundo branco (para logótipos escuros no modo escuro)</label>`:""}</div></div>`}).join("");
   const im=(k,ph)=>lgGet(k)?`<img src="${lgGet(k).src}" alt="">`:(ph?`<span class="lgph">${ph}</span>`:"");
   $("#lgPvMain").innerHTML=im("main","LOGO");$("#lgPvRight").innerHTML=im("right","OPCIONAL");$("#lgPvFoot").innerHTML=im("foot","OPCIONAL");
   const c=msCfg();$("#msClient").value=c.clientId||"";$("#msTenant").value=c.tenant||"";$("#msCc").value=c.cc||"";$("#msLista").checked=!!c.lista;$("#msRedir").textContent=MS_REDIR;
   msUI(true)}
-$("#lgSlots").addEventListener("click",e=>{const sl=e.target.closest("[data-lg]");if(!sl)return;const k=sl.dataset.lg;
+function lgProjHTML(){let T=[];try{T=escData().turmas||[]}catch(e){}const G=new Map();
+  for(const t of T){const k=lgProjK(t.fse);if(!k)continue;if(!G.has(k))G.set(k,[]);G.get(k).push(t.cod)}
+  for(const k in LOGOS.proj||{})if(LOGOS.proj[k]&&LOGOS.proj[k].foot&&!G.has(k))G.set(k,[]);
+  const ks=[...G.keys()].sort();
+  if(!ks.length)return `<div class="lgproj"><h5>Por n.º de projeto</h5><p class="hint" style="margin:0">Quando as turmas tiverem o n.º de projeto (Escola360 › Turmas, código FSE), pode escolher aqui um rodapé para cada projeto.</p></div>`;
+  return `<div class="lgproj"><h5>Por n.º de projeto</h5><p class="hint" style="margin:0 0 8px">Os documentos de uma turma usam o rodapé do seu n.º de projeto; sem imagem própria, usam o do ano letivo (acima).</p>
+    ${ks.map(k=>{const L=lgProj(k),cs=G.get(k);return `<div class="lgpr" data-lgproj="${esc(k)}"><div class="lgpb${L?"":" vazio"}" data-lgppick title="Escolher imagem">${L?`<img src="${L.src}" alt="">`:"do ano letivo"}</div>
+      <div class="grow"><code>${esc(k)}</code><span class="hint" style="margin:0">${cs.length?"Turmas: "+cs.map(esc).join(", "):"sem turmas"}</span></div>
+      <button class="b s" type="button" data-lgppick>${IC_UP}${L?"Substituir":"Escolher"}</button>${L?`<button class="b rm" type="button" data-lgpdel>${IC_DEL}Remover</button>`:""}</div>`}).join("")}</div>`}
+$("#lgSlots").addEventListener("click",e=>{const pr=e.target.closest("[data-lgproj]");if(pr){const k=pr.dataset.lgproj;
+    if(e.target.closest("[data-lgppick]")){lgAlvo="proj:"+k;$("#lgFile").value="";$("#lgFile").click()}
+    else if(e.target.closest("[data-lgpdel]")){if(LOGOS.proj)delete LOGOS.proj[k];guardarLogos();toast("O projeto "+k+" volta a usar o rodapé do ano letivo")}return}
+  const sl=e.target.closest("[data-lg]");if(!sl)return;const k=sl.dataset.lg;
   if(e.target.closest("[data-lgpick]")){lgAlvo=k;$("#lgFile").value="";$("#lgFile").click()}
   else if(e.target.closest("[data-lgdel]")){lgSet(k,null);guardarLogos();toast("Logótipo removido")}});
 $("#lgSlots").addEventListener("change",e=>{if(!e.target.matches("[data-lgbg]")||!LOGOS.main)return;LOGOS.main.bg=e.target.checked;guardarLogos()});
@@ -82,7 +104,7 @@ let PDF_LG=null;
 async function pdfLgImg(src){try{const b=await (await fetch(src)).blob();const d=await new Promise(ok=>{const f=new FileReader();f.onload=()=>ok(f.result);f.readAsDataURL(b)});
   const im=new Image();await new Promise(ok=>{im.onload=ok;im.onerror=ok;im.src=d});return im.naturalWidth?{src:d,w:im.naturalWidth,h:im.naturalHeight}:null}catch(e){return null}}
 async function pdfLgPadrao(){if(!PDF_LG){const[m,f]=await Promise.all([pdfLgImg("img/logo-episj.png"),pdfLgImg(LG_FUNDOS_PADRAO.src)]);PDF_LG={main:m,foot:f}}return PDF_LG}
-function pdfLogos(){try{lgDoNavegador()}catch(e){}const P=PDF_LG||{};let f=lgGet("foot");if(f===undefined)try{f=lgFootBarra()}catch(e){}if(f===undefined)f=P.foot;
+function pdfLogos(fse){try{lgDoNavegador()}catch(e){}const P=PDF_LG||{};let f=fse?lgProj(fse):undefined;if(!f)f=lgGet("foot");if(f===undefined)try{f=lgFootBarra()}catch(e){}if(f===undefined)f=P.foot;
   return{m:LOGOS.main||P.main||null,r:LOGOS.right||null,f:f||null}}
 // as fontes base do PDF só têm caracteres latinos: troca os tipográficos por equivalentes simples
 const pdfTxt=s=>String(s??"").replace(/[—–]/g,"-").replace(/[“”«»]/g,'"').replace(/[‘’]/g,"'").replace(/…/g,"...").replace(/[›→]/g,">").replace(/•/g,"-").replace(/⚠/g,"!").replace(/[^\x00-\xff]/g,"");
@@ -91,12 +113,12 @@ const lgFit=(L,mw,mh)=>{const r=Math.min(mw/L.w,mh/L.h);return[L.w*r,L.h*r]};
 // 0.9.30: os dois logótipos do cabeçalho com o mesmo "peso" visual (mesma área), mais pequenos e centrados na mesma linha
 const lgFitArea=(L,A,mw,mh)=>{const ar=L.w/L.h;let w=Math.sqrt(A*ar),h=w/ar;const r=Math.min(1,mw/w,mh/h);return[w*r,h*r]};
 const PDF_TOP=36,PDF_BOT=28;
-function pdfMoldura(doc,rodape){const n=doc.getNumberOfPages(),{m,r,f}=pdfLogos();
-  for(let i=1;i<=n;i++){doc.setPage(i);const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
+function pdfMoldura(doc,rodape,fse){const n=doc.getNumberOfPages(),{m,r,f:f0}=pdfLogos();
+  for(let i=1;i<=n;i++){doc.setPage(i);const pf=pdfProjPag(doc,i,fse),f=(pf&&lgProj(pf))||f0;const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
     if(m){const[w,h]=lgFitArea(m,230,40,14);doc.addImage(m.src,lgFmt(m),14,19-h/2,w,h,"lgMain")}
     if(r){const[w,h]=lgFitArea(r,230,40,14);doc.addImage(r.src,lgFmt(r),W-14-w,19-h/2,w,h,"lgRight")}
     doc.setDrawColor(222,226,231);doc.setLineWidth(.2);if(m||r)doc.line(14,31,W-14,31);doc.line(14,H-PDF_BOT+3,W-14,H-PDF_BOT+3);
-    if(f){const[w,h]=lgFit(f,120,13);doc.addImage(f.src,lgFmt(f),(W-w)/2,H-PDF_BOT+5+(13-h)/2,w,h,"lgFoot")}
+    if(f){const[w,h]=lgFit(f,120,13);doc.addImage(f.src,lgFmt(f),(W-w)/2,H-PDF_BOT+5+(13-h)/2,w,h,f===f0?"lgFoot":"lgFoot_"+lgProjK(pf))}
     doc.setFont("helvetica","normal");doc.setFontSize(7.5);doc.setTextColor(130);
     doc.text(pdfTxt(rodape),14,H-7);doc.text(`Página ${i} de ${n}`,W-14,H-7,{align:"right"})}}
 function pdfTitulo(doc,titulo,sub){doc.setFont("helvetica","bold");doc.setFontSize(16);doc.setTextColor(22,40,80);doc.text(pdfTxt(titulo),14,PDF_TOP+6);

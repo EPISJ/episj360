@@ -271,7 +271,7 @@ function crCorrDiscs(){const a=crAnoSel(),M=crMotor(a,CR_SEL.asof||calHoje()),R=
 /* ---------- PDF do ponto de situação (uma turma ou todas) e envio aos orientadores educativos ---------- */
 async function crPdf(tid,doc0){const a=crAnoSel(),asof=CR_SEL.asof||calHoje(),M=crMotor(a,asof),f=M.fator,J=doc0?null:await loadPDF(),doc=doc0||new J({unit:"mm",format:"a4"});
   const TT=[...M.turmas.values()].filter(T=>tid?T.t.id===tid:(!CR_SEL.t||T.t.id===CR_SEL.t)).sort((p,q)=>COLL_PTN.compare(String(p.t.cod),String(q.t.cod)));let prim=true;
-  for(const T of TT){const r=crTurmaRes(T,"");if(!r.L.length)continue;if(!prim)doc.addPage();prim=false;
+  for(const T of TT){const r=crTurmaRes(T,"");if(!r.L.length)continue;if(!prim)doc.addPage();prim=false;pdfProjDesde(doc,T.t.fse);
     let y=pdfTitulo(doc,"Ponto de situação — "+T.t.cod,`${turmaNome(T.t)} · Ano letivo ${a.nome} · situação a ${calDMA(asof)}`);
     y=pdfTabela(doc,y,["Disciplina","Plano","Dadas","Por dar","Até ao fim","Saldo","Módulos","Fim previsto","Estado"],
       r.L.slice().sort(crOrdArea).map(o=>[o.disc,crNum(crH1(o.P,f)),crNum(crH1(o.G,f)),crNum(crH1(Math.max(0,o.P-o.G),f)),crNum(crH1(o.cap,f)),(o.saldo>=0?"+":"")+crNum(crH1(o.saldo,f)),o.mods.filter(m=>m.estado==="feito").length+"/"+o.mods.length,o.fimPrev?calDM(o.fimPrev):"-",(CR_EST[o.est]||[""])[0]].map(pdfTxt)),

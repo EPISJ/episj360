@@ -355,7 +355,7 @@ if(curMod!=="boxcheck"){const M=MODULOS.find(x=>x.id===curMod);if(M)try{show(M.i
 /* ---------- 0.10: menu e barra de cada módulo como no EduSchedule ---------- */
 {const SUB={econo:"economato da escola",folder:"arquivo físico dos dossiers",pass:"palavras-passe da escola",pap:"provas de aptidão profissional",social:"redes sociais",escola:"dados comuns da escola",eduschedule:"horários da escola",roomcheck:"reservas de espaços",boxcheck:"entregas na Box"};
  document.querySelectorAll("#nav .mgrp").forEach(g=>{const h=g.querySelector(".mh");if(!h||h.querySelector(".msub"))return;const t=g.dataset.m?SUB[g.dataset.m]:"definições gerais";if(t)h.insertAdjacentHTML("beforeend",`<span class="msub">${t}</span>`)});
- const sb=document.createElement("div");sb.id="subbar";sb.innerHTML=`<span class="sst" id="subSt"></span>`;const mn=document.querySelector("main");mn.insertBefore(sb,mn.firstChild);
+ const sb=document.createElement("div");sb.id="subbar";sb.innerHTML=`<span class="subusr" id="subUsr"></span><span class="sst" id="subSt"></span>`;const mn=document.querySelector("main");mn.insertBefore(sb,mn.firstChild);
  const u=document.querySelector(".top .undo"),f=document.querySelector(".top .fsz");if(u)sb.appendChild(u);if(f)sb.appendChild(f);
  const ic=d=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
  const ub=document.getElementById("undoBtn"),rb=document.getElementById("redoBtn");if(ub){ub.innerHTML=ic("M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11");ub.setAttribute("aria-label","Anular")}if(rb){rb.innerHTML=ic("m15 14 5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13");rb.setAttribute("aria-label","Refazer")}
@@ -372,5 +372,12 @@ if(curMod!=="boxcheck"){const M=MODULOS.find(x=>x.id===curMod);if(M)try{show(M.i
      if(RO){t=PUB&&PUB.t?"Só leitura · publicado a "+new Date(PUB.t).toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"}):"Só leitura";tit="Os dados são os que a Direção publicou; só a Direção os muda."} // 0.9.50
      const b=document.getElementById("subUp");if(b)b.hidden=!!RO}catch(e){}el.textContent=t;el.title=tit};
  window.__subEst=est;
- est();setInterval(est,4000)}
+ /* 0.9.180: quem tem a sessão aberta, à esquerda da barra (nome, email e perfil) */
+ const usr=()=>{const el=document.getElementById("subUsr");if(!el)return;if(!EU||!EU.email){el.innerHTML="";return}
+   const em=String(EU.email),nm=String(EU.nome||"").trim()||(()=>{try{const p=(cfg.profs||[]).find(q=>profEmail(q)===em.toLowerCase());return p?p.nome:""}catch(e){return ""}})(),
+     pf=EU.admin?"Administrador":(PERFIL_CURTO[EU.perfil]||EU.perfil||""),ini=(nm||em).split(/[\s.@]+/).filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join(""),
+     k=em+"|"+nm+"|"+pf;if(el.dataset.k===k)return;el.dataset.k=k;
+   el.innerHTML=`<span class="av">${esc(ini)}</span><span class="tx"><b>${esc(nm||em)}</b><small>${nm?esc(em)+" · ":""}${esc(pf)}</small></span>`;el.title="Sessão iniciada como "+em};
+ const est0=est;
+ est0();usr();setInterval(()=>{est0();usr()},4000)}
 loginUI();

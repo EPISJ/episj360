@@ -37,10 +37,10 @@ function msUI(quiet){const st=$("#msState"),li=$("#msLogin"),lo=$("#msLogout");i
 $("#msLista").addEventListener("change",e=>{msCfg().lista=e.target.checked;save()});
 $("#msLogin").onclick=async()=>{try{await msLoginPopup();toast("Ligado ao Office 365")}catch(e){$("#msState").textContent=msErro(e)}};
 $("#msLogout").onclick=async()=>{try{const p=await msInit();await p.clearCache({account:MSACC})}catch(e){}MSACC=null;msUI();toast("Sessão Microsoft terminada neste navegador")};
-async function msEnviar({to,cc,subject,body,anexo}){
+async function msEnviar({to,cc,subject,body,html,anexo}){
   const rec=s=>String(s||"").split(/[;,]/).map(x=>x.trim()).filter(Boolean).map(address=>({emailAddress:{address}}));
   if(!rec(to).length)throw new Error("Sem endereço de email.");
-  const message={subject,body:{contentType:"Text",content:body},toRecipients:rec(to)};
+  const message={subject,body:html?{contentType:"HTML",content:html}:{contentType:"Text",content:body},toRecipients:rec(to)}; // 0.9.151: html opcional (o Horários360 envia o horário desenhado)
   if(rec(cc).length)message.ccRecipients=rec(cc);
   if(anexo)message.attachments=[{"@odata.type":"#microsoft.graph.fileAttachment",name:anexo.name,contentType:"application/pdf",contentBytes:anexo.b64}];
   for(let t=0;;t++){const tok=await msToken();

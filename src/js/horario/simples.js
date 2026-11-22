@@ -63,7 +63,9 @@ function h3Email(p){return p?(String(p.email||"").trim().toLowerCase()||(typeof 
 // o que se mostra numa célula, para formador (t), turma (c) ou sala (r)
 function h3Celulas(st,V,tipo,id){const T=new Map((st.teachers||[]).map(t=>[t.id,t])),C=new Map((st.classes||[]).map(c=>[c.id,c])),S=new Map((st.subjects||[]).map(x=>[x.id,x])),R=new Map((st.rooms||[]).map(x=>[x.id,x]));
   const les=new Map((V.lessons||[]).map(l=>[l.id,l])),out=new Map();
-  for(const cd of V.cards||[]){const l=les.get(cd.lessonId);if(!l)continue;const lin=(l.linhas||[]).map((x,i)=>Object.assign({i},x));
+  const nD=(st.days||[0,0,0,0,0]).length,nP=(st.periods||[]).length||99;
+  for(const cd of V.cards||[]){const l=les.get(cd.lessonId);if(!l)continue;if(!(cd.day>=0&&cd.day<nD&&cd.period>=0&&cd.period<nP))continue; // 0.9.151: aulas por colocar (sem dia/tempo) não entram
+    const lin=(l.linhas||[]).map((x,i)=>Object.assign({i},x));
     for(let k=0;k<(cd.len||1);k++){const rr=(cd.rx&&cd.rx[k])||cd.r||[];
       const sel=tipo==="t"?lin.filter(x=>x.t===id):tipo==="c"?((l.classIds||[]).includes(id)?lin.filter(x=>!x.cls||x.cls.includes(id)):[]):lin.filter(x=>(rr[x.i]||x.r)===id);
       for(const x of sel){const s=S.get(x.s)||{},sala=R.get(rr[x.i])||R.get(x.r),tu=(x.cls&&x.cls.length?x.cls:(l.classIds||[])).map(c=>(C.get(c)||{}).name).filter(Boolean).join(", "),f=T.get(x.t)||{};
@@ -179,9 +181,10 @@ document.addEventListener("click",e=>{if(!e.target.closest("[data-h3volta]"))ret
 
 /* ---------- Comunicar: o que mudou desde o último aviso ---------- */
 // as aulas de um formador no horário em vigor e nos seguintes, em frases que se podem comparar e mostrar
+const h3Frase=(pre,dia,p,pi,x)=>`${pre}${dia} ${p.start||p.label||pi+1}${p.end?"–"+p.end:""} · ${x.disc}${x.tu?" · "+x.tu:""}${x.sala?" · "+x.sala:""}`;
 function h3Linhas(st,tid){const VL=cpVersoes(st),hj=calHoje(),D=st.days||["Seg","Ter","Qua","Qui","Sex"],P=st.periods||[],o=new Set();
   for(const V of VL){if(V.ate&&V.ate<hj)continue;const m=h3Celulas(st,V,"t",tid),pre=V.de&&V.de>hj?"A partir de "+calDM(V.de)+" · ":"";
-    for(const [k,L] of m){const [di,pi]=k.split("|").map(Number),p=P[pi]||{};for(const x of L)o.add(`${pre}${D[di]||"?"} ${p.start||p.label||pi+1}${p.end?"–"+p.end:""} · ${x.disc}${x.tu?" · "+x.tu:""}${x.sala?" · "+x.sala:""}`)}}
+    for(const [k,L] of m){const [di,pi]=k.split("|").map(Number),p=P[pi]||{};if(!D[di])continue;for(const x of L)o.add(h3Frase(pre,D[di],p,pi,x))}}
   const DS=["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"],ord=s=>{const m=/(Seg|Ter|Qua|Qui|Sex|Sáb|Dom)\S* (\d\d:\d\d)?/.exec(s);return (s.startsWith("A partir")?"1":"0")+(m?DS.indexOf(m[1].slice(0,3))+(m[2]||""):"")+s};
   return [...o].sort((a,b)=>ord(a).localeCompare(ord(b)))}
 // 0.9.149: cada formador só sai da lista depois de avisado pelas duas vias — email e telemóvel (notificação ou SMS).
@@ -208,7 +211,31 @@ function h3Marcar(x,canais){const u=Object.assign({},H3.ult[x.t.id]||{}),agora=D
 async function h3Push(x){const tp=h3Topico(h3Email(x.p));if(!tp)throw new Error("sem tópico");
   const r=await fetch("https://ntfy.sh/",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({topic:tp,title:"EPISJ 360 — Horário",message:h3Preencher(H3.msg.curta,x),click:h3Lig(),tags:["calendar"]})});
   if(!r.ok)throw new Error("ntfy "+r.status)}
-async function h3Email1(x){const to=h3Email(x.p);if(!to)throw new Error("sem email");await msEnviar({to,subject:h3Preencher(H3.msg.assunto,x),body:h3Preencher(H3.msg.corpo,x)})}
+async function h3Email1(x){const to=h3Email(x.p);if(!to)throw new Error("sem email");await msEnviar({to,subject:h3Preencher(H3.msg.assunto,x),body:h3Preencher(H3.msg.corpo,x),html:h3EmailHtml(x)})}
+// 0.9.151: email em HTML com o horário desenhado (grelha dias × tempos, cores das disciplinas, aulas novas ou mudadas assinaladas).
+// Estilos todos embutidos e tabelas simples, para o Outlook e o Gmail mostrarem igual; o texto simples continua como alternativa.
+function h3EmailHtml(x){const st=mhEstado();if(!st)return "";const hj=calHoje(),D=st.days||["Seg","Ter","Qua","Qui","Sex"],P=st.periods||[],novo=new Set(x.novo?[]:x.mais),F="font-family:Segoe UI,Helvetica,Arial,sans-serif";
+  const VL=cpVersoes(st).slice().sort((p,q)=>String(p.de||"").localeCompare(String(q.de||""))).filter(V=>!(V.ate&&V.ate<hj));
+  const grelha=V=>{const m=h3Celulas(st,V,"t",x.t.id),pre=V.de&&V.de>hj?"A partir de "+calDM(V.de)+" · ":"";let n=0;
+    let h=`<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;border-spacing:3px;width:100%;max-width:760px;table-layout:fixed;${F};font-size:12px"><tr><td style="width:58px"></td>${D.map(d=>`<td style="width:${Math.floor(100/D.length)}%;padding:6px 4px;text-align:center;font-weight:700;color:#163269">${esc(d)}</td>`).join("")}</tr>`;
+    P.forEach((p,pi)=>{h+=`<tr><td style="padding:4px 6px 4px 0;text-align:right;color:#6b7385;white-space:nowrap;vertical-align:top"><b style="color:#1b2333">${esc(p.label||pi+1)}</b><br>${esc(p.start||"")}${p.end?"<br>"+esc(p.end):""}</td>`;
+      D.forEach((d,di)=>{const L=m.get(di+"|"+pi);if(!L){h+=`<td style="background:#f3f5f9;border-radius:6px;height:44px"></td>`;return}
+        h+=`<td style="vertical-align:top;padding:0">`+L.map(c=>{n++;const cor=c.s.color||"#2f5fb8",tx=corTexto(cor),nv=novo.has(h3Frase(pre,d,p,pi,c));
+          return `<div style="background:${esc(cor)};color:${tx};border-radius:6px;padding:5px 7px;margin:0 0 2px;${nv?"border:2px solid #1b2333;":"border:2px solid "+esc(cor)+";"}line-height:1.3"><b style="font-size:12.5px">${esc(c.disc)}</b>${nv?` <span style="font-size:10px;font-weight:700;background:#fff;color:#1b2333;border-radius:4px;padding:0 4px">NOVO</span>`:""}<br><span style="font-size:11px">${esc([c.tu,c.sala].filter(Boolean).join(" · "))}</span></div>`}).join("")+`</td>`});h+=`</tr>`});
+    return {h:h+`</table>`,n}};
+  let quadro="";for(const V of VL){const g=grelha(V);if(!g.n&&VL.length>1)continue;
+    quadro+=`<p style="${F};font-size:14px;font-weight:700;color:#163269;margin:18px 0 6px">${VL.length>1?(V.de&&V.de>hj?"A partir de "+esc(calDMA(V.de)):"Horário em vigor"+(V.de?" desde "+esc(calDMA(V.de)):"")):"O seu horário"} <span style="font-weight:400;color:#6b7385">· ${g.n} tempo${g.n===1?"":"s"} por semana</span></p>`+g.h}
+  if(!x.novo&&x.mais.length)quadro+=`<p style="${F};font-size:12px;color:#6b7385;margin:6px 0 0"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;border:2px solid #1b2333;vertical-align:middle"></span>&nbsp; aulas novas ou mudadas</p>`;
+  if(!x.novo&&x.menos.length)quadro+=`<p style="${F};font-size:13px;font-weight:700;color:#1b2333;margin:14px 0 4px">Deixam de existir</p><ul style="${F};font-size:12.5px;color:#6b7385;margin:0;padding-left:18px">${x.menos.map(l=>`<li style="text-decoration:line-through">${esc(l)}</li>`).join("")}</ul>`;
+  const lig=h3Lig(),txt=t=>esc(t).replace(/\n/g,"<br>").replace(/\{ligacao\}/g,`<a href="${esc(lig)}" style="color:#2f5fb8">${esc(lig.replace(/^https?:\/\//,"").replace(/\/$/,""))}</a>`);
+  const corpo=String(H3.msg.corpo||"").replace(/\{nome\}/g,(x.p&&x.p.nome)||x.t.name||"").replace(/\{semana\}/g,calDM(h3Seg(hj),{day:"numeric",month:"long"})).replace(/\{n\}/g,x.novo?"horário novo":String(x.mais.length+x.menos.length));
+  const partes=corpo.split("{alteracoes}").map((t,i,a)=>a.length>1?(i===0?t.replace(/\s+$/,""):i===a.length-1?t.replace(/^\s+/,""):t.trim()):t),meio=`</div>${quadro}<div style="${F};font-size:14px;color:#1b2333;line-height:1.55;margin-top:16px">`;
+  const btn=`<p style="margin:20px 0 4px"><a href="${esc(lig)}" style="${F};display:inline-block;background:#163269;color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;padding:10px 18px;border-radius:8px">Ver o horário de cada semana na EPISJ 360</a></p>`;
+  return `<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head><body style="margin:0;padding:0;background:#ffffff">
+<div style="max-width:780px;padding:8px 4px">
+<div style="${F};font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7385;margin:0 0 12px">EPISJ 360 · Horários360</div>
+<div style="${F};font-size:14px;color:#1b2333;line-height:1.55">${partes.map(txt).join(meio)}</div>${partes.length<2?quadro:""}${btn}
+<p style="${F};font-size:11px;color:#9aa1ad;margin:18px 0 0">Escola Profissional da Ilha de São Jorge · mensagem enviada pela EPISJ 360</p></div></body></html>`}
 function h3SmsLink(L){L=L.filter(x=>!x.tlOk);const nums=L.map(x=>h3Tel(H3.tel[(x.p||{}).id])).filter(Boolean);if(!nums.length)return "";
   const body=encodeURIComponent(L.length===1?h3Preencher(H3.msg.curta,L[0]):"EPISJ 360: o seu horário mudou. Veja em "+h3Lig()),ios=/iPhone|iPad|Macintosh/.test(navigator.userAgent);
   return ios?`sms:/open?addresses=${nums.join(",")}&body=${body}`:`sms:${nums.join(",")}?body=${body}`}
@@ -240,7 +267,7 @@ async function hsComRender(){await null;try{await esdPronto}catch(e){}await h3Ca
   if(L.length){h+=`<div class="tw"><table class="rt"><thead><tr><th><input type="checkbox" id="h3All" checked aria-label="Todos"></th><th>Formador</th><th>Email</th><th>Telemóvel</th><th>Avisado por</th><th>O que mudou</th></tr></thead><tbody>`+
     L.map(x=>`<tr><td><input type="checkbox" data-h3sel="${esc(x.t.id)}" checked></td><td>${esc((x.p&&x.p.nome)||x.t.name)}</td><td>${esc(h3Email(x.p)||"—")}</td><td>${esc(h3Tel(H3.tel[(x.p||{}).id])||"—")}</td>
       <td><span class="h3via ${x.emOk?"ok":""}">${x.emOk?"✓ ":""}Email</span> <span class="h3via ${x.tlOk?"ok":""}">${x.tlOk?"✓ ":""}Telemóvel</span></td>
-      <td><details><summary>${x.novo?"horário novo ("+x.cur.length+" tempo"+(x.cur.length===1?"":"s")+")":`${x.mais.length?"+"+x.mais.length:""}${x.mais.length&&x.menos.length?" / ":""}${x.menos.length?"−"+x.menos.length:""}`}</summary><pre class="h3dif">${esc(h3Txt(x))}</pre></details></td></tr>`).join("")+`</tbody></table></div>
+      <td><details><summary>${x.novo?"horário novo ("+x.cur.length+" tempo"+(x.cur.length===1?"":"s")+")":`${x.mais.length?"+"+x.mais.length:""}${x.mais.length&&x.menos.length?" / ":""}${x.menos.length?"−"+x.menos.length:""}`}</summary><pre class="h3dif">${esc(h3Txt(x))}</pre></details> <button class="b s" type="button" data-h3prev="${esc(x.t.id)}" title="Ver o email que este formador vai receber">Ver email</button></td></tr>`).join("")+`</tbody></table></div>
     <div class="row" style="margin-top:10px;flex-wrap:wrap;gap:8px">
       <button class="b" id="h3Em"${ms?"":" disabled title=\"Entre com o Office 365 para enviar emails\""}>Enviar email</button>
       <button class="b" id="h3Pu">Enviar notificação ao telemóvel</button>
@@ -289,6 +316,8 @@ async function hsComRender(){await null;try{await esdPronto}catch(e){}await h3Ca
   if(b5)b5.onclick=()=>{setTimeout(()=>{const S=sel().filter(x=>!x.tlOk&&h3Tel(H3.tel[(x.p||{}).id]));if(S.length&&confirm("A mensagem foi enviada pelo telemóvel? Os "+S.length+" formadores com telemóvel ficam como avisados por telemóvel."))
     {S.forEach(x=>h3Marcar(x,["sms"]));h3Guardar();hsComRender()}},1500)};
   if(b4)b4.onclick=()=>{const S=sel();if(!S.length)return;if(!confirm(`Dar ${S.length} formador${S.length===1?"":"es"} como avisado${S.length===1?"":"s"} pelas duas vias sem enviar nada?`))return;S.forEach(x=>h3Marcar(x,["marca"]));h3Guardar();hsComRender()};
+  el.querySelectorAll("[data-h3prev]").forEach(b=>b.onclick=()=>{const x=L.find(y=>y.t.id===b.dataset.h3prev);if(!x)return;const w=window.open("","_blank");if(!w){toast("O navegador bloqueou a janela — permita janelas deste site");return}
+    w.document.open();w.document.write(h3EmailHtml(x).replace("<body",`<body`).replace('<div style="max-width:780px;padding:8px 4px">',`<div style="max-width:780px;padding:8px 4px"><p style="font-family:Segoe UI,Arial,sans-serif;font-size:12px;color:#6b7385;margin:0 0 14px">Pré-visualização · Para: ${esc(h3Email(x.p))} · Assunto: ${esc(h3Preencher(H3.msg.assunto,x))}</p>`));w.document.close()});
   el.querySelectorAll("[data-h3a]").forEach(i=>i.onchange=()=>{H3.auto[i.dataset.h3a]=i.checked;h3Guardar()});
   el.querySelectorAll("[data-h3m2]").forEach(i=>i.onchange=()=>{H3.msg[i.dataset.h3m2]=i.value;h3Guardar()});
   $("#h3MsgRep").onclick=()=>{if(!confirm("Repor as mensagens originais?"))return;H3.msg=Object.assign({},H3_MSG0);h3Guardar();hsComRender()};

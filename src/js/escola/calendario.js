@@ -330,7 +330,29 @@ function calGrelha(a,NL,P){const y0=+a.ini,hj=calHoje(),t=CAL_T?escData().turmas
       cel+=`<button class="${cls}" data-cald="${s}" title="${esc(tit)}">${dd}${ms.length?`<span class="cal-pts">${[...new Set(ms.map(m=>m.tipo))].slice(0,3).map(k=>`<i style="background:${(CAL_TIPOS[k]||CAL_TIPOS.outro)[1]}"></i>`).join("")}</span>`:""}</button>`}
     h+=`<div class="cal-m"><h4><span>${d.toLocaleDateString("pt-PT",{month:"long"})}${mo===0||mo===8?" "+y:""}</span><small>${n?n+" dias letivos":""}</small></h4><div class="cal-g">${["S","T","Q","Q","S","S","D"].map(x=>`<i>${x}</i>`).join("")}${cel}</div></div>`}
   $("#calGrid").innerHTML=`<div class="cal-ano">${h}</div><div class="cal-leg"><span><b class="let p1"></b>1.º período</span><span><b class="let p2"></b>2.º período</span><span><b class="let p3"></b>3.º período</span><span><b class="int"></b>Interrupção</span><span><b class="fer"></b>Feriado</span><span><b class="fds"></b>Fim de semana</span><span><b class="fct"></b>FCT${t?"":" (escolha a turma)"}</span>${Object.entries(CAL_TIPOS).filter(([k])=>k!=="fct").map(([k,v])=>`<span><i style="background:${v[1]}"></i>${esc(v[0])}</span>`).join("")}</div>`;
-  calDiaInfo(a,NL,P)}
+  calDiaInfo(a,NL,P);try{calEst(a,NL,P,M,fct,t)}catch(e){console.warn("estatísticas do calendário",e)}}
+/* 0.9.174: estatísticas do ano no Calendário do ano (só aparecem no modo ampliado, por baixo da grelha) */
+function calEst(a,NL,P,M,fct,t){const el=$("#calEst");if(!el)return;if(!a.inicio||!a.fim){el.innerHTML="";return}
+  const hj=calHoje(),tot=calLetivos(a,a.inicio,a.fim,NL),dad=hj>=a.inicio?calLetivos(a,a.inicio,hj<a.fim?hj:a.fim,NL):0,pct=tot?Math.round(dad*100/tot):0,pa=calPeriodoDe(a,hj,P);
+  const DS=["seg","ter","qua","qui","sex"],porW=[0,0,0,0,0],porWr=[0,0,0,0,0],sem=new Set();let intU=0,ferU=0;
+  for(let d=calD(a.inicio);calS(d)<=a.fim;d.setDate(d.getDate()+1)){const s=calS(d),w=d.getDay();if(w===0||w===6)continue;const x=NL.get(s);
+    if(x){if(x.t==="fer")ferU++;else intU++;continue}porW[w-1]++;if(s>hj)porWr[w-1]++;const m=new Date(d);m.setDate(m.getDate()-((w+6)%7));sem.add(calS(m))}
+  const st=(l,v,s)=>`<div class="ay-st"><small>${esc(l)}</small><b>${v}</b>${s?`<em>${s}</em>`:""}</div>`;
+  const per=P.map(p=>{const n=calLetivos(a,p.ini,p.fim,NL),f=hj>=p.ini?calLetivos(a,p.ini,hj<p.fim?hj:p.fim,NL):0;return st(p.n+".º período"+(pa===p.n?" · agora":""),n+" dias",`${calDM(p.ini)} a ${calDM(p.fim)} · ${hj>p.fim?"terminado":hj<p.ini?"por começar":"faltam "+(n-f)}`)}).join("");
+  const cnt={};for(const m of M){if(m.tipo==="fct")continue;cnt[m.tipo]=(cnt[m.tipo]||0)+calDatasDe(m).length}
+  const fctD=fct.length?fct.reduce((n,m)=>n+calLetivos(a,m.de,m.ate,NL),0):0;
+  const prox=M.filter(m=>(m.ate||m.de)>=hj).sort((x,y)=>x.de.localeCompare(y.de)).slice(0,6);
+  const mx=Math.max(1,...porW);
+  el.innerHTML=`<h3>Estatísticas de ${esc(a.nome)}${t?" · "+esc(t.cod):""}</h3>
+  <div class="cal-est-g">
+    <div class="cal-est-c"><div class="cal-est-top"><div><small>Dias letivos dados</small><b>${dad} <span>/ ${tot}</span></b></div><div class="ay-pct"><b>${pct}%</b><small>do ano letivo</small></div></div>
+      <div class="cal-est-bar"><i style="width:${pct}%"></i></div>
+      <div class="cal-est-st">${st("Faltam",(tot-dad)+" dias","até "+calDM(a.fim))}${st("Semanas com aulas",sem.size)}${st("Dias de interrupção",intU,"dias úteis")}${st("Feriados",ferU,"em dias úteis")}</div></div>
+    <div class="cal-est-c"><h4>Por período</h4><div class="cal-est-st">${per||`<p class="hint">Sem períodos.</p>`}</div></div>
+    <div class="cal-est-c"><h4>Dias de aulas por dia da semana</h4>${DS.map((d,i)=>`<div class="cal-est-w"><span>${d}</span><div><i style="width:${porW[i]*100/mx}%"></i></div><b>${porW[i]}</b><em>faltam ${porWr[i]}</em></div>`).join("")}<p class="hint" style="margin:6px 0 0">Útil para saber quantas aulas dá uma disciplina de cada dia.</p></div>
+    <div class="cal-est-c"><h4>Marcos${t?" da turma":""}</h4><div class="cal-est-st">${Object.entries(CAL_TIPOS).filter(([k])=>k!=="fct"&&cnt[k]).map(([k,v])=>st(v[0],cnt[k])).join("")}${t&&fct.length?st("FCT",fctD+" dias","dias úteis"):""}</div>
+      ${prox.length?`<div class="cal-est-px">${prox.map(m=>{const tt=calTurmaDoMarco(m,a),c=(CAL_TIPOS[m.tipo]||CAL_TIPOS.outro)[1],n=calDias(hj,m.de);return `<div><i style="background:${c}"></i><span>${tt&&!t?`<b>${esc(tt.cod)}</b> · `:""}${esc(m.nome)}</span><em>${calDM(m.de)} · ${m.de<=hj?"a decorrer":n===0?"hoje":"daqui a "+n+" d"}</em></div>`}).join("")}</div>`:`<p class="hint">Sem marcos por vir.</p>`}</div>
+  </div>`}
 function calDiaInfo(a,NL,P){const el=$("#calDia");if(!el)return;if(!CAL_DIA){el.innerHTML=`<p class="hint" style="margin:8px 0 0">Carregue num dia para ver o que acontece.</p>`;return}
   const s=CAL_DIA,w=calD(s).getDay(),x=NL.get(s),p=calPeriodoDe(a,s,P),dentro=(!a.inicio||s>=a.inicio)&&(!a.fim||s<=a.fim);
   const ms=calMarcos(a,CAL_T).filter(m=>calDatasDe(m).includes(s)||(m.tipo==="fct"&&m.de<=s&&m.ate>=s));

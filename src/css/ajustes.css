@@ -259,3 +259,20 @@ body.callamplo #calLinha>.cal-l.amp{flex:1 0 auto;display:flex;flex-direction:co
 .wa-lista li.cur{color:var(--ink);font-weight:600}.wa-lista li.ok{color:var(--brand)}
 .wa-dest{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--brandbg,#f6f8fb)}
 .wa-tur{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px;max-height:200px;overflow:auto}.wa-tur small,.wa-dest small{color:var(--muted)}
+
+/* 0.9.174: estatísticas no Calendário do ano (só no modo ampliado) */
+.cal-est{display:none}
+body.calamplo #calAnoCard .cal-est{display:block;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.cal-est h3{margin:0 0 10px;font-size:16px}
+.cal-est-g{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.cal-est-c{border:1px solid var(--line);border-radius:10px;padding:12px}.cal-est-c h4{margin:0 0 8px;font-size:13.5px;font-weight:600}
+.cal-est-top{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}.cal-est-top small{display:block;color:var(--muted);font-size:12px}
+.cal-est-top>div:first-child b{font-size:30px;font-weight:650;letter-spacing:-.03em;font-variant-numeric:tabular-nums}.cal-est-top b span{font-size:16px;color:var(--muted);font-weight:500}
+.cal-est-top .ay-pct{text-align:right}.cal-est-top .ay-pct b{font-size:30px;font-weight:650;color:var(--brand)}
+.cal-est-bar{height:8px;border-radius:5px;background:#eef1f6;margin:8px 0 10px;overflow:hidden}.cal-est-bar i{display:block;height:100%;background:var(--brand);border-radius:5px}
+.cal-est-st{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.cal-est-w{display:grid;grid-template-columns:34px 1fr 32px 64px;align-items:center;gap:8px;font-size:12.5px;margin:4px 0}.cal-est-w>div{height:10px;background:#eef1f6;border-radius:5px;overflow:hidden}.cal-est-w>div i{display:block;height:100%;background:#6b86c4;border-radius:5px}
+.cal-est-w b{text-align:right;font-variant-numeric:tabular-nums}.cal-est-w em{font-style:normal;color:var(--muted);font-size:11.5px}
+.cal-est-px{margin-top:10px;display:flex;flex-direction:column;gap:5px}.cal-est-px>div{display:grid;grid-template-columns:8px 1fr auto;gap:8px;align-items:center;font-size:12.5px}.cal-est-px i{width:8px;height:8px;border-radius:50%}.cal-est-px em{font-style:normal;color:var(--muted);font-size:11.5px;white-space:nowrap}
+@media (max-width:1300px){.cal-est-g{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:700px){.cal-est-g{grid-template-columns:1fr}}

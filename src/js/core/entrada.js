@@ -40,9 +40,16 @@ $("#msGo").onclick=async()=>{if(sbCfg()){gateState("wait","");prog(18,"A abrir o
 $("#gMsSave").onclick=()=>{const id=$("#gMsClient").value.trim(),ten=$("#gMsTenant").value.trim();if(!id||!ten){toast("Preencha os dois campos");return}
   GMS={clientId:id,tenant:ten};try{localStorage.setItem("guide_ms",JSON.stringify(GMS))}catch(e){}MSAL=null;guideArranque()};
 
+/* 0.9.174: «permission denied for function g360_eu» (o pedido chegou sem sessão), falhas de rede ou de sessão na entrada são quase
+   sempre um bloqueador de conteúdos ou de publicidade a cortar a ligação à Microsoft ou à base de dados: explica e mostra o erro técnico por baixo */
+function gateErroEntrada(e){const m=String((e&&e.message)||e||"");
+  if(!/permission denied|42501|JWT|not authenticated|401|failed to fetch|networkerror|load failed|network request failed|blocked|ERR_BLOCKED/i.test(m))return esc(m);
+  return `<b>Não foi possível confirmar a sua entrada.</b><br>Isto acontece quase sempre por causa de um <b>bloqueador de conteúdos ou de publicidade</b> (uBlock Origin, AdBlock, AdGuard, Ghostery, Privacy Badger, os escudos do Brave ou a proteção contra rastreio do Safari, Edge ou Firefox), que corta a ligação ao Office 365 ou à base de dados da app.
+    <ol style="margin:8px 0 6px;padding-left:20px;text-align:left"><li>Desative o bloqueador para <b>episj360.episj.com</b> (no ícone da extensão, «desativar neste site»).</li><li>No Safari, Edge ou Firefox, ponha a proteção contra rastreio em «normal» para este site.</li><li><a href="#" id="gTentar">Tente outra vez</a>.</li></ol>
+    <small style="opacity:.7">Erro técnico: ${esc(m)}</small>`}
 async function guideEntrarSB(){
   gateState("wait","");prog(30,"A confirmar o perfil…");
-  let j=SBEU;if(!j||!j.perfil){try{j=await sbRpc("g360_eu");SBEU=j}catch(e){gateState("login",esc(e.message||String(e)));return}}
+  let j=SBEU;if(!j||!j.perfil){try{j=await sbRpc("g360_eu");SBEU=j}catch(e){gateState("login",gateErroEntrada(e));const r=$("#gTentar");if(r)r.onclick=ev=>{ev.preventDefault();location.reload()};return}}
   if(!j||!j.perfil){const em=SBSES&&SBSES.user&&SBSES.user.email||"";gateState("login",`A conta <b>${esc(em)}</b> ainda não tem perfil na EPISJ 360. Peça à Direção que lho atribua. <a href="#" id="gSairSB">Entrar com outra conta</a>`);
     const a=$("#gSairSB");if(a)a.onclick=e=>{e.preventDefault();sbSair().then(()=>location.reload())};return}
   SBMEMBRO=j;EU=j;MODS_OFF=Array.isArray(j.modsOff)?j.modsOff:[];window.__guideLogin=EU.email;

@@ -249,7 +249,7 @@ function renderDSD(){const a=anoAtivo(),M=dsdDados(a.id),out=$("#dsdOut"),soEu=d
   if(DSD_SEL){out.innerHTML=dsdDetalhe(DSD_SEL==="_sem"?"":DSD_SEL,M);return}
   const q=norm($("#dsdFilter").value||"");
   const L=P.map(p=>({p,r:M.get(p.id)})).filter(({p,r})=>!q||norm([p.cod,p.nome,...(r?[...r.turmas].map(id=>TC.get(id)):[]),...(r?r.let.map(x=>x.l.disc):[])].join(" ")).includes(q));
-  const com=L.filter(x=>x.r),sem=L.filter(x=>!x.r),S=M.get("");
+  const com=L.filter(x=>x.r).sort((x,y)=>{const a=String(x.p.cod||"").trim(),b=String(y.p.cod||"").trim();return (!a-!b)||CNd.compare(a,b)||CPd.compare(String(x.p.nome),String(y.p.nome))}),sem=L.filter(x=>!x.r),S=M.get("");
   const tl=com.reduce((s,x)=>s+x.r.h,0),tn=com.reduce((s,x)=>s+x.r.hnl,0);
   let h=`<div class="tiles pctiles"><div class="tile"><div class="v">${com.length}</div><div class="l">Formadores com serviço</div></div><div class="tile"><div class="v">${pcNum(tl)} h</div><div class="l">Componente letiva</div></div><div class="tile"><div class="v">${pcNum(tn)} h</div><div class="l">Componente não letiva</div></div><div class="tile"><div class="v">${nPl}</div><div class="l">Planos de turma</div></div></div>`;
   if(S)h+=`<div class="msg bad">${S.let.length+S.nl.length} módulo(s)/cargo(s) sem formador (${pcNum(S.h+S.hnl)} h) — <a href="#" data-dsdsem>ver quais</a>.</div>`;

@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.164 — ecrã do módulo «pass», carregado quando é aberto */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.165 — ecrã do módulo «pass», carregado quando é aberto */
 "use strict";
 // ===== src/js/pass/pass.js =====
 /* Pass360 — ecrã do módulo (carregado só quando o Pass360 é aberto; os dados e a cifra estão em pass/pass-dados.js) */

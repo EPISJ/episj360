@@ -133,8 +133,10 @@ nav.side .h3modo button.sel,.h3modo button.sel{background:var(--brand);color:#ff
 .frseg button{border:0;background:none;padding:8px 12px;font:inherit;font-size:13px;cursor:pointer;color:var(--muted)}.frseg button+button{border-left:1px solid var(--line)}
 .frseg button.on{background:var(--brandbg,#e8f0fb);color:var(--brand);font-weight:600}
 .frl{display:flex;flex-direction:column}
-.frg{display:flex;gap:10px;align-items:baseline;padding:14px 4px 6px;border-bottom:2px solid var(--line);position:sticky;top:var(--toph,56px);background:var(--card);z-index:1}
+.frg{display:flex;gap:10px;align-items:baseline;width:100%;border:0;border-radius:0;font:inherit;color:inherit;text-align:left;cursor:pointer;padding:14px 4px 6px;border-bottom:2px solid var(--line);position:sticky;top:var(--toph,56px);background:var(--card);z-index:1}
 .frg b{font-size:15px}.frg span{color:var(--muted);font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.frg i{font-style:normal;font-size:12px;color:var(--muted)}
+.frg:hover{background:#f6f8fb}.frgchev{fill:none;stroke:var(--muted);stroke-width:2;flex:none;align-self:center;transition:transform .15s}.frg.fc .frgchev{transform:rotate(-90deg)}.frg.fc{border-bottom-width:1px}
+.frgtodas{display:flex;justify-content:flex-end;margin:0 0 4px}
 .frr{border-bottom:1px solid #eef1f5}.frr.sai .frn b{color:var(--muted)}.frr.ab{background:#f8fafd}
 .frh{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;padding:9px 6px;font:inherit;text-align:left;cursor:pointer;color:inherit}
 .frh:hover{background:#f6f8fb}.frchev{fill:none;stroke:var(--muted);stroke-width:2;transition:transform .15s}.frr.ab .frchev{transform:rotate(180deg)}

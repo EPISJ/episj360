@@ -145,7 +145,7 @@ function turmaOpts(sel,first){return (first??`<option value="">— sem turma —
 function turmaPorCod(cod){const a=anoAtivo(),L=escData().turmas.filter(t=>norm(t.cod)===norm(cod));return L.find(t=>turmaNoAno(t,a))||L[0]||null}
 /* 0.9.141: Formandos — lista por turma com a ficha completa de cada formando (dados, turma e curso, orientador educativo,
    plano curricular, calendário da turma, PAP e colegas). A ficha abre ao carregar na linha; os dados mudam-se lá. */
-var FOR_EST="",FOR_AB="",FOR_REP=null;
+var FOR_EST="",FOR_AB="",FOR_REP=null,FOR_FECH=new Set(),FOR_GK=[];
 function forIdade(iso,ref){const m=String(iso||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return null;const r=ref||new Date();let i=r.getFullYear()-+m[1];if(r.getMonth()+1<+m[2]||(r.getMonth()+1===+m[2]&&r.getDate()<+m[3]))i--;return i}
 function forAniv(iso){const m=String(iso||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return null;const h=new Date();h.setHours(0,0,0,0);let d=new Date(h.getFullYear(),+m[2]-1,+m[3]);if(d<h)d=new Date(h.getFullYear()+1,+m[2]-1,+m[3]);return Math.round((d-h)/864e5)}
 function forIni(n){const p=String(n||"").trim().split(/\s+/).filter(Boolean);return ((p[0]||"?")[0]+(p.length>1?p[p.length-1][0]:"")).toUpperCase()}
@@ -171,16 +171,22 @@ function renderFormandos(){const e=escData(),q=norm($("#forFilter").value||""),f
   const REP=forEmailsRep();FOR_REP=REP;
   const L=base.filter(f=>(!FOR_EST||(FOR_EST==="ativo"?!f.estado:f.estado===FOR_EST)||(FOR_EST==="email"&&REP.has(formandoEmail(f))))&&(!q||norm((f.num||"")+" "+f.nome+" "+cod(f.turmaId)+" "+formandoEmail(f)).includes(q)))
     .sort((x,y)=>CN.compare(cod(x.turmaId),cod(y.turmaId))||(!!x.estado-!!y.estado)||CP.compare(x.nome,y.nome));
-  FOR_N=FOR_N||200;const resto=L.length-FOR_N;let h="",tAnt=null;
-  for(const f of L.slice(0,FOR_N)){
-    if(f.turmaId!==tAnt){tAnt=f.turmaId;const t=TM.get(f.turmaId),c=t&&cursoById(t.cursoId),nA=e.formandos.filter(x=>x.turmaId===f.turmaId&&!x.estado).length;
-      h+=`<div class="frg"><b>${t?esc(t.cod):"Sem turma"}</b><span>${t?esc(c?c.nome:turmaNome(t)):""}${t&&anoCurricular(t,a)?" · "+esc(anoCurricular(t,a)):""}${t&&t.dt?" · Orientador educativo: "+esc(profName(t.dt)):""}</span><i>${nA} ativo(s)</i></div>`}
+  // 0.9.165: cada turma abre e fecha (clicar no cabeçalho); fechadas guardadas em FOR_FECH (só nesta sessão)
+  FOR_N=FOR_N||200;const G=[],GM=new Map();for(const f of L){const k=f.turmaId||"_sem";let g=GM.get(k);if(!g){g={k,tid:f.turmaId,fs:[]};GM.set(k,g);G.push(g)}g.fs.push(f)}
+  const fech=g=>FOR_FECH.has(g.k)&&!(FOR_AB&&g.fs.some(f=>f.id===FOR_AB));
+  let h="",mostra=0,resto=0;FOR_GK=G.map(g=>g.k);
+  if(G.length>1){const todasF=G.every(fech);h+=`<div class="frgtodas"><button class="b s" type="button" data-frgtodas="${todasF?"abrir":"fechar"}">${todasF?"Abrir todas as turmas":"Fechar todas as turmas"}</button></div>`}
+  for(const g of G){const t=TM.get(g.tid),c=t&&cursoById(t.cursoId),nA=e.formandos.filter(x=>x.turmaId===g.tid&&!x.estado).length,fc=fech(g);
+    if(mostra>=FOR_N&&!fc){resto+=g.fs.length;continue}
+    h+=`<button type="button" class="frg${fc?" fc":""}" data-frg="${esc(g.k)}" aria-expanded="${!fc}"><svg class="frgchev" viewBox="0 0 24 24" width="16" height="16"><path d="m6 9 6 6 6-6"/></svg><b>${t?esc(t.cod):"Sem turma"}</b><span>${t?esc(c?c.nome:turmaNome(t)):""}${t&&anoCurricular(t,a)?" · "+esc(anoCurricular(t,a)):""}${t&&t.dt?" · Orientador educativo: "+esc(profName(t.dt)):""}</span><i>${fc?g.fs.length+" na lista · ":""}${nA} ativo(s)</i></button>`;
+    if(fc)continue;
+    for(const f of g.fs){if(mostra>=FOR_N){resto++;continue}mostra++;
     const id=forIdade(f.nasc),an=forAniv(f.nasc),ab=FOR_AB===f.id;
     h+=`<div class="frr${f.estado?" sai":""}${ab?" ab":""}" data-id="${f.id}"><button type="button" class="frh" data-fab aria-expanded="${ab}">
       <span class="frav" style="--c:${forCor(f.nome)}">${esc(forIni(f.nome))}</span>
       <span class="frn"><b>${esc(f.nome)}</b><small>${f.num?"N.º "+esc(f.num):"sem número"}${id!=null?` · ${id} anos`:""}${formandoEmail(f)?" · "+esc(formandoEmail(f)):""}${an===0?" · faz anos hoje":an!=null&&an<=7?` · faz anos daqui a ${an} dia${an>1?"s":""}`:""}</small></span>
       ${FOR_REP&&FOR_REP.has(formandoEmail(f))?`<span class="tag bad" title="Há outra pessoa com este email: escreva o email certo na ficha (exceção)">email repetido</span>`:""}${forEstTag(f)}<span class="frc">${cod(f.turmaId)?esc(cod(f.turmaId)):""}</span><svg class="frchev" viewBox="0 0 24 24" width="16" height="16"><path d="m6 9 6 6 6-6"/></svg></button>
-      ${ab?forFicha(f):""}</div>`}
+      ${ab?forFicha(f):""}</div>`}}
   if(resto>0)h+=`<div style="text-align:center;padding:10px"><button class="b s" type="button" data-formais>Mostrar mais ${Math.min(resto,500)} (faltam ${resto}) — ou escolha a turma acima</button></div>`;
   $("#tbFor").innerHTML=h||`<p class="hint">${e.formandos.length?"Ninguém corresponde à procura.":"Ainda sem formandos — acrescente acima, cole uma lista ou importe o mapa (PDF)."}</p>`;
   $("#forCnt").textContent=e.formandos.length?`${L.length} de ${e.formandos.length} formando(s)${resto>0?" — a mostrar os primeiros "+FOR_N:""}.`:""}
@@ -231,6 +237,8 @@ $("#tbFor").addEventListener("change",e=>{const r=e.target.closest(".frr");if(!r
   else if(k==="email"){const em=v.toLowerCase();if(!em||em===emailAuto(f.nome))delete f.email;else f.email=em}
   else f[k]=v;save();esRecarregar();renderFormandos()});
 $("#tbFor").addEventListener("click",e=>{if(e.target.closest("[data-formais]")){FOR_N+=500;renderFormandos();return}
+  const gt=e.target.closest("[data-frgtodas]");if(gt){if(gt.dataset.frgtodas==="abrir")FOR_FECH.clear();else{FOR_AB="";FOR_GK.forEach(k=>FOR_FECH.add(k))}renderFormandos();return}
+  const gb=e.target.closest("[data-frg]");if(gb){const k=gb.dataset.frg;if(FOR_FECH.has(k))FOR_FECH.delete(k);else{FOR_FECH.add(k);const fa=FOR_AB&&escData().formandos.find(x=>x.id===FOR_AB);if(fa&&(fa.turmaId||"_sem")===k)FOR_AB=""}renderFormandos();return}
   const ir=e.target.closest("[data-fir]"),r=e.target.closest(".frr"),f=r&&escData().formandos.find(x=>x.id===r.dataset.id);
   if(ir){if(f&&f.turmaId&&ir.dataset.fir==="pc"){PC_T=f.turmaId;try{localStorage.setItem("pc_t",PC_T)}catch(x){}}show(ir.dataset.fir);return}
   const v=e.target.closest("[data-fver]");if(v){FOR_AB=v.dataset.fver;renderFormandos();const n=$("#tbFor").querySelector(`.frr[data-id="${CSS.escape(FOR_AB)}"]`);if(n)n.scrollIntoView({behavior:"smooth",block:"start"});return}

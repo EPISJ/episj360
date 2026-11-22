@@ -53,8 +53,10 @@ function utiAuto(){const M=new Map(),rep=new Set();
   return {M,rep}}
 var UTI_ORG="";
 function utiPerfilDe(t){t=norm(t);return /econom/.test(t)?"econ":/exec/.test(t)?"dexec":/pedag/.test(t)?"dped":/prof|formador|docente/.test(t)?"prof":/forman|alun|estud/.test(t)?"form":""}
-function utiSujo(){UTI_SUJO=true;$("#utiEstado").innerHTML=`<span style="color:var(--warn)">Alterações por guardar.</span>`}
-async function renderUti(force){const m=$("#utiMsg");
+function utiSujo(){UTI_SUJO=true;utiEst(`<span style="color:var(--warn)">Alterações por guardar.</span>`)}
+/* 0.9.176: Utilizadores e Perfis em separadores diferentes — a mensagem, o estado e o botão «Guardar perfis» aparecem nos dois */
+function utiEst(h){for(const id of["utiEstado","utiEstado2"]){const e=document.getElementById(id);if(e)e.innerHTML=h}}
+async function renderUti(force){const m={set innerHTML(h){for(const id of["utiMsg","utiMsg2"]){const e=document.getElementById(id);if(e)e.innerHTML=h}}};
   if(!EU||!EU.admin){m.innerHTML=`<div class="msg bad">Só os administradores da EPISJ 360 gerem os perfis.</div>`;return}
   if(EU.provisorio){m.innerHTML=`<div class="msg info">Para gerir os perfis, atualize primeiro o serviço de avisos na Cloudflare com o ficheiro <code>servidor/boxcheck-avisos.js</code> da EPISJ 360 0.9 (ver LEIA-ME).</div>`;return}
   if(!UTI||force){m.innerHTML=`<p class="hint"><span class="spin"></span> A carregar…</p>`;try{UTI=await guideApi("/guide/perfis");UTI_SUJO=false}catch(e){m.innerHTML=`<div class="msg bad">${esc(e.message)}</div>`;return}}
@@ -66,7 +68,7 @@ async function renderUti(force){const m=$("#utiMsg");
   $("#utiDom").value=L.formandos.dominios.join(", ");$("#utiPad").value=L.formandos.padrao||"";
   utiTabela();utiVis();utiMods();
   $("#utiPrev").innerHTML=`<option value="">— escolha —</option>`+Object.entries(UTI.perfis).map(([k,n])=>`<option value="${k}">${esc(n)}</option>`).join("");
-  $("#utiEstado").innerHTML=UTI_SUJO?`<span style="color:var(--warn)">Alterações por guardar.</span>`:L.t?`Guardado a ${new Date(L.t).toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"})}${L.por?" por "+esc(L.por):""}.`:""}
+  utiEst(UTI_SUJO?`<span style="color:var(--warn)">Alterações por guardar.</span>`:L.t?`Guardado a ${new Date(L.t).toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"})}${L.por?" por "+esc(L.por):""}.`:"")}
 // 0.9.50: com 1300 contas — 200 linhas de cada vez, a lista de turmas só se enche quando se toca nela, e mudar uma linha só redesenha essa linha
 var UTI_N=200;
 // 0.9.110: sem a lista carregada do servidor (sem rede ou ainda a carregar), os botões avisam em vez de dar erro
@@ -106,7 +108,7 @@ function utiMods(){if(!utiOk(1))return;const off=new Set(UTI.loja.modsOff||[]);
 $("#utiMods").addEventListener("change",e=>{const x=e.target.closest("[data-mod]");if(!x||!utiOk())return;const off=new Set(UTI.loja.modsOff||[]);if(x.checked)off.delete(x.dataset.mod);else off.add(x.dataset.mod);
   UTI.loja.modsOff=MODULOS.map(M=>M.id).filter(m=>off.has(m));utiMods();utiSujo()});
 function utiVis(){if(!utiOk(1))return;const L=UTI.loja,P=Object.keys(UTI.perfis);let h=`<thead><tr><th>Separador</th>${P.map(k=>`<th>${esc(UTI.perfis[k])}</th>`).join("")}</tr></thead><tbody>`;
-  document.querySelectorAll("#nav .mgrp").forEach(g=>{const bs=[...g.querySelectorAll("button[data-t]")].filter(b=>b.dataset.t!=="uti");if(!bs.length)return;
+  document.querySelectorAll("#nav .mgrp").forEach(g=>{const bs=[...g.querySelectorAll("button[data-t]")].filter(b=>b.dataset.t!=="uti"&&b.dataset.t!=="per");if(!bs.length)return;
     h+=`<tr class="grp"><td colspan="${P.length+1}">${esc(g.querySelector(".mh").childNodes[0].textContent.trim())}</td></tr>`;
     for(const b of bs){const t=b.dataset.t;h+=`<tr><td>${esc(b.textContent.trim())}</td>${P.map(k=>`<td><input type="checkbox" data-vp="${k}" data-vt="${t}"${(L.vis[k]||UTI.visOmissao[k]).includes(t)?" checked":""}></td>`).join("")}</tr>`}});
   $("#utiVis").innerHTML=h+"</tbody>"}
@@ -129,7 +131,8 @@ $("#utiVisRepor").onclick=()=>{if(!utiOk())return;UTI.loja.vis={};utiVis();utiSu
 $("#utiPrev").onchange=e=>{const v=e.target.value;if(!v)return;if(!utiOk()){e.target.value="";return}utiLerCampos();PREV=v;aplicarPerfil();toast("A pré-visualizar como "+PERFIL_CURTO[v]);e.target.value=""};
 function utiLerCampos(){if(!utiOk(1))return;const L=UTI.loja;L.admins=$("#utiAdmins").value.split(/[\s,;]+/).map(x=>x.trim().toLowerCase()).filter(x=>x.includes("@"));
   L.formandos={dominios:$("#utiDom").value.split(/[\s,;]+/).map(x=>x.trim().toLowerCase().replace(/^@/,"")).filter(Boolean),padrao:$("#utiPad").value.trim()}}
+{const g2=document.getElementById("utiGuardar2");if(g2)g2.onclick=()=>$("#utiGuardar").click()}
 $("#utiGuardar").onclick=async()=>{if(!UTI)return;utiLerCampos();const pad=UTI.loja.formandos.padrao;if(pad){try{new RegExp(pad)}catch(e){toast("O padrão dos formandos não é uma expressão regular válida");return}}
-  $("#utiEstado").textContent="A guardar…";try{const j=await guideApi("/guide/perfis",{method:"POST",body:JSON.stringify(UTI.loja)});UTI.loja=j.loja;UTI_SUJO=false;MODS_OFF=Array.isArray(j.loja.modsOff)?j.loja.modsOff:[];aplicarPerfil();renderUti();toast("modsOff" in j.loja?"Perfis e módulos guardados":"Perfis guardados — falta atualizar o serviço na Cloudflare para desligar módulos")}
-  catch(e){$("#utiEstado").innerHTML=`<span style="color:var(--bad)">${esc(e.message)}</span>`}};
+  utiEst("A guardar…");try{const j=await guideApi("/guide/perfis",{method:"POST",body:JSON.stringify(UTI.loja)});UTI.loja=j.loja;UTI_SUJO=false;MODS_OFF=Array.isArray(j.loja.modsOff)?j.loja.modsOff:[];aplicarPerfil();renderUti();toast("modsOff" in j.loja?"Perfis e módulos guardados":"Perfis guardados — falta atualizar o serviço na Cloudflare para desligar módulos")}
+  catch(e){utiEst(`<span style="color:var(--bad)">${esc(e.message)}</span>`)}};
 

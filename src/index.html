@@ -154,7 +154,8 @@
     </div>
     <div class="mgrp gl">
     <div class="mh">EPISJ 360</div>
-    <button data-t="uti"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8l1.5 1.5L23 7"/></svg>Utilizadores e perfis</button>
+    <button data-t="uti"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8l1.5 1.5L23 7"/></svg>Utilizadores</button>
+    <button data-t="per"><svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5z"/><path d="M9 12l2 2 4-4"/></svg>Perfis</button>
     <button data-t="def"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Definições</button>
     </div>
 
@@ -1399,7 +1400,7 @@
 
 <section id="uti">
   <div class="card">
-    <h2>Utilizadores e perfis</h2>
+    <h2>Utilizadores</h2>
     <p class="hint">Toda a gente entra na EPISJ 360 com a conta do <b>Office 365 da escola</b>. Cada conta tem um perfil, que decide o que vê. A regra é, por esta ordem: <b>1)</b> o perfil mudado ou atribuído à mão na lista abaixo; <b>2)</b> os administradores ficam com <b>Direção Executiva</b>; <b>3)</b> cada formador de <b>Escola360 › Formadores</b> fica <b>Formador</b>; <b>4)</b> cada formando ativo de <b>Escola360 › Formandos</b> fica <b>Formando</b>, com a sua turma; <b>5)</b> quem cumprir a regra dos formandos fica <b>Formando</b>. Os emails são os da escola (automáticos: primeiro nome + último apelido @episj.com, ou a exceção escrita na ficha). Quem não cumprir nenhuma não entra.</p>
     <div id="utiMsg"></div>
   </div>
@@ -1410,7 +1411,7 @@
     <p class="hint" id="utiAdmInfo" style="margin:6px 0 0"></p>
   </div>
   <div class="card">
-    <h2>Contas e perfis</h2>
+    <h2>Contas</h2>
     <p class="hint">Todos os formadores e formandos importados para a Escola360 aparecem aqui com o perfil já atribuído. Para uma exceção, mude o perfil na linha; «Automático» desfaz. Para acrescentar alguém que não está na Escola360 (ex.: Direção, Economato), use o formulário.</p>
     <form id="utiForm" class="row" style="background:#f6f8fb;border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px" autocomplete="off">
       <label class="grow">Email do Office 365<input type="email" id="utiEmail" placeholder="nome@episj.pt" required></label>
@@ -1437,10 +1438,15 @@
     </div>
   </div>
   <div class="card">
-    <h2>Módulos ligados</h2>
-    <p class="hint">Desligue um módulo para o esconder de toda a gente. Só os <b>administradores</b> o continuam a ver (com a marca <b>desligado</b> na barra de cima), para o prepararem antes de o abrir à escola. Os dados não se perdem.</p>
-    <div class="utimods" id="utiMods"></div>
-    <p class="hint" id="utiModsAviso" style="margin:8px 0 0"></p>
+    <div class="row"><button class="b" id="utiGuardar">Guardar perfis</button><span id="utiEstado" class="hint" style="margin:0"></span></div>
+  </div>
+</section>
+
+<section id="per">
+  <div class="card">
+    <h2>Perfis</h2>
+    <p class="hint">Os perfis decidem o que cada conta vê: Direção Executiva, Direção Pedagógica, Formador, Formando e Economato. Aqui escolhe os separadores de cada perfil e os módulos ligados para toda a escola. As contas e o perfil de cada uma estão em <b>Utilizadores</b>.</p>
+    <div id="utiMsg2"></div>
   </div>
   <div class="card">
     <h2>O que cada perfil vê</h2>
@@ -1450,7 +1456,13 @@
       <label style="margin-left:auto">Pré-visualizar como<select id="utiPrev"><option value="">— escolha —</option></select></label></div>
   </div>
   <div class="card">
-    <div class="row"><button class="b" id="utiGuardar">Guardar perfis</button><span id="utiEstado" class="hint" style="margin:0"></span></div>
+    <h2>Módulos ligados</h2>
+    <p class="hint">Desligue um módulo para o esconder de toda a gente. Só os <b>administradores</b> o continuam a ver (com a marca <b>desligado</b> na barra de cima), para o prepararem antes de o abrir à escola. Os dados não se perdem.</p>
+    <div class="utimods" id="utiMods"></div>
+    <p class="hint" id="utiModsAviso" style="margin:8px 0 0"></p>
+  </div>
+  <div class="card">
+    <div class="row"><button class="b" id="utiGuardar2">Guardar perfis</button><span id="utiEstado2" class="hint" style="margin:0"></span></div>
   </div>
 </section>
 

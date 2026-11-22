@@ -5,6 +5,8 @@
 var ECO_MOB_MQ="(max-width:760px)";
 function ecoMob(){try{return matchMedia(ECO_MOB_MQ).matches}catch(e){return false}}
 function ecoMovel(t){const B=document.body;B.classList.toggle("ecoed",ecoEd());if(t!=="ecoInicio")B.classList.remove("ecofic");
+  // 0.9.212: com a versão para telemóvel de toda a app (core/movel.js) a barra de baixo é a geral (com a câmara ao meio)
+  if(typeof mvLigado==="function"&&mvLigado()){const v=document.getElementById("ecoBar");if(v)v.remove();try{mvAtualizar()}catch(e){}return}
   let b=document.getElementById("ecoBar");
   if(!b){b=document.createElement("nav");b.id="ecoBar";b.className="eco-bar";b.setAttribute("aria-label","Econo360");
     const I=(p)=>`<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;

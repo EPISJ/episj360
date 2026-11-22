@@ -4,7 +4,8 @@
   "css/fontes.css",
   "css/app.css",
   "css/ajustes.css",
-  "css/temas.css"
+  "css/temas.css",
+  "css/movel.css"
  ],
  "app": [
   "js/core/base.js",
@@ -44,7 +45,8 @@
   "js/core/meu-horario-utilizadores.js",
   "js/social/social.js",
   "js/core/arranque.js",
-  "js/core/gaveta-tabelas.js"
+  "js/core/gaveta-tabelas.js",
+  "js/core/movel.js"
  ],
  "modulos": {
   "pap": [

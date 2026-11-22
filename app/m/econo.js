@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.212 — ecrã do módulo «econo», carregado quando é aberto */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.213 — ecrã do módulo «econo», carregado quando é aberto */
 "use strict";
 // ===== src/js/econo/econo.js =====
 /* Econo360 — ecrã do módulo (carregado só quando o Econo360 é aberto; os dados estão em econo/econo-dados.js) */
@@ -718,6 +718,8 @@ function ecfXls(L){ecoXls("Econo360 faturas",[["Faturas",L.map(f=>({"Data":f.dat
 var ECO_MOB_MQ="(max-width:760px)";
 function ecoMob(){try{return matchMedia(ECO_MOB_MQ).matches}catch(e){return false}}
 function ecoMovel(t){const B=document.body;B.classList.toggle("ecoed",ecoEd());if(t!=="ecoInicio")B.classList.remove("ecofic");
+  // 0.9.212: com a versão para telemóvel de toda a app (core/movel.js) a barra de baixo é a geral (com a câmara ao meio)
+  if(typeof mvLigado==="function"&&mvLigado()){const v=document.getElementById("ecoBar");if(v)v.remove();try{mvAtualizar()}catch(e){}return}
   let b=document.getElementById("ecoBar");
   if(!b){b=document.createElement("nav");b.id="ecoBar";b.className="eco-bar";b.setAttribute("aria-label","Econo360");
     const I=(p)=>`<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;

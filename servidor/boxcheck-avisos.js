@@ -26,7 +26,7 @@
  */
 
 const P = "avisos:";                       // prefixo das chaves no KV (não mexe no que o serviço de login lá guarda)
-const ORIGENS_OMISSAO = "https://eduspruce.github.io,https://boxcheck.episj.pt";
+const ORIGENS_OMISSAO = "https://episj360.episj.com,https://eduspruce.github.io,https://boxcheck.episj.pt";
 const LIMITE_PEDIDOS = 45;                 // o plano gratuito da Cloudflare permite 50 pedidos por execução
 const DIA = 864e5;
 

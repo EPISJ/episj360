@@ -8,7 +8,7 @@ const SCOPES = "pages_show_list,pages_read_engagement,pages_manage_posts,busines
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" };
 const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { ...CORS, "Content-Type": "application/json" } });
 // As páginas HTML vindas do domínio supabase.co são mostradas como texto: a volta reencaminha para uma página do site da EPISJ 360
-const VOLTA = Deno.env.get("S360_VOLTA") || "https://eduspruce.github.io/boxdoc/social360/meta-volta.html";
+const VOLTA = Deno.env.get("S360_VOLTA") || "https://episj360.episj.com/social360/meta-volta.html";
 function pagina(titulo: string, texto: string, ok: boolean, n = 0, itens: string[] = []) {
   const p = new URLSearchParams({ ok: ok ? "1" : "0", t: titulo, m: texto, n: String(n) });
   itens.slice(0, 20).forEach(i => p.append("i", i));

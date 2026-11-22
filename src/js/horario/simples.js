@@ -260,6 +260,10 @@ function h3SmsLink(L){L=L.filter(x=>!x.tlOk);const nums=L.map(x=>h3Tel(H3.tel[(x
   const body=encodeURIComponent(L.length===1?h3Preencher(H3.msg.curta,L[0]):"EPISJ 360: o seu horário mudou. Veja em "+h3Lig()),ios=/iPhone|iPad|Macintosh/.test(navigator.userAgent);
   return ios?`sms:/open?addresses=${nums.join(",")}&body=${body}`:`sms:${nums.join(",")}?body=${body}`}
 async function h3Enviar(L,canais,msg){if(H3_ENVIO||!L.length)return;H3_ENVIO=true;let ok=0,erros=[];
+  // 0.9.155: a sessão do Office 365 é pedida logo no início (ainda no clique, para a janela da Microsoft não ser bloqueada);
+  // se não houver sessão, diz uma vez porquê em vez de falhar formador a formador
+  if(canais.includes("email")&&L.some(x=>!x.emOk)){try{await msToken()}catch(e){H3_ENVIO=false;const m=typeof msErro==="function"?msErro(e):(e.message||String(e));
+    return{ok:0,erros:["Os emails não saíram: "+m+" Carregue outra vez em enviar (o navegador pode pedir para entrar na conta da Microsoft)."]}}}
   try{for(let i=0;i<L.length;i++){const x=L[i],feito=[];if(msg)msg(`A enviar ${i+1} de ${L.length}…`);
       const fazEm=canais.includes("email")&&!x.emOk,fazTl=canais.includes("push")&&!x.tlOk;
       if(fazEm)try{await h3Email1(x);feito.push("email")}catch(e){erros.push((x.t.name||"")+": email — "+(e.message||e))}

@@ -12,11 +12,12 @@ async function msInit(){const {id,ten}=msIds();
   if(!id||!ten)throw new Error("Falta ligar o Office 365: em Definições, indique o ID da aplicação e o ID do diretório.");
   const k=id+"|"+ten;if(MSAL&&MSAL._k===k)return MSAL;
   if(!window.msal)await loadScript("lib/msal-browser.min.js");
-  const p=new msal.PublicClientApplication({auth:{clientId:id,authority:"https://login.microsoftonline.com/"+ten,redirectUri:MS_REDIR,navigateToLoginRequestUrl:false},cache:{cacheLocation:"memoryStorage"}});
+  const p=new msal.PublicClientApplication({auth:{clientId:id,authority:"https://login.microsoftonline.com/"+ten,redirectUri:MS_REDIR,navigateToLoginRequestUrl:false},cache:{cacheLocation:(window.__g360Mem&&window.__g360Mem.real&&window.__g360Mem.real.ss)?"sessionStorage":"memoryStorage"}});
   await p.initialize();p._k=k;MSAL=p;MSACC=p.getActiveAccount()||p.getAllAccounts()[0]||null;return p}
 async function msLoginPopup(){const p=await msInit();const r=await p.loginPopup({scopes:MS_SCOPES,prompt:"select_account",redirectUri:MS_REDIR});MSACC=r.account;p.setActiveAccount(r.account);msUI();return r.accessToken}
 async function msToken(){const p=await msInit();
-  if(!MSACC){try{if(EU&&EU.email)await msSilencioso(EU.email)}catch(e){}}
+  // 0.9.155: a entrada silenciosa só se tenta uma vez por página — se falhou, o clique seguinte abre logo a janela da Microsoft (sem esperar e sem ser bloqueada)
+  if(!MSACC&&!window.__msSsoFalhou){try{if(EU&&EU.email)await msSilencioso(EU.email)}catch(e){}if(!MSACC)window.__msSsoFalhou=1}
   if(MSACC){try{return (await p.acquireTokenSilent({scopes:MS_SCOPES,account:MSACC})).accessToken}catch(e){}
     try{return (await p.acquireTokenPopup({scopes:MS_SCOPES,account:MSACC,loginHint:MSACC.username,redirectUri:MS_REDIR})).accessToken}catch(e){}}
   return msLoginPopup()}

@@ -165,7 +165,7 @@ async function legadoLimpar(){if(LEGADO_FEITO||LIMPAR||!EU||!EU.email)return;
   if(havia){const v=await sairVerificar();if(!v.ok){console.warn("EPISJ 360: dados antigos ficam neste computador por agora —",v.porque);if(nuvSB())try{toast("Ainda há dados deste computador por confirmar na nuvem. "+v.porque)}catch(e){}return}}
   await legadoApagar();LEGADO_FEITO=true;if(havia)console.info("EPISJ 360: apagados deste computador os dados de versões antigas (já estão na nuvem)")}
 async function guideSair(){ // 0.9.50: a Box fica ligada (só «Desligar a Box» a desliga)
-  try{await sbSair()}catch(e){}try{const p=await msInit();await p.clearCache({account:MSACC})}catch(e){}MSACC=null;EU=null;location.reload()}
+  try{await sbSair()}catch(e){}try{const p=await msInit();await p.clearCache({account:MSACC})}catch(e){}try{const R=window.__g360Mem&&window.__g360Mem.real&&window.__g360Mem.real.ss;if(R){const ks=[];for(let i=0;i<R.length;i++){const k=R.key(i);if(k&&/^msal\.|login\.windows\.net|login\.microsoftonline\.com/i.test(k))ks.push(k)}ks.forEach(k=>R.removeItem(k))}}catch(e){}MSACC=null;EU=null;location.reload()}
 
 // esconde os módulos e separadores que o perfil não pode abrir
 function aplicarPerfil(){

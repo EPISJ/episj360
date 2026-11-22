@@ -1529,3 +1529,24 @@ select:disabled{-webkit-appearance:none;appearance:none;background-image:none!im
 .em-bar{display:grid;grid-template-columns:minmax(120px,1.2fr) 2fr 52px;gap:10px;align-items:center;font-size:13px;padding:4px 0}
 .em-bar .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.em-bar .b{height:9px;background:#eef1f6;border-radius:5px;overflow:hidden}.em-bar .b i{display:block;height:100%;border-radius:5px}.em-bar .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
 .em-falta div{font-size:13px;padding:4px 0;border-top:1px solid #f0f2f5}
+/* 0.9.195: Crono360 › Ano inteiro com o aspeto do «Calendário do ano» (Calendário Escolar): sem linhas grossas, cada dia é uma
+   pastilha de cantos redondos com cores suaves — dias de aulas a azul claro, feriados a rosa com o número a vermelho, interrupções
+   a amarelo-claro (sem riscas), fins de semana a cinzento; hoje com contorno azul; início e fim de cada disciplina continuam fortes */
+table.crano{border:0!important;border-collapse:separate!important;border-spacing:3px 0;background:transparent}
+table.crano td{border:0!important;background-clip:padding-box}
+table.crano tr.r1 td{border-top:5px solid transparent!important;border-radius:7px 7px 0 0;height:34px}
+table.crano tr.r2 td{border-bottom:5px solid transparent!important;border-radius:0 0 7px 7px;height:24px}
+table.crano td.crm{border:0!important;border-radius:10px!important;background:#fff}
+table.crano tr.r1 td.crm{border-top:5px solid transparent!important}table.crano tr.r2 td.crm{border-bottom:5px solid transparent!important}
+table.crano td{background:#f6f8fb}
+table.crano td.aula{background:#e3ecfb}table.crano tr.r2 td.aula{background:#d3e1f8;color:var(--brand)}
+table.crano td.fds{background:#f1f3f6}table.crano td.fds .dn,table.crano td.fds .dw{color:#aab2c0}
+table.crano td.fer{background:#fde4e4}table.crano td.fer .dn{color:#c62828!important;font-weight:700}table.crano td.fer .dw{color:#c62828!important}table.crano tr.r2 td.fer{color:#c62828!important}
+table.crano td.int{background:#fdefd2}table.crano td.int .dw{color:#8a5a00}
+table.crano td.fct{background:#efeafe}table.crano td.pap{background:#f9e3fb}
+table.crano td.out{background:transparent}table.crano td.nx{background:transparent}
+table.crano tr.r1 td.hoje{background:#e3ecfb!important;box-shadow:inset 0 0 0 2px var(--brand),inset 0 2px 0 2px var(--brand)}table.crano tr.r1 td.hoje .dn{color:var(--brand)!important}table.crano td.hoje .dw{color:var(--brand)!important}
+table.crano tr.r2 td.hoje{box-shadow:inset 2px 0 0 var(--brand),inset -2px 0 0 var(--brand),inset 0 -2px 0 var(--brand)}
+table.crano td.df{border-left:0!important;border-radius:7px;background:var(--brandbg)}
+table.crano tr.r1 td.df{border-radius:7px 7px 0 0}table.crano tr.r2 td.df{border-radius:0 0 7px 7px}
+.crano-leg i{border:0;border-radius:4px}.crano-leg i.aula{background:#d3e1f8}.crano-leg i.fer{background:#fde4e4;box-shadow:inset 0 0 0 1px #f3b4b4}.crano-leg i.int{background:#fdefd2}.crano-leg i.fds{background:#f1f3f6}.crano-leg i.fct{background:#efeafe}.crano-leg i.pap{background:#f9e3fb}

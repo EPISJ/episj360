@@ -134,7 +134,17 @@ function renderEscPainel(){
   try{renderWidgets()}catch(x){}try{epMeuRender()}catch(x){console.warn("a minha área",x)}}
 /* 0.9.192: «A minha área» — no Dashboard do Formador, o que lhe diz respeito: a semana, as turmas, as reservas de espaços e
    atalhos para requisitar material, reservar uma sala, ver o horário dos colegas, as entregas na Box e o ponto de situação */
-function epMeuRender(){const el=$("#epMeu");if(!el)return;let pf="";try{pf=perfilAtual()}catch(e){}
+/* 0.9.205: lembrete dos sumários no pleon — no último dia útil do mês e no dia útil antes dele (sem fins de semana nem feriados) */
+function ultDiaUtil(ref){const a=anoAtivo(),NL=(()=>{try{return calNaoLetivos(a)}catch(e){return new Map()}})(),d=calD(ref),fim=new Date(d.getFullYear(),d.getMonth()+1,0,12);
+  const util=x=>{const w=x.getDay(),s=calS(x),n=NL.get(s);return w>0&&w<6&&!(n&&n.t==="fer")};
+  const u=new Date(fim);while(!util(u))u.setDate(u.getDate()-1);const v=new Date(u);v.setDate(v.getDate()-1);while(!util(v))v.setDate(v.getDate()-1);return{ult:calS(u),antes:calS(v)}}
+function lembSumarios(){try{const hj=calHoje(),U=ultDiaUtil(hj),mes=calD(hj).toLocaleDateString("pt-PT",{month:"long"});
+  if(hj===U.ult)return `<b>Lembrete:</b> hoje é o último dia útil de ${esc(mes)} — faça os <b>sumários no pleon</b> antes de terminar o dia.`;
+  if(hj===U.antes)return `<b>Lembrete:</b> amanhã (${esc(calDM(U.ult,{weekday:"long",day:"numeric",month:"long"}))}) é o último dia útil de ${esc(mes)} — não se esqueça dos <b>sumários no pleon</b>.`}catch(e){}return ""}
+// aviso uma vez por dia ao entrar (formadores)
+function lembSumariosToast(){try{let pf="";try{pf=perfilAtual()}catch(e){}if(pf!=="prof")return;const L=lembSumarios();if(!L)return;const k="g360_lemb_sum_"+calHoje();if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1");
+  setTimeout(()=>toast(L.replace(/<[^>]+>/g,"")),2500)}catch(e){}}
+function epMeuRender(){try{lembSumariosToast()}catch(e){}const el=$("#epMeu");if(!el)return;let pf="";try{pf=perfilAtual()}catch(e){}
   if(pf!=="prof"||(typeof podePublicar==="function"&&podePublicar()&&!PREV)){el.hidden=true;el.innerHTML="";return}
   const a=anoAtivo(),hj=calHoje(),em=String(EU&&EU.email||"").toLowerCase(),me=(cfg.profs||[]).find(p=>profEmail(p)===em);
   const st=typeof mhEstado==="function"&&podeVer("hsSem")?mhEstado():null;let tid="",sem=null,turmas=new Map(),prox=null;
@@ -150,7 +160,7 @@ function epMeuRender(){const el=$("#epMeu");if(!el)return;let pf="";try{pf=perfi
   let res=[];try{if(typeof rcAtivas==="function"&&podeVer("rcMapa")){const nm=norm(me&&me.nome||"");
     res=rcAtivas().filter(r=>r.d>=hj&&nm&&(norm(r.p||"")===nm||norm(r.p||"").includes(nm)||(me&&r.pid===me.id))).sort((x,y)=>x.d.localeCompare(y.d)||x.h0-y.h0).slice(0,4)}}catch(e){res=[]}
   const at=[["ecoReq","Requisitar material"],["rcMapa","Reservar uma sala"],["hsVer","Horário dos colegas"],["hsFor","Formadores por semana"],["meu","O que me falta entregar"],["dsd","A minha distribuição de serviço"],["crPs","Ponto de situação"]].filter(([t])=>{try{return podeVer(t)}catch(e){return false}});
-  let h=`<h2>A minha área</h2><div class="em-g">`;
+  let h=`<h2>A minha área</h2>`+(()=>{const L=lembSumarios();return L?`<div class="msg info em-lemb" style="margin:0 0 12px">${L}</div>`:""})()+`<div class="em-g">`;
   h+=`<div class="em-b"><h4>Esta semana</h4>${st&&tid?`<div class="em-n">${sem} tempo${sem===1?"":"s"}</div><div class="em-s">${prox?`Próxima aula: <b>${esc(prox.dt===hj?"hoje":prox.dn+" "+calDM(prox.dt))}</b>, ${esc(prox.p.start||"")} · ${esc([prox.x.tu,prox.x.disc,prox.x.sala].filter(Boolean).join(" · "))}`:"Sem mais aulas marcadas."}</div><div class="em-at" style="margin-top:10px"><button class="b s" data-emir="mh">O meu horário</button></div>`:`<div class="em-s">${st?"O seu nome não foi encontrado no horário publicado.":"Ainda não há horário publicado."}</div>`}</div>`;
   h+=`<div class="em-b"><h4>As minhas turmas</h4>${turmas.size?[...turmas].sort((x,y)=>COLL_PTN.compare(x[0],y[0])).map(([k,o])=>`<div class="em-li"><i style="background:${esc(o.cor)}"></i><span class="grow"><b>${esc(k)}</b>${oe.includes(k)?` <span class="tag">orientador educativo</span>`:""}</span><span class="em-s">${o.n} tempo${o.n===1?"":"s"}/semana</span></div>`).join(""):`<div class="em-s">Sem turmas no horário desta semana.</div>`}${oe.filter(c=>!turmas.has(c)).map(c=>`<div class="em-li"><i style="background:var(--line)"></i><span class="grow"><b>${esc(c)}</b> <span class="tag">orientador educativo</span></span></div>`).join("")}</div>`;
   if(podeVer("rcMapa"))h+=`<div class="em-b"><h4>As minhas reservas de espaços</h4>${res.length?res.map(r=>{let e={};try{e=rcE(r.e)}catch(x){}return `<div class="em-li"><i style="background:${esc(e.c||"#64748b")}"></i><span class="grow"><b>${esc(e.sg||e.n||"")}</b> · ${esc(r.d===hj?"hoje":calDM(r.d,{weekday:"short",day:"numeric",month:"short"}))}</span><span class="em-s">${esc(rcHm(r.h0))}–${esc(rcHm(r.h1))}</span></div>`}).join(""):`<div class="em-s">Não tem reservas marcadas.</div>`}<div class="em-at" style="margin-top:10px"><button class="b s" data-emir="rcMapa">Reservar uma sala</button></div></div>`;

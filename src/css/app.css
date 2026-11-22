@@ -1419,7 +1419,7 @@ i.crgm span{overflow:hidden;text-overflow:ellipsis}
 .pp-pc .pp-meta{font-size:12.5px;color:var(--muted);line-height:1.45}
 .pp-chips{display:flex;flex-wrap:wrap;gap:5px}
 .pp-chip{font-size:12px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--brandbg);color:var(--brand);white-space:nowrap}
-.pp-chip.ok{background:#e7f6ec;color:#1f6b3a}.pp-chip.wa{background:#fff4e0;color:#8a5300}.pp-chip.ba{background:var(--badbg);color:#8c1d16}.pp-chip.mu{background:#eef1f5;color:#4a5568}
+.pp-chip.ok{background:var(--brandbg);color:var(--brand)}.pp-chip.wa{background:#fff4e0;color:#8a5300}.pp-chip.ba{background:var(--badbg);color:#8c1d16}.pp-chip.mu{background:#eef1f5;color:#4a5568}
 .pp-bar2{height:6px;border-radius:9px;background:#e9edf4;overflow:hidden}.pp-bar2 i{display:block;height:100%;background:var(--brand);border-radius:9px}
 .pp-pc .pp-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}.pp-pc .pp-btns .b{height:30px;padding:0 10px;font-size:12.5px}
 .pp-pc .pp-btns .grow{flex:1}

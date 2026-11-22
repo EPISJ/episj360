@@ -83,7 +83,9 @@ function papAnoSel(){const E=escData();return E.anos.find(a=>a.id===PAP_SEL.ano)
 function papAnoDe(P){return escData().anos.find(a=>a.id===P.anoId)||anoAtivo()}
 function papTurma(P){return P&&P.turmaId?escData().turmas.find(t=>t.id===P.turmaId)||null:null}
 const papFaseTxt=f=>f==="esp"?"Época especial":(f||"1")+".ª fase";
-function papNome(P){const t=papTurma(P);return `${t?t.cod+" · ":""}${P.curso||"(sem curso)"}${P.fase&&P.fase!=="1"?" · "+papFaseTxt(P.fase):""}`}
+// o código da turma só vai à frente se o nome do curso ainda não começar por ele (evita «A01 · A01 - Mecatrónica…»)
+function papNome(P){const t=papTurma(P),c=String(P.curso||"").trim(),cod=t&&t.cod?String(t.cod).trim():"";
+  const ja=cod&&new RegExp("^"+cod.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b","i").test(c);return `${cod&&!ja?cod+" · ":""}${c||"(sem curso)"}${P.fase&&P.fase!=="1"?" · "+papFaseTxt(P.fase):""}`}
 function papFse(P){const t=papTurma(P);return String(P.fse||(t&&t.fse)||"")}
 const papInc=P=>(P.cands||[]).filter(c=>c.inc&&String(c.nome||"").trim());
 const papOrdNome=(a,b)=>COLL_PT.compare(String(a.nome||""),String(b.nome||""));

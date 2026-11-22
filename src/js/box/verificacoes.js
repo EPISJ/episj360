@@ -151,7 +151,7 @@ function evalCore(idx,mods){
   const EXR=Object.values(cfg.excluir||{}).map(x=>relDe(x.path)).filter(x=>x&&x.length),FAR=((lastListing&&lastListing.failed)||[]).map(relDe).filter(x=>x&&x.length);
   const cobre=(L,esp)=>L.find(r=>r.every(x=>esp.some(c=>flexEq(x,c))));
   // 1.ª passagem: pastas de cada módulo e os ficheiros de cada uma (para a análise dos documentos comparar entre módulos)
-  const slotOf=new Map();
+  const slotOf=new Map(),PAIS=new Set();for(const f of folders||[]){const i=String(f).lastIndexOf("/");if(i>0)PAIS.add(String(f).slice(0,i))}
   for(const m of mods){
     let ms=segs(m.pasta),modFolders=idx.pick(ms,"folders"),flexNome="";
     if(!modFolders.length&&ms.length){const alt=idx.flex(ms);if(alt){ms=alt.ss;modFolders=idx.pick(ms,"folders");flexNome=alt.nome}}
@@ -159,7 +159,7 @@ function evalCore(idx,mods){
     for(const rec of modFolders){const p=rec.r.join("/"),own=C.own.get(p)||[],tot=C.tot.get(p)||0,nome=rec.r[rec.r.length-1];
       const T={cont:[],d:{id:"sec:"+norm(secDe(rec.r)),nome:secDe(rec.r),min:1,subpasta:""}};
       if(own.length){const slot={m,T:{...T,d:{...T.d,nome:nome}},hits:own,sg:sgm+p};for(const f of own)if(!slotOf.has(f))slotOf.set(f,slot);pastas.push({rec,p,nome,T,own,slot})}
-      else if(!tot){const par=rec.r.slice(0,-1).join("/");if(!S.has(par)||(C.tot.get(par)||0)>0)pastas.push({rec,p,nome,T,own:[],vazia:true})}}
+      else if(!tot&&!PAIS.has(p))pastas.push({rec,p,nome,T,own:[],vazia:true})} // 0.9.203: só a última pasta de cada ramo (sem subpastas) conta como vazia
     out.push({mod:m,pastas,modFolders,nFiles:modFolders.reduce((a,r)=>a+(C.own.get(r.r.join("/"))||[]).length,0),folder:ms.join(" / "),ms,flexNome});
   }
   const ck=cfgEvalKey();if(MENTK!==ck){MENT=new Map();MENTK=ck}

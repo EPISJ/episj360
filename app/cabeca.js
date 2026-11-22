@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.141 */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.142 */
 // ===== src/js/inicio/cabeca.js =====
 /* corre no <head>, antes de a página aparecer: modo de privacidade e tema escolhidos neste aparelho */
 try{(function(){if(localStorage.getItem("g360_priv_on"))document.documentElement.setAttribute("data-priv","on")})()}catch(e){}

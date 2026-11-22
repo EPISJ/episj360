@@ -143,19 +143,87 @@ function escRender(){renderAnoTopo();if(curTab==="esc")renderEscPainel();if(curT
 /* ---------- formandos (dados gerais partilhados) ---------- */
 function turmaOpts(sel,first){return (first??`<option value="">— sem turma —</option>`)+escData().turmas.slice().sort((a,b)=>COLL_PTN.compare(String(a.cod),String(b.cod))).map(t=>`<option value="${t.id}" ${t.id===sel?"selected":""}>${esc(t.cod)}${turmaNoAno(t,anoAtivo())?"":" (outro ano)"}</option>`).join("")}
 function turmaPorCod(cod){const a=anoAtivo(),L=escData().turmas.filter(t=>norm(t.cod)===norm(cod));return L.find(t=>turmaNoAno(t,a))||L[0]||null}
-function renderFormandos(){const e=escData(),q=norm($("#forFilter").value||""),ft=$("#forTurmaF").value;
+/* 0.9.141: Formandos — lista por turma com a ficha completa de cada formando (dados, turma e curso, orientador educativo,
+   plano curricular, calendário da turma, PAP e colegas). A ficha abre ao carregar na linha; os dados mudam-se lá. */
+var FOR_EST="",FOR_AB="";
+function forIdade(iso,ref){const m=String(iso||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return null;const r=ref||new Date();let i=r.getFullYear()-+m[1];if(r.getMonth()+1<+m[2]||(r.getMonth()+1===+m[2]&&r.getDate()<+m[3]))i--;return i}
+function forAniv(iso){const m=String(iso||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return null;const h=new Date();h.setHours(0,0,0,0);let d=new Date(h.getFullYear(),+m[2]-1,+m[3]);if(d<h)d=new Date(h.getFullYear()+1,+m[2]-1,+m[3]);return Math.round((d-h)/864e5)}
+function forIni(n){const p=String(n||"").trim().split(/\s+/).filter(Boolean);return ((p[0]||"?")[0]+(p.length>1?p[p.length-1][0]:"")).toUpperCase()}
+function forCor(s){let h=0;for(const c of String(s))h=(h*31+c.charCodeAt(0))>>>0;return ["#3b6fd8","#0f9b8e","#8b5cf6","#d9468f","#e07a1f","#2f855a","#c0392b","#4a5fc1","#0e7490","#9a6b00"][h%10]}
+var FOR_EST_TXT={desistente:"Desistente",transferido:"Transferido"};
+function forEstTag(f){return f.estado?`<span class="tag exc">${esc(FOR_EST_TXT[f.estado]||f.estado)}</span>`:""}
+function renderFormandos(){const e=escData(),q=norm($("#forFilter").value||""),ft=$("#forTurmaF").value,a=anoAtivo();
   $("#forTurmaF").innerHTML=turmaOpts(ft,`<option value="">Todas as turmas</option>`);$("#fTurma").innerHTML=turmaOpts($("#fTurma").value);$("#forBulkT").innerHTML=turmaOpts($("#forBulkT").value,`<option value="">— na própria lista —</option>`);
-  const TC=new Map(e.turmas.map(t=>[t.id,t.cod||""])),cod=id=>TC.get(id)||"";
+  document.querySelectorAll("#forEstF [data-fe]").forEach(b=>b.classList.toggle("on",b.dataset.fe===FOR_EST));
+  const TM=new Map(e.turmas.map(t=>[t.id,t])),cod=id=>(TM.get(id)||{}).cod||"";
   const CN=new Intl.Collator("pt",{numeric:true}),CP=new Intl.Collator("pt");
-  const L=e.formandos.filter(f=>(!ft||f.turmaId===ft)&&(!q||norm((f.num||"")+" "+f.nome).includes(q))).sort((a,b)=>CN.compare(cod(a.turmaId),cod(b.turmaId))||CN.compare(String(a.num),String(b.num))||CP.compare(a.nome,b.nome));
-  FOR_N=FOR_N||200;const resto=L.length-FOR_N;
-  $("#tbFor").innerHTML=L.slice(0,FOR_N).map(f=>`<tr data-id="${f.id}"><td><input type="text" data-k="num" value="${esc(f.num||"")}"></td><td><div style="display:flex;gap:6px;align-items:center"><input type="text" data-k="nome" value="${esc(f.nome)}"${f.nasc?` title="Nascimento: ${esc(forDataPt(f.nasc))}"`:""}>${f.estado?`<span class="tag exc" style="flex:none">${esc(f.estado)}</span>`:""}</div></td><td><select data-k="turmaId">${lzOpts("turma",f.turmaId)}</select></td><td><button class="x" data-del title="Apagar">×</button></td></tr>`).join("")+(resto>0?`<tr><td colspan="4" style="text-align:center"><button class="b s" type="button" data-formais>Mostrar mais ${Math.min(resto,500)} (faltam ${resto}) — ou escolha a turma acima</button></td></tr>`:"")
-    ||`<tr><td colspan="4" class="hint">${e.formandos.length?"Ninguém corresponde à procura.":"Ainda sem formandos — acrescente acima ou cole uma lista."}</td></tr>`;
+  const base=e.formandos.filter(f=>!ft||f.turmaId===ft);
+  // números do topo (da turma escolhida ou de todas)
+  const at=base.filter(f=>!f.estado),ids=at.map(f=>forIdade(f.nasc)).filter(x=>x!=null),men=ids.filter(x=>x<18).length,anivs=at.filter(f=>{const d=forAniv(f.nasc);return d!=null&&d<=7});
+  $("#forTiles").innerHTML=e.formandos.length?[[at.length,"ativos"],[base.filter(f=>f.estado==="desistente").length,"desistentes"],[base.filter(f=>f.estado==="transferido").length,"transferidos"],
+    [ids.length?(ids.reduce((s,x)=>s+x,0)/ids.length).toLocaleString("pt-PT",{maximumFractionDigits:1}):"—","idade média"],[ids.length?men:"—","menores de 18"],[anivs.length,"fazem anos esta semana"]]
+    .map(([v,l])=>`<div class="frt"><b>${v}</b><span>${l}</span></div>`).join(""):"";
+  const L=base.filter(f=>(!FOR_EST||(FOR_EST==="ativo"?!f.estado:f.estado===FOR_EST))&&(!q||norm((f.num||"")+" "+f.nome+" "+cod(f.turmaId)).includes(q)))
+    .sort((x,y)=>CN.compare(cod(x.turmaId),cod(y.turmaId))||(!!x.estado-!!y.estado)||CP.compare(x.nome,y.nome));
+  FOR_N=FOR_N||200;const resto=L.length-FOR_N;let h="",tAnt=null;
+  for(const f of L.slice(0,FOR_N)){
+    if(f.turmaId!==tAnt){tAnt=f.turmaId;const t=TM.get(f.turmaId),c=t&&cursoById(t.cursoId),nA=e.formandos.filter(x=>x.turmaId===f.turmaId&&!x.estado).length;
+      h+=`<div class="frg"><b>${t?esc(t.cod):"Sem turma"}</b><span>${t?esc(c?c.nome:turmaNome(t)):""}${t&&anoCurricular(t,a)?" · "+esc(anoCurricular(t,a)):""}${t&&t.dt?" · Orientador educativo: "+esc(profName(t.dt)):""}</span><i>${nA} ativo(s)</i></div>`}
+    const id=forIdade(f.nasc),an=forAniv(f.nasc),ab=FOR_AB===f.id;
+    h+=`<div class="frr${f.estado?" sai":""}${ab?" ab":""}" data-id="${f.id}"><button type="button" class="frh" data-fab aria-expanded="${ab}">
+      <span class="frav" style="--c:${forCor(f.nome)}">${esc(forIni(f.nome))}</span>
+      <span class="frn"><b>${esc(f.nome)}</b><small>${f.num?"N.º "+esc(f.num):"sem número"}${id!=null?` · ${id} anos`:""}${an===0?" · faz anos hoje":an!=null&&an<=7?` · faz anos daqui a ${an} dia${an>1?"s":""}`:""}</small></span>
+      ${forEstTag(f)}<span class="frc">${cod(f.turmaId)?esc(cod(f.turmaId)):""}</span><svg class="frchev" viewBox="0 0 24 24" width="16" height="16"><path d="m6 9 6 6 6-6"/></svg></button>
+      ${ab?forFicha(f):""}</div>`}
+  if(resto>0)h+=`<div style="text-align:center;padding:10px"><button class="b s" type="button" data-formais>Mostrar mais ${Math.min(resto,500)} (faltam ${resto}) — ou escolha a turma acima</button></div>`;
+  $("#tbFor").innerHTML=h||`<p class="hint">${e.formandos.length?"Ninguém corresponde à procura.":"Ainda sem formandos — acrescente acima, cole uma lista ou importe o mapa (PDF)."}</p>`;
   $("#forCnt").textContent=e.formandos.length?`${L.length} de ${e.formandos.length} formando(s)${resto>0?" — a mostrar os primeiros "+FOR_N:""}.`:""}
+function forFicha(f){const E=escData(),a=anoAtivo(),t=E.turmas.find(x=>x.id===f.turmaId),c=t&&cursoById(t.cursoId),id=forIdade(f.nasc),an=forAniv(f.nasc);
+  const sec=(tit,corpo)=>`<section class="frs"><h5>${tit}</h5>${corpo}</section>`,li=(k,v)=>v?`<div class="frli"><span>${k}</span><b>${v}</b></div>`:"";
+  // 1) dados
+  let h=sec("Dados do formando",`<div class="frform">
+    <label>N.º<input type="text" data-k="num" value="${esc(f.num||"")}"></label>
+    <label class="w2">Nome<input type="text" data-k="nome" value="${esc(f.nome)}"></label>
+    <label>Data de nascimento<input type="date" data-k="nasc" value="${esc(f.nasc||"")}"></label>
+    <label>Turma<select data-k="turmaId">${turmaOpts(f.turmaId)}</select></label>
+    <label>Situação<select data-k="estado"><option value="">Ativo</option><option value="desistente"${f.estado==="desistente"?" selected":""}>Desistente</option><option value="transferido"${f.estado==="transferido"?" selected":""}>Transferido</option></select></label></div>
+    ${id!=null?`<p class="frnota">${id} anos · ${id>=18?"maior de idade":"menor de idade"}${an!=null?` · ${an===0?"faz anos hoje":`faz ${id+1} anos a ${esc(forDataPt(f.nasc).slice(0,5))} (daqui a ${an} dia${an>1?"s":""})`}`:""}</p>`:""}
+    <div class="row" style="margin-top:8px"><button class="b s pcdanger" type="button" data-fdel>Apagar formando</button></div>`);
+  // 2) turma e curso
+  if(t){const dt=t.dt?cfg.profs.find(p=>p.id===t.dt):null,ac=anoCurricular(t,a),p=typeof pcDe==="function"?pcDe(t.id,a.id):null;
+    let pl="";if(p&&p.linhas&&p.linhas.length){const disc=new Set(p.linhas.map(l=>l.disc)).size,hh=p.linhas.reduce((s,l)=>s+(+l.h||0),0),fct=+(p.fct&&p.fct.horas)||0;
+      pl=li("Plano curricular",`${disc} disciplinas · ${hh.toLocaleString("pt-PT")} h${fct?` + ${fct} h de FCT`:""}`)}
+    const pp=typeof turmaPlanoProprio==="function"&&turmaPlanoProprio(t);
+    h+=sec("Turma e curso",li("Turma",esc(turmaNome(t)))+li("Curso",c?esc(c.nome)+(c.qual?` <small>(${esc(c.qual.cod)}, nível ${esc(c.qual.nivel||"?")})</small>`:""):"")+li("Ano curricular",ac?esc(ac)+" em "+esc(a.nome):`fora de ${esc(a.nome)}`)
+      +li("N.º de projeto",t.fse?esc(t.fse):"")+li("Orientador educativo",dt?esc(dt.nome)+(dt.email?` <a href="mailto:${esc(dt.email)}">${esc(dt.email)}</a>`:""):"")+pl+(pp?li("Plano","plano próprio da turma"):"")
+      +`<div class="row" style="margin-top:8px;gap:6px"><button class="b s" type="button" data-fir="pc">Plano curricular</button><button class="b s" type="button" data-fir="tur">Turma</button><button class="b s" type="button" data-fir="cal">Calendário</button></div>`);
+    // 3) calendário da turma
+    try{const hoje=calHoje(),M=calMarcos(a,t.id).filter(m=>m.de).slice().sort((x,y)=>String(x.de).localeCompare(String(y.de)));
+      const fut=M.filter(m=>(m.ate||m.de)>=hoje).slice(0,6),fct=M.filter(m=>m.tipo==="fct");
+      h+=sec("Calendário da turma",(fct.length?li("FCT",fct.map(m=>esc(calDatasTxt(m))).join("<br>")):"")+(fut.length?`<div class="frmarcos">${fut.map(m=>`<div>${calTag(m.tipo)}<span>${esc(m.nome||((CAL_TIPOS[m.tipo]||CAL_TIPOS.outro)[0]))}</span><time>${esc(calDatasTxt(m))}</time></div>`).join("")}</div>`:`<p class="hint" style="margin:0">Sem marcos por vir em ${esc(a.nome)}.</p>`))}catch(x){}
+    // 4) colegas
+    const col=E.formandos.filter(x=>x.turmaId===t.id&&x.id!==f.id),ca=col.filter(x=>!x.estado);
+    h+=sec("Colegas de turma",`<p class="frnota" style="margin-top:0">${ca.length} colega(s) ativo(s)${col.length>ca.length?` · ${col.length-ca.length} saíram`:""}</p><div class="frcol">${ca.slice(0,24).map(x=>`<button type="button" class="frav sm" style="--c:${forCor(x.nome)}" data-fver="${x.id}" title="${esc(x.nome)}">${esc(forIni(x.nome))}</button>`).join("")}${ca.length>24?`<span class="hint" style="margin:0">+${ca.length-24}</span>`:""}</div>`)}
+  else h+=sec("Turma e curso",`<p class="hint" style="margin:0">Este formando ainda não tem turma: escolha-a nos dados.</p>`);
+  // 5) PAP
+  try{if(typeof PAP!=="undefined"&&PAP&&Array.isArray(PAP.provas)&&(typeof podePublicar!=="function"||podePublicar())){const R=[];
+      for(const P of PAP.provas)for(const k of P.cands||[])if(k.fId===f.id||(f.num&&k.num&&String(k.num)===String(f.num)&&P.turmaId===f.turmaId))R.push({P,k});
+      if(R.length)h+=sec("PAP",R.map(({P,k})=>{const nf=typeof papFinal==="function"?papFinal(k):null,j=[k.j1,k.j2].filter(Boolean).map(x=>{const o=(PAP.contactos||[]).find(c=>c.id===x);return o?o.nome:x});
+        return li("Prova",`${esc(P.fase==="esp"?"Época especial":P.fase+".ª fase")}${P.turmaId===f.turmaId?"":" (outra turma)"}`)+li("Tema",esc(k.tema||""))+li("Data",k.data?esc(forDataPt(k.data)||k.data)+(k.hora?" às "+esc(k.hora):""):"")+li("Júri externo",j.map(esc).join(", "))
+          +li("Classificação",nf!=null?`<span class="tag ${nf>=10?"ok":"bad"}">${nf} valores</span>`:"por avaliar")}).join('<hr class="frhr">')+`<div class="row" style="margin-top:8px"><button class="b s" type="button" data-fir="papInicio">Abrir PAP360</button></div>`)}
+    else if(typeof papCarregar==="function"&&!forFicha.papPedido){forFicha.papPedido=1;papCarregar().then(()=>{if(FOR_AB===f.id)renderFormandos()})}}catch(x){}
+  return `<div class="frf">${h}</div>`}
 var FOR_N=200;
 {let h=null;$("#forFilter").addEventListener("input",()=>{FOR_N=200;clearTimeout(h);h=setTimeout(renderFormandos,120)})}$("#forTurmaF").addEventListener("change",()=>{FOR_N=200;renderFormandos()});
-$("#tbFor").addEventListener("change",e=>{const tr=e.target.closest("tr");const f=escData().formandos.find(x=>x.id===tr.dataset.id);if(!f)return;f[e.target.dataset.k]=e.target.value.trim();save();esRecarregar()});
-$("#tbFor").addEventListener("click",e=>{if(e.target.hasAttribute("data-formais")){FOR_N+=500;renderFormandos();return}if(!e.target.hasAttribute("data-del"))return;const E=escData();const f=E.formandos.find(x=>x.id===e.target.closest("tr").dataset.id);if(!f)return;ponto("Antes de apagar o formando "+f.nome);E.formandos=E.formandos.filter(x=>x!==f);save();renderFormandos();esRecarregar();toast("Formando apagado (pode anular)")});
+$("#forEstF").addEventListener("click",e=>{const b=e.target.closest("[data-fe]");if(!b)return;FOR_EST=b.dataset.fe;FOR_N=200;renderFormandos()});
+$("#tbFor").addEventListener("change",e=>{const r=e.target.closest(".frr");if(!r||!e.target.dataset.k)return;const f=escData().formandos.find(x=>x.id===r.dataset.id);if(!f)return;const k=e.target.dataset.k,v=e.target.value.trim();
+  if(k==="estado"){if(v)f.estado=v;else delete f.estado}else f[k]=v;save();esRecarregar();renderFormandos()});
+$("#tbFor").addEventListener("click",e=>{if(e.target.closest("[data-formais]")){FOR_N+=500;renderFormandos();return}
+  const ir=e.target.closest("[data-fir]"),r=e.target.closest(".frr"),f=r&&escData().formandos.find(x=>x.id===r.dataset.id);
+  if(ir){if(f&&f.turmaId&&ir.dataset.fir==="pc"){PC_T=f.turmaId;try{localStorage.setItem("pc_t",PC_T)}catch(x){}}show(ir.dataset.fir);return}
+  const v=e.target.closest("[data-fver]");if(v){FOR_AB=v.dataset.fver;renderFormandos();const n=$("#tbFor").querySelector(`.frr[data-id="${CSS.escape(FOR_AB)}"]`);if(n)n.scrollIntoView({behavior:"smooth",block:"start"});return}
+  if(e.target.closest("[data-fdel]")&&f){if(!confirm(`Apagar o formando ${f.nome}? Pode anular a seguir.`))return;const E=escData();ponto("Antes de apagar o formando "+f.nome);E.formandos=E.formandos.filter(x=>x!==f);FOR_AB="";save();renderFormandos();esRecarregar();toast("Formando apagado (pode anular)");return}
+  if(e.target.closest("[data-fab]")&&f){FOR_AB=FOR_AB===f.id?"":f.id;renderFormandos()}});
 $("#forForm").addEventListener("submit",e=>{e.preventDefault();const nome=$("#fNome").value.trim();if(!nome)return;escData().formandos.push({id:uid(),num:$("#fNum").value.trim(),nome,turmaId:$("#fTurma").value});save();const t=$("#fTurma").value;$("#forForm").reset();$("#fTurma").value=t;renderFormandos();esRecarregar();$("#fNum").focus()});
 $("#forImport").onclick=()=>{const lines=$("#forBulk").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);if(!lines.length)return;
   ponto("Antes de colar uma lista de formandos");const E=escData(),fix=$("#forBulkT").value;let add=0,upd=0,bad=0;

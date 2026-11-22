@@ -215,9 +215,24 @@ function gpDesenhar(){const d=GP.alvo-GP.v;GP.v=Math.abs(d)<.3?GP.alvo:GP.v+d*.1
   GP.raf=GP.v!==GP.alvo?requestAnimationFrame(gpDesenhar):0}
 function prog(p,txt){if(txt)$("#gateWaitTxt").textContent=txt;GP.alvo=Math.max(GP.alvo,Math.min(100,p));if(!GP.raf)GP.raf=requestAnimationFrame(gpDesenhar)}
 function gpPasso(p,txt){if(!$("#gate").classList.contains("off"))prog(p,txt)} // só mexe na barra enquanto o ecrã de entrada está visível
-function progMod(id,st){if(st)GP.mods[id]=st;else delete GP.mods[id];
-  $("#gpMods").innerHTML=GP_MODS.filter(([m])=>GP.mods[m]).map(([m,n])=>{const e=GP.mods[m];
-    return `<li class="${e}"><span class="ic">${e==="ok"?"✓":e==="erro"?"!":e==="wait"?'<span class="spin"></span>':"–"}</span>${n}<em>${GP_EST[e]||""}</em></li>`}).join("")}
+/* 0.9.141: no ecrã de entrada os módulos já não aparecem todos de uma vez: passa um de cada vez, a aparecer e a desaparecer
+   (o que está a carregar e o que acabou de ficar pronto); os que dão erro ficam à vista por baixo */
+function progMod(id,st){const ant=GP.mods[id];if(st)GP.mods[id]=st;else delete GP.mods[id];
+  GP.fila=GP.fila||[];if(st&&st!==ant&&st!=="wait")GP.fila.push(id);gpTick(true)}
+function gpTickHTML(m){const n=(GP_MODS.find(x=>x[0]===m)||[m,m])[1],e=GP.mods[m]||"wait";
+  return `<span class="gpt ${e}"><span class="ic">${e==="ok"?"✓":e==="erro"?"!":e==="wait"?'<span class="spin"></span>':"–"}</span><b>${esc(n)}</b><em>${e==="ok"?"pronto":e==="wait"?"a carregar…":GP_EST[e]||""}</em></span>`}
+function gpTick(novo){const el=document.getElementById("gpMods");if(!el)return;const ids=GP_MODS.map(x=>x[0]).filter(m=>GP.mods[m]);
+  const ok=ids.filter(m=>GP.mods[m]==="ok").length,er=ids.filter(m=>GP.mods[m]==="erro");
+  if(!el.firstChild)el.innerHTML=`<div class="gptl"></div><div class="gptn"></div><div class="gpte"></div>`;
+  el.querySelector(".gptn").textContent=ids.length?`${ok} de ${ids.length} módulos prontos`:"";
+  el.querySelector(".gpte").innerHTML=er.map(gpTickHTML).join("");
+  if(novo&&GP.tickT)return; // já está a passar: a fila é vista na próxima volta
+  const prox=()=>{let m=null;while(GP.fila&&GP.fila.length&&!m){const x=GP.fila.shift();if(GP.mods[x]&&GP.mods[x]!=="erro")m=x}
+    if(!m){const w=ids.filter(x=>GP.mods[x]==="wait");if(w.length){GP.rod=((GP.rod||0)+1)%w.length;m=w[GP.rod]}}return m};
+  const m=prox(),L=el.querySelector(".gptl");if(!m){GP.tickT=0;return}
+  if(L.dataset.m===m&&L.innerHTML){L.innerHTML=gpTickHTML(m)}
+  else{L.classList.add("fora");setTimeout(()=>{L.dataset.m=m;L.innerHTML=gpTickHTML(m);L.classList.remove("fora")},220)}
+  clearTimeout(GP.tickT);GP.tickT=setTimeout(()=>{GP.tickT=0;if(!document.getElementById("gate").classList.contains("off"))gpTick()},1300)}
 const gpAte=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(Object.assign(new Error("demorou demasiado"),{tempo:true})),ms))]);
 const gpEspera=ms=>new Promise(r=>setTimeout(r,ms));
 function gateState(st,msg,txt){if(txt)$("#gateWaitTxt").textContent=txt;

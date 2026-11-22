@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.141 */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.142 */
 /* ===== src/css/fontes.css ===== */
 @font-face{font-family:Poppins;font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/poppins-latin-400.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:Poppins;font-style:normal;font-weight:500;font-display:swap;src:url(../fonts/poppins-latin-500.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -1625,6 +1625,43 @@ nav.side .h3modo button.on,.h3modo button.on{background:var(--brand);color:#fff}
 .h3volta{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 8px}.h3volta span{flex:1;min-width:240px}
 .h3lb{display:block;margin:0 0 10px}.h3lb input,.h3lb textarea{display:block;margin-top:4px;width:100%;box-sizing:border-box}.h3lb textarea{height:auto;min-height:170px;padding:8px 11px;font-family:inherit;line-height:1.5}
 #hsCom input[data-h3tel]{height:32px}
+/* Escola360 › Formandos: lista com ficha (0.9.141) */
+.frtiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:4px 0 14px}
+.frt{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;display:flex;flex-direction:column;gap:2px}
+.frt b{font-size:22px;font-variant-numeric:tabular-nums;color:var(--ink)}.frt span{font-size:12px;color:var(--muted)}
+.frseg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff}
+.frseg button{border:0;background:none;padding:8px 12px;font:inherit;font-size:13px;cursor:pointer;color:var(--muted)}.frseg button+button{border-left:1px solid var(--line)}
+.frseg button.on{background:var(--brandbg,#e8f0fb);color:var(--brand);font-weight:600}
+.frl{display:flex;flex-direction:column}
+.frg{display:flex;gap:10px;align-items:baseline;padding:14px 4px 6px;border-bottom:2px solid var(--line);position:sticky;top:var(--toph,56px);background:var(--card);z-index:1}
+.frg b{font-size:15px}.frg span{color:var(--muted);font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.frg i{font-style:normal;font-size:12px;color:var(--muted)}
+.frr{border-bottom:1px solid #eef1f5}.frr.sai .frn b{color:var(--muted)}.frr.ab{background:#f8fafd}
+.frh{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;padding:9px 6px;font:inherit;text-align:left;cursor:pointer;color:inherit}
+.frh:hover{background:#f6f8fb}.frchev{fill:none;stroke:var(--muted);stroke-width:2;transition:transform .15s}.frr.ab .frchev{transform:rotate(180deg)}
+.frav{width:34px;height:34px;border-radius:50%;flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;color:#fff;background:var(--c);letter-spacing:.3px}
+.frr.sai .frav{opacity:.45}.frav.sm{width:28px;height:28px;font-size:11px;border:0;cursor:pointer;padding:0}
+.frn{flex:1;min-width:0;display:flex;flex-direction:column}.frn b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.frn small{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.frc{font-size:12px;font-weight:600;color:var(--muted);min-width:34px;text-align:right}
+.frf{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;padding:4px 6px 16px 52px}
+.frs{border:1px solid var(--line);border-radius:10px;background:#fff;padding:12px 14px}.frs h5{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+.frform{display:grid;grid-template-columns:1fr 1fr;gap:8px}.frform label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}.frform .w2{grid-column:1/-1}
+.frli{display:flex;gap:10px;padding:4px 0;border-bottom:1px dashed #eef1f5;font-size:13px}.frli span{width:130px;flex:none;color:var(--muted)}.frli b{font-weight:500;min-width:0;overflow-wrap:anywhere}.frli a{margin-left:4px;font-weight:400}
+.frnota{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+.frmarcos{display:flex;flex-direction:column;gap:6px;margin-top:6px}.frmarcos div{display:flex;gap:8px;align-items:center;font-size:13px}.frmarcos span{flex:1;min-width:0}.frmarcos time{color:var(--muted);font-size:12px;white-space:nowrap}
+.frcol{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.frhr{border:0;border-top:1px solid var(--line);margin:8px 0}
+@media (max-width:700px){.frf{padding-left:6px}.frg{position:static}}
+/* Ecrã de entrada: um módulo de cada vez, com fade (0.9.141) */
+.gptick{display:flex;flex-direction:column;align-items:center;gap:6px;margin:6px 0 0;min-height:64px}
+.gptl{height:40px;display:flex;align-items:center;justify-content:center;transition:opacity .22s ease,transform .22s ease}
+.gptl.fora{opacity:0;transform:translateY(4px)}
+.gpt{display:inline-flex;align-items:center;gap:9px;font-size:15px;padding:8px 16px;border:1px solid var(--line);border-radius:999px;background:#fbfcfe}
+.gpt b{font-weight:600}.gpt em{font-style:normal;font-size:12.5px;color:var(--muted)}
+.gpt .ic{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;border-radius:50%;flex:none}.gpt .ic .spin{width:14px;height:14px;border-width:2px}
+.gpt.ok{border-color:#bfe6cc;background:#f1faf4}.gpt.ok .ic{background:#3db166;color:#fff}
+.gpt.erro{border-color:#f3c7c7;background:#fdf3f3}.gpt.erro .ic{background:#d64545;color:#fff}
+.gptn{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.gpte{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.gpte .gpt{font-size:13px;padding:5px 12px}
+@media (prefers-reduced-motion:reduce){.gptl{transition:none}}
 /* ===== src/css/temas.css ===== */
 /* 0.9.94: Definições › Temas. «360» é o aspeto original (sem atributo). «Cobalto» é inspirado no aspeto da Box:
    menu lateral azul-cobalto com texto branco, conteúdo branco, linhas finas, cabeçalhos de tabela em maiúsculas pequenas

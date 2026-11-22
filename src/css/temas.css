@@ -255,3 +255,56 @@ html[data-tema="cobalto"] nav.side .mgrp .h3modo button.sel,html[data-tema="coba
 html[data-tema="cobalto"] nav.side .h3modo button+button{border-left-color:rgba(255,255,255,.28)}
 /* 0.9.142: no Cobalto o bloco do logótipo fica fixo à esquerda — o aviso por cima do editor começa depois dele */
 @media (min-width:1024px){html[data-tema="cobalto"] body.esch #esMsg:not(:empty){margin-left:var(--navwe,220px)}}
+
+/* ===================== 0.9.160: Econo360 — faturas e versão para telemóvel ===================== */
+.ecf-add{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-style:dashed}.ecf-add.on{border-color:var(--brand);background:var(--brandbg)}
+.ecf-addt{flex:1;min-width:220px;display:flex;flex-direction:column;gap:3px}.ecf-addb{display:flex;gap:8px;flex-wrap:wrap}
+.ecf-foto svg,.ecf-btns svg,[data-ecfpag] svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px;margin-right:6px}
+.ecf-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.ecf-h h2{margin:0}
+.ecf-fich{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.ecf-img{display:flex;flex-direction:column;align-items:center;gap:2px;width:92px;text-decoration:none;color:var(--muted);font-size:11px}
+.ecf-img img{width:92px;height:120px;object-fit:cover;object-position:top;border:1px solid var(--line);border-radius:8px;background:#fff}
+.ecf-pdf{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;text-decoration:none;color:var(--ink);background:var(--card,#fff)}
+.ecf-pdf svg{width:22px;height:22px;fill:none;stroke:var(--brand);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ecf-pdf small{display:block;color:var(--muted);font-size:11px}
+.fd-hist .eco-anul{color:var(--muted)}.fd-hist .eco-anul b{text-decoration:line-through}
+.eco-somob,.eco-voltar,.eco-bar{display:none}
+.eco-cards{display:grid;gap:8px}
+.eco-card{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;color:inherit;background:var(--card,#fff);border:1px solid var(--line);border-radius:12px;padding:11px 12px;cursor:pointer}
+.eco-card:active{background:var(--brandbg)}.eco-mc{cursor:default}
+.eco-cm{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.eco-cm b{font-weight:600;font-size:14.5px;overflow:hidden;text-overflow:ellipsis}.eco-cm small{color:var(--muted);font-size:12px}
+.eco-cq{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:none;text-align:right}.eco-cq b{font-size:17px;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:-.02em}.eco-cq small{color:var(--muted);font-size:11.5px}
+.eco-cb{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.eco-cb:empty{display:none}
+.eco-card.eco-anul{opacity:.65}.eco-card.eco-anul .eco-cq b{text-decoration:line-through}
+@media (max-width:760px){
+  .eco-sopc{display:none!important}
+  body.ecom .eco-somob{display:inline-flex}
+  body.ecom.ecoed{padding-bottom:calc(74px + env(safe-area-inset-bottom))}
+  body.ecom.ecoed nav.side{padding-bottom:96px!important}
+  body.ecom.ecoed .eco-bar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:95;background:#fff;border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom));justify-content:space-around;align-items:flex-end;box-shadow:0 -6px 20px rgba(15,23,42,.06)}
+  .eco-bar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;font:inherit;font-size:11px;color:var(--muted);padding:4px 2px;cursor:pointer;min-width:0}
+  .eco-bar button[hidden]{display:none}
+  .eco-bar button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .eco-bar button.on{color:var(--brand);font-weight:600}
+  .eco-bar .eco-bcam{flex:none;width:58px;height:58px;margin:-22px 6px 0;border-radius:50%;background:var(--brand);color:#fff;justify-content:center;box-shadow:0 6px 16px rgba(22,50,105,.35)}
+  .eco-bar .eco-bcam svg{width:26px;height:26px}
+  body.ecom .ecf-foto{flex:1;justify-content:center;padding:14px;font-size:15px}
+  body.ecom .ecf-addb{width:100%}body.ecom .ecf-addb .b{flex:1;justify-content:center}
+  body.ecom #ecoFicha{display:none}
+  body.ecom.ecofic #ecoFicha{display:block;position:fixed;inset:0;z-index:90;overflow:auto;-webkit-overflow-scrolling:touch;background:var(--bg,#f4f6fa);padding:10px 10px calc(90px + env(safe-area-inset-bottom))}
+  body.ecom.ecofic{overflow:hidden}
+  body.ecom #ecoFicha .eco-voltar{display:inline-flex;margin-bottom:10px}
+  body.ecom .eco-modal{padding:0;place-items:stretch}
+  body.ecom .eco-modal .fd-mcard{width:100%!important;max-height:none;height:100dvh;border-radius:0;padding:16px 14px calc(16px + env(safe-area-inset-bottom))!important}
+  body.ecom .eco-modal .fd-btns{position:sticky;bottom:-16px;background:var(--card,#fff);padding:10px 0;margin-bottom:-6px;flex-wrap:wrap;border-top:1px solid var(--line)}
+  body.ecom #ecoInicio .fd-filtros>label:not(.grow){flex:1 1 30%}
+  body.ecom .ay-hero h1{font-size:24px}
+  body.ecom .eco-scanb{align-self:flex-end}
+  body.ecom main>section[id^="eco"] .pp-head .hint{display:none}
+  body.ecom main>section[id^="eco"] .ay-stats{grid-template-columns:1fr 1fr!important;gap:8px}
+  body.ecom main>section[id^="eco"] .ay-st{padding:8px 10px}
+  body.ecom main>section[id^="eco"] .ay-hero .sub{font-size:13px}
+  body.ecom .eco-big{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px}body.ecom .eco-big>div{padding:7px 8px}body.ecom .eco-big b{font-size:16px}
+  body.ecom main>section[id^="eco"] .fd-filtros>label:has(input[type=date]){flex:1 1 40%}
+  body.ecom .ecf-btns #ecfTot{flex-basis:100%}body.ecom .ecf-btns .grow{display:none}body.ecom .ecf-btns .b{flex:1 1 auto}
+}
+.ecf-novo[hidden]{display:none!important}

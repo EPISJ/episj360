@@ -56,7 +56,9 @@
    "js/folder/folder.js"
   ],
   "econo": [
-   "js/econo/econo.js"
+   "js/econo/econo.js",
+   "js/econo/econo-faturas.js",
+   "js/econo/econo-movel.js"
   ]
  },
  "armazenamento": [

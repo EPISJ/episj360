@@ -62,7 +62,7 @@ function mvIniciar(){if(MV)return;MV={on:false,mq:null,tab:null,pop:false,scroll
   // ao passar de telemóvel para ecrã largo (ou ao contrário, ex.: rodar o telemóvel) os ecrãs com desenho próprio para telemóvel são redesenhados
   const f=()=>{mvModo(MV.mq.matches);try{if(curTab)show(curTab)}catch(e){}};MV.mq.addEventListener?MV.mq.addEventListener("change",f):MV.mq.addListener(f);
   mvModo(MV.mq.matches)}
-function mvModo(on){if(!MV)return;MV.on=!!on;const H=document.documentElement;H.classList.toggle("mv",MV.on);
+function mvModo(on){if(!MV)return;MV.on=!!on;const H=document.documentElement;H.classList.toggle("mv",MV.on);try{mvEntrada(MV.on)}catch(e){}
   if(!MV.on){mvFolhaFechar(true);document.body.classList.remove("navopen");return}
   document.body.classList.remove("navopen");const v=document.getElementById("navVeu");if(v)v.hidden=true;
   try{if(!history.state||!history.state.mv)history.replaceState({mv:curTab},"")}catch(e){}
@@ -71,11 +71,24 @@ function mvModo(on){if(!MV)return;MV.on=!!on;const H=document.documentElement;H.
   // o estado de «guardado» e o utilizador mudam sem passar por show(): acompanhar de vez em quando (barato)
   if(!MV.tick)MV.tick=setInterval(()=>{if(MV.on&&!document.hidden){mvConta0();try{mvBarra(curMod,curTab)}catch(e){}}},4000)}
 
+/* ---------- ecrã de entrada como uma app (0.9.224) ----------
+   No telemóvel: fundo azul a toda a altura com o logótipo branco, o nome e a frase ao centro, e um painel branco em baixo
+   (como as apps) com o botão de entrar, a ajuda, os avisos e os logótipos de financiamento. Os elementos são os mesmos
+   (mudam só de sítio, com os seus eventos); voltam ao lugar se a janela deixar de ser de telemóvel. */
+function mvEntrada(on){const g=document.getElementById("gate"),c=g&&g.querySelector(".gcard");if(!c)return;
+  const lg=c.querySelector(".glogo");if(lg&&!lg.querySelector(".mv-glogo")){const s=document.querySelector(".sblogo");if(s){const k=s.cloneNode(true);k.removeAttribute("id");k.classList.add("mv-glogo");k.setAttribute("aria-hidden","true");lg.appendChild(k)}}
+  let p=document.getElementById("mvGPainel");const ids=["gateWait","gateLogin","gateMsg","gFundos"];
+  if(on){if(!p){p=document.createElement("div");p.id="mvGPainel";p.className="mv-gpainel";g.appendChild(p)}
+    ids.forEach(id=>{const e=document.getElementById(id);if(e&&e.parentNode!==p){if(!e.__mvVolta)e.__mvVolta={pai:e.parentNode,seg:e.nextSibling};p.appendChild(e)}})}
+  else if(p){ids.slice().reverse().forEach(id=>{const e=document.getElementById(id);if(e&&e.__mvVolta&&e.parentNode===p){const v=e.__mvVolta;try{v.pai.insertBefore(e,v.seg&&v.seg.parentNode===v.pai?v.seg:null)}catch(x){v.pai.appendChild(e)}}});p.remove()}}
+
 /* ---------- chamado por show() a cada mudança de separador ---------- */
 function mvShow(t){if(!MV||!MV.on)return;
   if(MV.tab&&MV.tab!==t)MV.scroll[MV.tab]=window.scrollY;
   if(!MV.pop){try{const s=history.state;if(!s||s.mv!==t){if(s&&s.mv&&!s.sh)history.pushState({mv:t},"");else history.replaceState({mv:t},"")}}catch(e){}}
   const ant=MV.tab;MV.tab=t;mvAtualizar();
+  // transição curta entre ecrãs (como nas apps); não se nota com «reduzir movimento»
+  if(ant&&ant!==t){const sec=document.getElementById(t);if(sec){sec.classList.remove("mv-entra","mv-volta");void sec.offsetWidth;sec.classList.add(MV.pop?"mv-volta":"mv-entra");setTimeout(()=>sec.classList.remove("mv-entra","mv-volta"),320)}}
   if(ant!==t)requestAnimationFrame(()=>{window.scrollTo(0,MV.pop&&MV.scroll[t]?MV.scroll[t]:0)})}
 function mvPop(e){if(!MV||!MV.on)return;const s=e.state||{};
   if(MV.folha){mvFolhaFechar(true);if(s.sh)return} // «voltar» com uma folha aberta só a fecha

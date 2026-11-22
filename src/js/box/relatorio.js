@@ -438,6 +438,18 @@ function boxPublico(){if(!lastListing||!folders||!folders.length)return null;let
     for(const p of [...S]){const q=p.split("/");for(let i=1;i<q.length;i++)S.add(q.slice(0,i).join("/"))}
     R.profs[pid]={p:[...S].sort().map(p=>[p,own.get(p)||0]),m:out[pid].m}}
   return {id:String(lastListing.rootId||R.nome),d:R}}
+/* todas as análises guardadas neste computador (ex.: DTP 2025.2026 e DTP 2026.2027): cada uma é calculada à vez, trocando por
+   momentos a análise carregada, e no fim volta tudo ao que estava (nada é gravado nem apagado) */
+async function boxPublicoTodas(){const out=[],cur=lastListing&&String(lastListing.rootId||"");
+  try{const b=boxPublico();if(b)out.push(b)}catch(e){}
+  let ids=[];try{ids=Object.keys(resumos()).filter(id=>id!==cur)}catch(e){}
+  if(!ids.length)return out;
+  const S={lastListing,files,folders};
+  try{for(const id of ids){let j=null;try{j=await lerListagem(id)}catch(e){}if(!j||!j.itens)continue;
+      const t=toFF(semExcluidas(j));lastListing=j;files=t.fs;folders=t.fo;filesRev++;IDX=null;EV=null;
+      try{const b=boxPublico();if(b)out.push(b)}catch(e){console.warn("análise "+id,e)}}}
+  finally{lastListing=S.lastListing;files=S.files;folders=S.folders;filesRev++;IDX=null;EV=null}
+  return out}
 var BOX_SEL="";
 function boxAnalises(){const A=PUB&&PUB.box&&PUB.box.anal||{};return Object.entries(A).map(([id,d])=>({id,d})).sort((a,b)=>COLL_PTN.compare(String(b.d.nome||""),String(a.d.nome||""))||(b.d.t||0)-(a.d.t||0))}
 // escolha da análise guardada (formador): a mais recente por omissão

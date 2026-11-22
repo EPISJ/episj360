@@ -231,7 +231,7 @@ async function guidePublicar(manual){if(!podePublicar()||RO)return;
   const body={v:1,t:Date.now(),por:EU.email,escola:cfg.escola,profs:cfg.profs.map(p=>({id:p.id,nome:p.nome,abrev:p.abrev||"",email:profEmail(p)})),contasFormandos:forContas().map(c=>({email:c.email,nome:c.nome,turma:c.turma})),es:{porAno,mapaT:ESD.mapaT||{},mapaC:ESD.mapaC||{}}};try{body.cr=crPublico()}catch(e){}try{if(H3&&H3.sal)body.h3={sal:H3.sal}}catch(e){} // 0.9.136: tópicos das notificações dos formadores (Horários360) // 0.9.59: pontos de situação do Crono360
   // 0.9.194: as pastas e as estatísticas de cada formador (Box360) — calculadas da análise carregada; sem análise, mantém-se o publicado
   // cada análise guardada (ex.: DTP 2025.2026, DTP 2026.2027) fica publicada à parte, para o formador poder ver as dos anos anteriores
-  try{const old=await guideApi("/guide/publico").catch(()=>null),A=Object.assign({},old&&old.box&&old.box.anal||{}),bx=boxPublico();if(bx)A[bx.id]=bx.d;if(Object.keys(A).length)body.box={anal:A}}catch(e){console.warn("box publicado",e)}
+  try{const old=await guideApi("/guide/publico").catch(()=>null),A=Object.assign({},old&&old.box&&old.box.anal||{}),L=await boxPublicoTodas();for(const bx of L)A[bx.id]=bx.d;if(Object.keys(A).length)body.box={anal:A}}catch(e){console.warn("box publicado",e)}
   // 0.9.50: o que já está publicado não volta a ser enviado (com o tempo real, cada computador da Direção publicaria o mesmo)
   const sx=JSON.stringify({...body,t:0,por:""}),sig=sx.length+":"+esHash(sx);let sig0="";try{sig0=localStorage.getItem("guide_pub_sig")||""}catch(e){}
   if(!manual&&sig===sig0&&PUBT&&!PUBERR){pubUI();return}

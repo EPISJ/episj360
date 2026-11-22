@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.160 — ecrã do módulo «folder», carregado quando é aberto */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.161 — ecrã do módulo «folder», carregado quando é aberto */
 "use strict";
 // ===== src/js/folder/folder.js =====
 /* Folder360 — ecrã do módulo (carregado só quando o Folder360 é aberto; os dados estão em folder/folder-dados.js) */
@@ -85,7 +85,7 @@ function foFichaUI(){const d=foSel(),el=$("#foFicha");if(!el)return;
   const sel=(k,l,L)=>`<label>${l}<select data-fdk="${k}" ${dis}>${foOpts(foUniq(L.concat([d[k]])),d[k]||"","—")}</select></label>`;
   el.innerHTML=`<div class="card fd-ficha">
     <div class="fd-fh"><div><div class="fd-fcod">${esc(cod)}</div><div class="hint" style="margin:2px 0 0">${esc(foArqNome(d.arq))} · armário ${esc(d.arm||"—")} · prateleira ${esc(d.prat||"—")} · n.º ${esc(d.ns||"—")}</div></div><span class="grow"></span>${foChip(e)}${foRepetido(d)?' <span class="pp-chip ba">código repetido</span>':""}</div>
-    <div class="fd-codes"><div class="fd-barw">${foBarSvg(cod,40)}<small>${esc(cod)}</small></div><div class="fd-qrw" id="foQRw" title="${esc(foQRTxt(d))}"></div></div>
+    <div class="fd-top"><div class="fd-codes"><div class="fd-barw">${foBarSvg(cod,40)}<small>${esc(cod)}</small></div><div class="fd-qrw" id="foQRw" title="${esc(foQRTxt(d))}"></div></div><div class="fd-lpv"><div class="fd-lpt">Lombada</div><button type="button" class="fd-lpc" id="foLPv" data-fdpdf="lomb" title="Pré-visualização da lombada (${esc(String(+E.lombW||65))} mm) — carregue para criar o PDF"><span class="spin"></span></button><small>${esc(String(+E.lombW||65))} × 158 mm · carregue para o PDF</small></div></div>
     ${e.m?`<div class="msg ${e.k==="ba"?"bad":"info"}" style="margin:8px 0">Requisitado por <b>${esc(e.m.quem||"—")}</b> desde ${esc(calDMA(e.m.saida))}${e.m.prev?` · devolução prevista a ${esc(calDMA(e.m.prev))}`:""}${ed?` <button class="b s" data-fddev="${e.m.id}" style="margin-left:6px">Devolvido</button>`:""}</div>`:""}
     <div class="pp-form fd-form">
       <label>Arquivo<select data-fdk="arq" ${dis}>${foOpts(arqs.map(c=>({v:c,t:foArqNome(c)})),d.arq||"","—")}</select></label>
@@ -111,6 +111,7 @@ function foFichaUI(){const d=foSel(),el=$("#foFicha");if(!el)return;
     ${H.length?`<h3 class="fd-h3">Requisições</h3><div class="fd-hist">${H.slice(0,8).map(m=>`<div><b>${esc(m.quem||"—")}</b> · ${esc(calDM(m.saida,{day:"numeric",month:"short",year:"numeric"}))} → ${m.dev?esc(calDM(m.dev,{day:"numeric",month:"short",year:"numeric"})):"<i>ainda fora</i>"}${m.obs?` · ${esc(m.obs)}`:""}</div>`).join("")}</div>`:""}
   </div>`;
   foLibQR().then(()=>{const w=$("#foQRw");if(w&&foSel()===d)w.innerHTML=foQRSvg(foQRTxt(d))+`<small>${d.url?"abre a pasta":"código"}</small>`}).catch(()=>{});
+  foLombPrev(d);
   foDatalists()}
 function foDatalists(){const E=foDef(),dl=(id,L)=>{let x=document.getElementById(id);if(!x){x=document.createElement("datalist");x.id=id;document.body.appendChild(x)}x.innerHTML=foUniq(L).map(v=>`<option value="${esc(v)}">`).join("")};
   let tur=[];try{tur=escData().turmas.map(t=>{const c=t.cod?String(t.cod):"";return(c&&/^\d+$/.test(c)?c+" - ":"")+turmaNome(t)})}catch(e){}
@@ -292,6 +293,18 @@ async function foScanAbrir(cb,cont){foScanFechar();const box=document.createElem
     setTimeout(passo,det?120:180)};passo()}
 function foScanFechar(){const S=FO_SCAN;FO_SCAN=null;if(!S)return;S.on=false;try{S.stream&&S.stream.getTracks().forEach(t=>t.stop())}catch(e){}S.box.remove()}
 
+// 0.9.161: pré-visualização da lombada na ficha — é o próprio PDF da lombada (foLombada), desenhado numa imagem, por isso fica igual ao que se imprime
+var FO_LPV={k:"",url:"",n:0};
+async function foLombPrev(d){const n=++FO_LPV.n,E=foDef(),W=+E.lombW||65,H=158,k=JSON.stringify([d,W,E.lombQR,E.site,E.fins,typeof LOGOS==="object"?Object.keys(LOGOS).length:0]);
+  const porImg=u=>{const b=$("#foLPv");if(b&&foSel()===d&&n===FO_LPV.n)b.innerHTML=`<img src="${u}" alt="Lombada de ${esc(foCod(d))}">`};
+  if(FO_LPV.k===k&&FO_LPV.url){porImg(FO_LPV.url);return}
+  try{const J=await loadPDF();await foLibQR();await foLgPadrao();if(n!==FO_LPV.n)return;
+    const doc=new J({unit:"mm",format:[W+2,H+2],orientation:"portrait",compress:true});foLombada(doc,d,1,1,W,H,true);
+    const pdfjs=await calPdfJs(),pdf=await pdfjs.getDocument({data:new Uint8Array(doc.output("arraybuffer")),isEvalSupported:false}).promise,pg=await pdf.getPage(1);
+    const vp=pg.getViewport({scale:Math.min(4,(380*(window.devicePixelRatio>1?2:1.4))/((H+2)/25.4*72))}),cv=document.createElement("canvas");cv.width=Math.ceil(vp.width);cv.height=Math.ceil(vp.height);
+    await pg.render({canvasContext:cv.getContext("2d"),viewport:vp}).promise;try{pdf.destroy()}catch(e){}if(n!==FO_LPV.n)return;
+    const url=cv.toDataURL("image/png");FO_LPV={k,url,n};porImg(url)}
+  catch(e){console.warn(e);const b=$("#foLPv");if(b&&n===FO_LPV.n)b.innerHTML=`<span class="hint" style="margin:0;padding:8px">Sem pré-visualização</span>`}}
 // ----- PDF: lombadas, etiquetas, etiquetas de CD, relatório por arquivo, lista de conferência -----
 function foA4(J,deitada){return new J({unit:"mm",format:"a4",orientation:deitada?"landscape":"portrait",compress:true})}
 function foFoot(d){const E=foDef(),f=E.fins.find(x=>x.n===d.fin);{const p=d.proj&&lgProj(d.proj);if(p)return p} // 0) o do n.º de projeto do dossier (Definições › Logótipos)
@@ -302,7 +315,7 @@ function foFoot(d){const E=foDef(),f=E.fins.find(x=>x.n===d.fin);{const p=d.proj
   return pdfLogos().f}                                                                                  // 3) o da barra de baixo (ano ativo / padrão)
 function foImg(doc,L,x,y,mw,mh,al){if(!foLg(L))return 0;const[w,h]=lgFit(L,mw,mh);const xx=al==="c"?x+(mw-w)/2:al==="r"?x+mw-w:x;try{doc.addImage(L.src,lgFmt(L),xx,y+(mh-h)/2,w,h,undefined,"FAST")}catch(e){}return w}
 function foTxtC(doc,t,cx,y,maxw,lh){const L=doc.splitTextToSize(pdfTxt(t),maxw);L.forEach((s,i)=>doc.text(s,cx,y+i*lh,{align:"center"}));return L.length}
-function foLombada(doc,d,x,y,W,H){const E=foDef(),{m,r}=pdfLogos(),cx=x+W/2,cod=foCod(d);
+function foLombada(doc,d,x,y,W,H,semTira){const E=foDef(),{m,r}=pdfLogos(),cx=x+W/2,cod=foCod(d);
   doc.setDrawColor(30);doc.setLineWidth(.45);doc.rect(x,y,W,H);
   if(m&&r){foImg(doc,m,x+4,y+4,W/2-6,14,"c");foImg(doc,r,x+W/2+2,y+4,W/2-6,14,"c")}else if(m||r)foImg(doc,m||r,x+6,y+4,W-12,14,"c");
   doc.setDrawColor(205);doc.setLineWidth(.2);doc.line(x+5,y+22,x+W-5,y+22);
@@ -322,8 +335,8 @@ function foLombada(doc,d,x,y,W,H){const E=foDef(),{m,r}=pdfLogos(),cx=x+W/2,cod=
   doc.setFont("helvetica","normal");if(d.proj){let f=9;doc.setFontSize(f);while(f>6.5&&doc.getTextWidth(pdfTxt(d.proj))>W-6){f-=.25;doc.setFontSize(f)}foTxtC(doc,d.proj,cx,y+H-35,W-6,3.8)} // 0.9.111: o n.º de projeto numa só linha nas lombadas estreitas
   foImg(doc,foFoot(d),x+3,y+H-28,W-6,10,"c");
   doc.setFont("helvetica","italic");doc.setFontSize(8.5);doc.setTextColor(90);if(E.site)doc.text(pdfTxt(E.site),cx,y+H-7,{align:"center"});
-  // tira com o código de barras, para recortar
-  const sy=y+H+6;doc.setDrawColor(60);doc.setLineWidth(.25);doc.line(x,sy,x+W,sy);doc.line(x,sy+17,x+W,sy+17);foPdfBar(doc,x+2,sy+2.2,W-4,10.5,cod);
+  // tira com o código de barras, para recortar (não vai na pré-visualização da ficha)
+  if(semTira)return;const sy=y+H+6;doc.setDrawColor(60);doc.setLineWidth(.25);doc.line(x,sy,x+W,sy);doc.line(x,sy+17,x+W,sy+17);foPdfBar(doc,x+2,sy+2.2,W-4,10.5,cod);
   doc.setFont("courier","normal");doc.setFontSize(6.5);doc.setTextColor(30);doc.text(pdfTxt(cod),cx,sy+15.2,{align:"center"})}
 var FO_ETQ={l7159:{t:"Avery L7159 · 3 × 8 (63,5 × 33,9 mm)",c:3,r:8,w:63.5,h:33.9,mx:6.5,my:12.9,px:66,py:33.9,fr:false},
   l7160:{t:"Avery L7160 · 3 × 7 (63,5 × 38,1 mm)",c:3,r:7,w:63.5,h:38.1,mx:7.2,my:15.1,px:66,py:38.1,fr:false},

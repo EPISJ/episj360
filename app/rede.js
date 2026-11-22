@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.198 */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.199 */
 // ===== src/js/inicio/rede.js =====
 /* 0.9.93: rede de segurança do arranque — se o script principal falhar antes de a app abrir, a próxima entrada abre na Escola360 e o ecrã de entrada diz o que se passou */
 (function(){var vis=false;function falha(m){if(window.__wgOk||vis)return;vis=true;try{localStorage.setItem("guide_mod","escola")}catch(e){}

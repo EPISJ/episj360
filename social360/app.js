@@ -75,7 +75,7 @@ function pubHTML(p) {
   const ws = S.workspaces[p.ws]; const r = p.pub || {};
   const linhas = (p.pageIds || []).map(id => { const pg = pageOf(ws, id); const x = r[id]; if (!pg || !x) return ''; 
     const nome = `${pfBadge(pg.platform, 'sm')} ${esc(pg.name)}`;
-    if (x.estado === 'ok') return `<div class="pubr ok">${nome} · publicada${x.url ? ` · <a href="${esc(x.url)}" target="_blank" rel="noopener">ver ↗</a>` : ''}</div>`;
+    if (x.estado === 'ok') return `<div class="pubr ok">${nome} · publicada${x.url ? ` · <a href="${escUrl(x.url)}" target="_blank" rel="noopener">ver ↗</a>` : ''}</div>`;
     if (x.estado === 'manual') return `<div class="pubr man">${nome} · publicar à mão nesta rede</div>`;
     if (x.estado === 'aguarda') return `<div class="pubr">${nome} · o Instagram está a processar o vídeo…</div>`;
     return `<div class="pubr err">${nome} · ${esc(x.erro || 'falhou')}</div>`; }).join('');

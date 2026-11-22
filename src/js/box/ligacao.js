@@ -26,7 +26,11 @@ function sesNova(j,base){return{mode:"oauth",a:j.access_token||j.a,r:j.refresh_t
   t:j.access_token?Date.now():(+j.t||Date.now()),dono:(base&&base.dono)||euEmailBox(),login:j.login||(base&&base.login)||"",nome:j.nome||(base&&base.nome)||""}}
 // regresso do login (o serviço devolve o acesso no fim do endereço, depois de #)
 (function(){const h=location.hash;
-  if(h.startsWith("#boxdoc_auth=")){try{const p=JSON.parse(atob(decodeURIComponent(h.slice(13))));SES={mode:"oauth",a:p.a,r:p.r,exp:Date.now()+(p.e||3600)*1000-120e3,t:Date.now(),dono:"",login:""};saveSes();localStorage.removeItem("boxdoc_morta")}catch(e){}
+  // 0.9.145: só aceita a sessão da Box se esta janela foi para o login da Box há menos de 15 min (um link de outra pessoa com «#boxdoc_auth=» deixa de ligar a conta Box dela)
+  // a marca vai no sessionStorage verdadeiro do separador (só um número com a hora; apaga-se logo ao voltar), porque a página sai para a Box e volta
+  let pend=0;try{const ss=(window.__g360Mem&&window.__g360Mem.real&&window.__g360Mem.real.ss)||sessionStorage;pend=+ss.getItem("box_oauth_pend")||0;ss.removeItem("box_oauth_pend")}catch(e){}
+  if(h.startsWith("#boxdoc_auth=")&&!(Date.now()-pend<15*60000)){history.replaceState(null,"",location.pathname+location.search);window.__authErr="A ligação à Box não foi pedida neste separador. Carregue em «Entrar com a Box» para ligar.";window.__goBox=true;loadSes()}
+  else if(h.startsWith("#boxdoc_auth=")){try{const p=JSON.parse(atob(decodeURIComponent(h.slice(13))));SES={mode:"oauth",a:p.a,r:p.r,exp:Date.now()+(p.e||3600)*1000-120e3,t:Date.now(),dono:"",login:""};saveSes();localStorage.removeItem("boxdoc_morta")}catch(e){}
     history.replaceState(null,"",location.pathname+location.search);window.__goBox=true;window.__boxNova=true}
   else if(h.startsWith("#boxdoc_erro=")){window.__authErr=decodeURIComponent(h.slice(13));history.replaceState(null,"",location.pathname+location.search);window.__goBox=true}
   else loadSes();})();
@@ -190,7 +194,7 @@ function loginUI(){
   $("#wkSet").style.display=w?"none":"block";$("#oaGo").disabled=!w;
   if(!BOXDOC_WORKER&&w)$("#wkUrl").value=w;
 }
-$("#oaGo").onclick=()=>{const w=workerUrl();if(!w){loginUI();return}location.href=w+"/login"};
+$("#oaGo").onclick=()=>{const w=workerUrl();if(!w){loginUI();return}try{((window.__g360Mem&&window.__g360Mem.real&&window.__g360Mem.real.ss)||sessionStorage).setItem("box_oauth_pend",String(Date.now()))}catch(e){}location.href=w+"/login"};
 $("#wkSave").onclick=()=>{let v=$("#wkUrl").value.trim();if(!/^https:\/\//.test(v)){toast("O endereço tem de começar por https://");return}
   try{localStorage.setItem("boxdoc_worker",v.replace(/\/+$/,""))}catch(e){}loginUI();toast("Guardado")};
 async function tokGo(){

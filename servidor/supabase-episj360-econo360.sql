@@ -29,6 +29,8 @@ end $d$;
 -- Direção ou Economato
 create or replace function public.g360_economato() returns boolean language sql stable security definer set search_path to 'public' as $f$
   select coalesce(public.g360_direcao() or (public.g360_perfil_de(public.g360_email()) ->> 'perfil') = 'econ', false) $f$;
+revoke execute on function public.g360_economato() from anon, public;
+grant execute on function public.g360_economato() to authenticated;
 
 -- a peça «EC» (Econo360) também pode ser lida e gravada pelo Economato
 drop policy if exists "estado: economato lê EC" on public.g360_estado;

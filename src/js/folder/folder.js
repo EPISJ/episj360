@@ -95,7 +95,7 @@ function foFichaUI(){const d=foSel(),el=$("#foFicha");if(!el)return;
       ${inp("proj","N.º de projeto",{dl:"foProjDL"})}${sel("fin","Financiamento",E.fins.map(f=>f.n))}
       ${sel("tipo","Tipo",E.tipos)}
       <label class="fd-ck"><input type="checkbox" data-fdk="princ"${d.princ?" checked":""} ${dis}> Dossier principal</label>
-      <label class="w2">Ligação (SharePoint/OneDrive)<span class="fd-in2"><input type="url" data-fdk="url" value="${esc(d.url||"")}" placeholder="https://…" ${dis}>${d.url?`<a class="b s" href="${esc(d.url)}" target="_blank" rel="noopener">Abrir</a>`:""}</span></label>
+      <label class="w2">Ligação (SharePoint/OneDrive)<span class="fd-in2"><input type="url" data-fdk="url" value="${esc(d.url||"")}" placeholder="https://…" ${dis}>${d.url?`<a class="b s" href="${escUrl(d.url)}" target="_blank" rel="noopener">Abrir</a>`:""}</span></label>
       <label class="w2">Observações<textarea data-fdk="obs" rows="2" ${dis}>${esc(d.obs||"")}</textarea></label>
     </div>
     ${d.cbAntigo&&d.cbAntigo.toUpperCase()!==cod.toUpperCase()?`<p class="hint">No FileMaker, o código de barras impresso era <b>${esc(d.cbAntigo)}</b> (escrito à mão, não batia certo com o sítio). As etiquetas novas levam o código de localização.</p>`:""}

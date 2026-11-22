@@ -23,6 +23,7 @@ window.addEventListener('message', e => {
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const escUrl = u => esc(/^https?:/i.test(String(u ?? '').trim()) ? String(u).trim() : '#'); // só ligações http(s)
 const uid = (p = '') => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const clone = o => JSON.parse(JSON.stringify(o));
 const nowISO = () => new Date().toISOString();

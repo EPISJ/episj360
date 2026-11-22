@@ -129,7 +129,7 @@ function papProvaUI(){const P=papProva();if(!P){$("#papCab").innerHTML="";papSem
     <label>${esc(D.rotDped)}<input type="text" list="papFormDL" data-pk="dped" value="${esc(P.dped||"")}" ${dis}></label>
     <label>Local das provas<input type="text" data-pk="local" value="${esc(P.local||"")}" ${dis}></label>
     <label class="w2">Pasta da prova na Box (ligação)<input type="text" inputmode="url" data-pk="box" value="${esc(P.box||"")}" placeholder="https://episj.box.com/s/…" ${dis}></label>
-    </div>${P.box?`<p class="hint" style="margin:8px 0 0"><a href="${esc(P.box)}" target="_blank" rel="noopener">Abrir a pasta na Box</a> (só leitura)</p>`:""}
+    </div>${P.box?`<p class="hint" style="margin:8px 0 0"><a href="${escUrl(P.box)}" target="_blank" rel="noopener">Abrir a pasta na Box</a> (só leitura)</p>`:""}
     ${dc.length?`<p class="hint" style="margin:8px 0 0">Datas da PAP desta turma no Calendário Escolar: <b>${dc.map(d=>calDM(d,{day:"numeric",month:"long"})).join(", ")}</b>.</p>`:""}`;
   papCandsUI(P)}
 function papCandsUI(P){const ed=papEd(),dis=ed?"":"disabled",L=P.cands;

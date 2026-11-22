@@ -1,0 +1,70 @@
+{
+ "_leia": "Lista e ordem dos ficheiros da EPISJ 360. tools/montar.mjs junta-os em app/ (não editar app/ nem index.html à mão).",
+ "css": [
+  "css/fontes.css",
+  "css/app.css",
+  "css/ajustes.css",
+  "css/temas.css"
+ ],
+ "app": [
+  "js/core/base.js",
+  "js/core/onedrive.js",
+  "js/core/config.js",
+  "js/box/armazenamento.js",
+  "js/core/modulos.js",
+  "js/box/atribuicoes.js",
+  "js/box/verificacoes.js",
+  "js/box/relatorio.js",
+  "js/box/ligacao.js",
+  "js/core/nuvem.js",
+  "js/core/pdf.js",
+  "js/core/o365.js",
+  "js/box/estatisticas.js",
+  "js/box/prazos.js",
+  "js/core/interface.js",
+  "js/escola/escola.js",
+  "js/escola/painel-widgets.js",
+  "js/core/novidades.js",
+  "js/escola/anos.js",
+  "js/escola/cursos-turmas.js",
+  "js/escola/planos-dsd.js",
+  "js/horario/horario.js",
+  "js/sala/sala.js",
+  "js/core/entrada.js",
+  "js/escola/calendario.js",
+  "js/crono/crono.js",
+  "js/crono/cronograma.js",
+  "js/crono/cumprir.js",
+  "js/pap/pap-dados.js",
+  "js/pass/pass-dados.js",
+  "js/folder/folder-dados.js",
+  "js/econo/econo-dados.js",
+  "js/core/meu-horario-utilizadores.js",
+  "js/social/social.js",
+  "js/core/arranque.js",
+  "js/core/gaveta-tabelas.js"
+ ],
+ "modulos": {
+  "pap": [
+   "js/pap/pap.js"
+  ],
+  "pass": [
+   "js/pass/pass.js"
+  ],
+  "folder": [
+   "js/folder/folder.js"
+  ],
+  "econo": [
+   "js/econo/econo.js"
+  ]
+ },
+ "cabeca": [
+  "js/inicio/cabeca.js"
+ ],
+ "rede": [
+  "js/inicio/rede.js"
+ ],
+ "extra": [
+  "js/extra/numberflow-apps.js"
+ ]
+}

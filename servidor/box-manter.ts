@@ -1,3 +1,5 @@
+// 0.9.133: no Supabase, esta função foi substituída por uma versão que não faz nada (responde 410) — estava publicada sem
+// verificação de sessão e qualquer pessoa podia forçar renovações do código da Box. O código abaixo fica só como registo.
 // DESLIGADA na EPISJ 360 0.9.70 (tarefa episj360-box-manter em pausa): a Box passa a ser renovada só no navegador de quem
 // usa o Box360, uma vez por código, sem pedidos de madrugada a partir de servidores. Fica aqui só como registo.
 // EPISJ 360 — função box-manter do Supabase (publicada pelo Claude; guardada aqui para referência).

@@ -1,0 +1,11 @@
+name: Verificar montagem
+# Confirma que index.html e app/ correspondem a src/ (alguém pode ter editado o index.html à mão).
+on: [push, pull_request]
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node tools/montar.mjs --verificar

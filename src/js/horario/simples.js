@@ -261,10 +261,12 @@ function h3EmailHtml(x){const st=mhEstado();if(!st)return "";const hj=calHoje(),
   {const leg=[...usadas].sort((a,b)=>COLL_PTN.compare(a[0],b[0])).map(([t,c])=>`<span style="display:inline-block;margin:0 10px 4px 0;white-space:nowrap"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${esc(c)};vertical-align:-1px"></span>&nbsp;${esc(t)}</span>`).join("");
     quadro+=`<p style="${F};font-size:12px;color:#4a5262;margin:8px 0 0">${leg}${!x.novo&&x.mais.length?`<span style="display:inline-block;white-space:nowrap"><span style="font-size:9.5px;font-weight:700;background:#1b2333;color:#fff;border-radius:4px;padding:1px 5px">NOVO</span>&nbsp;aula nova ou mudada</span>`:""}</p>`}
   if(!x.novo&&x.menos.length)quadro+=`<p style="${F};font-size:13px;font-weight:700;color:#1b2333;margin:14px 0 4px">Deixam de existir</p><ul style="${F};font-size:12.5px;color:#6b7385;margin:0;padding-left:18px">${x.menos.map(l=>`<li style="text-decoration:line-through">${esc(l)}</li>`).join("")}</ul>`;
-  const lig=h3Lig(),txt=t=>esc(t).replace(/\n/g,"<br>").replace(/\{ligacao\}/g,`<a href="${esc(lig)}" style="color:#2f5fb8">${esc(lig.replace(/^https?:\/\//,"").replace(/\/$/,""))}</a>`);
+  /* 0.9.163: sem ligações no email — o filtro de correio do Office 365 retinha (sem avisar) os emails com ligações para o endereço da
+     EPISJ 360, um domínio ainda recente; testado a 22/11/2026: o mesmo email sem ligações chega. O endereço fica escrito, em negrito. */
+  const lig=h3Lig(),txt=t=>esc(t).replace(/\n/g,"<br>").replace(/\{ligacao\}/g,`<b style="color:#163269">${esc(lig.replace(/^https?:\/\//,"").replace(/\/$/,""))}</b>`);
   const corpo=String(H3.msg.corpo||"").replace(/\{nome\}/g,(x.p&&x.p.nome)||x.t.name||"").replace(/\{semana\}/g,calDM(h3Seg(hj),{day:"numeric",month:"long"})).replace(/\{n\}/g,x.novo?"horário novo":String(x.mais.length+x.menos.length));
   const partes=corpo.split("{alteracoes}").map((t,i,a)=>a.length>1?(i===0?t.replace(/\s+$/,""):i===a.length-1?t.replace(/^\s+/,""):t.trim()):t),meio=`</div>${quadro}<div style="${F};font-size:14px;color:#1b2333;line-height:1.55;margin-top:16px">`;
-  const btn=`<p style="margin:20px 0 4px"><a href="${esc(lig)}" style="${F};display:inline-block;background:#163269;color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;padding:10px 18px;border-radius:8px">Ver o horário de cada semana na EPISJ 360</a></p>`;
+  const btn="";
   return `<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head><body style="margin:0;padding:0;background:#ffffff">
 <div style="max-width:780px;padding:8px 4px">
 <div style="${F};font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7385;margin:0 0 12px">EPISJ 360 · Horários360</div>

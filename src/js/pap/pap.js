@@ -147,12 +147,13 @@ function papCandsUI(P){const ed=papEd(),dis=ed?"":"disabled",L=P.cands;
       <td data-cest>${est(c)}</td>${ed?`<td><button class="x" data-cdel title="Tirar este formando da prova (pede confirmação)">×</button></td>`:""}</tr>`).join("")}</tbody></table>`
     :papVz("tel",`Esta prova ainda não tem formandos.${P.turmaId?" Carregue em <b>Juntar formandos da turma</b>.":""}`))
     +(ed?`<div class="row" style="margin-top:10px"><button class="b s" id="papAddC">Acrescentar formando</button><span class="hint" style="margin:0">${papInc(P).length} de ${L.length} apresenta${L.length===1?"":"m"}.</span></div>`:"");
-  const ad=$("#papAddC");if(ad)ad.onclick=()=>{P.cands.push({id:uid(),fId:"",num:"",nome:"",inc:true,n:{}});papGuardar(P);papCandsUI(P);const i=document.querySelector("#papCands tr:last-child [data-ck=nome]");if(i)i.focus()}}
+  const ad=$("#papAddC");if(ad)ad.onclick=()=>{P.cands.push({id:uid(),fId:"",num:"",nome:"",inc:true,n:{}});papGuardar(P);papCandsUI(P);const i=document.querySelector("#papCands tr:last-child [data-ck=nome]");if(i)i.focus()}
+  papPlLigar();papPlanoUI(P)} // 0.9.222: Organizar os dias da PAP (pap-plano.js)
 $("#papCab").addEventListener("change",e=>{const x=e.target.closest("[data-pk]");if(!x||!papEd())return;const P=papProva();if(!P)return;const k=x.dataset.pk,v=x.value.trim();P[k]=v;
   if(k==="turmaId"){const t=papTurma(P);if(t){if(!P.curso)P.curso=turmaNome(t);if(!P.resp)P.resp=papCargo(t.id,P.anoId,/respons.*curso/);if(!P.orient)P.orient=papCargo(t.id,P.anoId,/orientador.*educ/)}}
   papGuardar(P);if(["anoId","turmaId","fase","curso"].includes(k)){PAP_SEL.ano=P.anoId;papSelOpcoes();papProvaUI()}});
 $("#papCands").addEventListener("change",e=>{const x=e.target.closest("[data-ck]");if(!x||!papEd())return;const P=papProva(),tr=x.closest("tr"),c=P&&P.cands.find(y=>y.id===tr.dataset.c);if(!c)return;const k=x.dataset.ck;
-  c[k]=x.type==="checkbox"?x.checked:x.value.trim();if(k==="inc")tr.classList.toggle("off",!c.inc);papGuardar(P)});
+  c[k]=x.type==="checkbox"?x.checked:x.value.trim();if(k==="inc")tr.classList.toggle("off",!c.inc);papGuardar(P);if(/^(inc|num|nome|j1|j2|data|hora|tema)$/.test(k))papPlanoUI(P)});
 $("#papCands").addEventListener("click",e=>{if(!e.target.closest("[data-cdel]")||!papEd())return;const P=papProva(),tr=e.target.closest("tr"),c=P.cands.find(y=>y.id===tr.dataset.c);if(!c)return;
   const tem=papEstado(c).k!=="mu";if(!confirm(`Tirar «${c.nome||"(sem nome)"}» desta prova?${tem?"\n\nAtenção: este formando já tem notas na grelha, que se perdem.":""}\n\n(Se só não vai apresentar, desmarque «Apresenta».)`))return;
   P.cands=P.cands.filter(y=>y.id!==c.id);papGuardar(P);papCandsUI(P)});

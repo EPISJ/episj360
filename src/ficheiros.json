@@ -50,7 +50,8 @@
  ],
  "modulos": {
   "pap": [
-   "js/pap/pap.js"
+   "js/pap/pap.js",
+   "js/pap/pap-plano.js"
   ],
   "pass": [
    "js/pass/pass.js"

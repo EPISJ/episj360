@@ -1579,3 +1579,46 @@ body:not(.pf-dir) .so-dir,body:not(.pf-dir) .blk:has(> .so-dir){display:none!imp
 #relMeu .mit{display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-top:1px solid #f0f2f5}#relMeu .mit:first-of-type{border-top:0}
 #relMeu .mit .tag{min-width:96px;text-align:center;margin-top:1px}#relMeu .mit>div{min-width:0;line-height:1.35}
 #relMeu .rm-g h3{align-items:baseline}#relMeu .rm-g h3 .hint{font-size:13px;margin:0}#relMeu .rm-g h3 .tag{align-self:center}
+/* ===== PAP360 › Organizar os dias da PAP (0.9.222, pap-plano.js) ===== */
+.pl-res{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin:12px 0}
+.pl-ini{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;background:#fff}
+.pl-ini span{font-size:12px;color:var(--muted)}.pl-ini b{font-size:15px;font-weight:650}.pl-ini small{font-size:12.5px;color:var(--muted)}
+.pl-add{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}.pl-add input{font-size:13px;padding:5px 7px}
+.pl-selb{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--brandbg);color:var(--ink);border-radius:10px;padding:8px 12px;margin:0 0 10px;font-size:13.5px}
+.pl-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;align-items:start}
+.pl-d{border:1px solid var(--line);border-top:4px solid var(--pc);border-radius:12px;background:#fafbfd;display:flex;flex-direction:column;min-width:0;transition:box-shadow .12s}
+.pl-d.pl-sobre{box-shadow:0 0 0 2px var(--pc)}
+.pl-d header{display:flex;align-items:center;gap:8px;padding:10px 10px 8px}
+.pl-cor{width:18px;height:18px;border-radius:50%;border:0;background:var(--pc);flex:none;cursor:pointer;box-shadow:0 0 0 2px #fff,0 0 0 3px var(--line)}
+.pl-cor:disabled{cursor:default}
+.pl-dt{flex:1;min-width:0;display:flex;flex-direction:column}.pl-dt b{font-size:14px;font-weight:650}.pl-dt small{font-size:12px;color:var(--muted)}
+.pl-ic{width:30px;height:30px;border:0;background:none;border-radius:8px;display:grid;place-items:center;color:var(--muted);cursor:pointer}.pl-ic:hover{background:#eef1f5}
+.pl-ic svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pl-cfg{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:0 10px 10px;font-size:12px;color:var(--muted)}
+.pl-cfg label{display:flex;flex-direction:column;gap:3px}.pl-cfg input{font-size:13px;padding:5px 6px;min-width:0}
+.pl-cfgb{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}
+.pl-l{display:flex;flex-direction:column;gap:6px;padding:0 8px 8px;min-height:56px}
+.pl-vz{border:1.5px dashed var(--line);border-radius:10px;padding:14px 8px;text-align:center;font-size:12.5px;color:var(--muted)}
+.pl-c{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--pc);border-radius:9px;padding:7px 8px 7px 4px;cursor:grab;user-select:none;-webkit-user-select:none;position:relative;min-width:0}
+.pl-c:hover{border-color:#c9d1dd;border-left-color:var(--pc)}
+.pl-c:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+.pl-c.sel{box-shadow:0 0 0 2px var(--brand);background:var(--brandbg)}
+.pl-c.sob{background:#fff5f5}.pl-c.sob .pl-h b{color:#c62828}
+.pl-c.pl-troca{box-shadow:0 0 0 2px var(--brand);outline:2px dashed var(--brand);outline-offset:2px}
+.pl-c.pl-troca::after{content:"Trocar";position:absolute;right:8px;top:50%;transform:translateY(-50%);background:var(--brand);color:#fff;font-size:11px;font-weight:700;border-radius:99px;padding:2px 8px}
+.pl-c.pl-orig{opacity:.35}
+.pl-pega{width:20px;flex:none;display:grid;place-items:center;color:#a6afbd;cursor:grab;touch-action:none;align-self:stretch}
+.pl-pega svg{width:16px;height:16px;fill:currentColor}
+.pl-h{display:flex;flex-direction:column;align-items:center;min-width:42px;flex:none;line-height:1.15}.pl-h b{font-size:13.5px;font-weight:700;color:var(--ink)}.pl-h small{font-size:11.5px;color:var(--muted)}
+.pl-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}.pl-t b{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-t small{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pl-sj{font-style:normal;color:#8a5300}
+.pl-e{flex:none;font-size:11px;padding:1px 7px}
+.pl-aqui{margin:0 8px 8px}
+.pl-ind{height:3px;border-radius:3px;background:var(--brand);margin:-1px 4px}
+.pl-fan{position:fixed;left:0;top:0;z-index:3000;pointer-events:none;box-shadow:0 12px 28px rgba(15,23,42,.22);opacity:.95;cursor:grabbing}
+body.pl-arrastar,body.pl-arrastar *{cursor:grabbing!important;user-select:none!important}
+.pl-sem{border-top-style:dashed}
+table.pp-ct tr.pl-tem td.pp-d{box-shadow:inset 4px 0 0 var(--pd)}
+table.pp-ct tr.pl-tem td.pp-d input{background:color-mix(in srgb,var(--pd) 10%,#fff)}
+html.mv .pl-g{grid-template-columns:1fr}
+html.mv .pl-c{padding:9px 8px 9px 2px}html.mv .pl-pega{width:30px}html.mv .pl-pega svg{width:20px;height:20px}

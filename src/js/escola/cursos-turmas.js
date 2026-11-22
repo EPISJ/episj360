@@ -179,7 +179,7 @@ function renderFormandos(){const e=escData(),q=norm($("#forFilter").value||""),f
   $("#tbFor").innerHTML=h||`<p class="hint">${e.formandos.length?"Ninguém corresponde à procura.":"Ainda sem formandos — acrescente acima, cole uma lista ou importe o mapa (PDF)."}</p>`;
   $("#forCnt").textContent=e.formandos.length?`${L.length} de ${e.formandos.length} formando(s)${resto>0?" — a mostrar os primeiros "+FOR_N:""}.`:""}
 function forFicha(f){const E=escData(),a=anoAtivo(),t=E.turmas.find(x=>x.id===f.turmaId),c=t&&cursoById(t.cursoId),id=forIdade(f.nasc),an=forAniv(f.nasc);
-  const sec=(tit,corpo)=>`<section class="frs"><h5>${tit}</h5>${corpo}</section>`,li=(k,v)=>v?`<div class="frli"><span>${k}</span><b>${v}</b></div>`:"";
+  const sec=(tit,corpo)=>`<div class="frs"><h5>${tit}</h5>${corpo}</div>`,li=(k,v)=>v?`<div class="frli"><span>${k}</span><b>${v}</b></div>`:"";
   // 1) dados
   let h=sec("Dados do formando",`<div class="frform">
     <label>N.º<input type="text" data-k="num" value="${esc(f.num||"")}"></label>

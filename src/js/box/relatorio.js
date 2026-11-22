@@ -430,7 +430,11 @@ function boxPublico(){if(!lastListing||!folders||!folders.length)return null;let
   const own=new Map();for(const f of files)if(f.rawDir)own.set(f.rawDir,(own.get(f.rawDir)||0)+1);
   const todas=[...new Set(folders)],out={};
   for(const e of ev){const pid=profOf(e.mod);if(!pid)continue;const o=out[pid]||(out[pid]={raiz:new Set(),m:[]});
-    for(const r of e.modFolders||[])o.raiz.add(r.r.join("/"));
+    let mf=e.modFolders||[];
+    // 0.9.200: numa análise de outro ano letivo a pasta do módulo não tem o mesmo ano no caminho (ex.: o módulo está em «DTP 2026.2027 / A01…»
+    // e a análise é a de «DTP 2025.2026»): procura-a sem as pastas do ano, pelo resto do caminho (turma, disciplina, módulo)
+    if(!mf.length){try{const idx=getIdx(),ss=segs(e.mod.pasta).filter(x=>!anoDe(x));if(ss.length){mf=idx.pick(ss,"folders");if(!mf.length){const f=idx.flex(ss);if(f)mf=idx.pick(f.ss,"folders")}}}catch(x){}}
+    for(const r of mf)o.raiz.add(r.r.join("/"));
     o.m.push({tu:e.mod.turma||"",di:e.mod.disc||"",mo:modTitle(e.mod),it:e.items.map(i=>{let d="";for(const f of i.hits||[]){const x=(f.f||f).date||"";if(x>d)d=x}return[(i.doc&&i.doc.nome)||"",i.state,i.falta||"",d.slice(0,10)]})})}
   const R={t:lastListing.t||Date.now(),pasta:lastListing.pasta||"",nome:String(lastListing.pasta||"").split("/").filter(Boolean).pop()||"Análise",profs:{}};
   for(const pid in out){const raiz=[...out[pid].raiz],S=new Set();

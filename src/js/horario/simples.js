@@ -228,9 +228,11 @@ function h3Pendentes(){const st=mhEstado();if(!st||!H3)return[];const r=[];
   return r.sort((a,b)=>COLL_PT.compare(String(a.t.name),String(b.t.name)))}
 function h3Txt(x){if(x.novo)return "O seu horário:\n"+x.cur.map(s=>"  "+s).join("\n");
   return (x.mais.length?"Aulas novas ou mudadas:\n"+x.mais.map(s=>"  + "+s).join("\n"):"")+(x.mais.length&&x.menos.length?"\n\n":"")+(x.menos.length?"Deixam de existir:\n"+x.menos.map(s=>"  − "+s).join("\n"):"")}
+/* 0.9.171: {nome} = só o primeiro nome do formador («Olá Joel,») */
+function h3PNome(x){const n=String((x.p&&x.p.nome)||x.t.name||"").trim();return n.split(/\s+/)[0]||n}
 function h3Preencher(tpl,x){const n=x.novo?"horário novo":(x.mais.length+x.menos.length)+" alteraç"+(x.mais.length+x.menos.length===1?"ão":"ões");
   const sem=calDM(h3Seg(calHoje()),{day:"numeric",month:"long"});
-  return String(tpl||"").replace(/\{nome\}/g,(x.p&&x.p.nome)||x.t.name||"").replace(/\{alteracoes\}/g,h3Txt(x)).replace(/\{ligacao\}/g,h3Lig()).replace(/\{semana\}/g,sem).replace(/\{n\}/g,n)}
+  return String(tpl||"").replace(/\{nome\}/g,h3PNome(x)).replace(/\{alteracoes\}/g,h3Txt(x)).replace(/\{ligacao\}/g,h3Lig()).replace(/\{semana\}/g,sem).replace(/\{n\}/g,n)}
 function h3Marcar(x,canais){const u=Object.assign({},H3.ult[x.t.id]||{}),agora=Date.now(),todos=canais.includes("marca");
   if(todos||canais.includes("email")){u.em=x.h;u.emT=agora}
   if(todos||canais.includes("push")||canais.includes("sms")){u.tl=x.h;u.tlT=agora}
@@ -267,7 +269,7 @@ function h3EmailHtml(x){const st=mhEstado();if(!st)return "";const hj=calHoje(),
   /* 0.9.170: a despedida («Com os melhores cumprimentos, …» e a assinatura) fica alinhada à direita */
   const txt=t=>{const m=String(t).match(/(^|\n)[ \t]*((com os )?(melhores |cordiais )?cumprimentos|atenciosamente|saudações)/i);if(!m)return txt0(t);const k=m.index+m[1].length;
     return txt0(t.slice(0,k).replace(/\s+$/,""))+`<div style="text-align:right;margin-top:${k?14:0}px">${txt0(t.slice(k).replace(/^\s+/,""))}</div>`};
-  const corpo=String(H3.msg.corpo||"").replace(/\{nome\}/g,(x.p&&x.p.nome)||x.t.name||"").replace(/\{semana\}/g,calDM(h3Seg(hj),{day:"numeric",month:"long"})).replace(/\{n\}/g,x.novo?"horário novo":String(x.mais.length+x.menos.length));
+  const corpo=String(H3.msg.corpo||"").replace(/\{nome\}/g,h3PNome(x)).replace(/\{semana\}/g,calDM(h3Seg(hj),{day:"numeric",month:"long"})).replace(/\{n\}/g,x.novo?"horário novo":String(x.mais.length+x.menos.length));
   const partes=corpo.split("{alteracoes}").map((t,i,a)=>a.length>1?(i===0?t.replace(/\s+$/,""):i===a.length-1?t.replace(/^\s+/,""):t.trim()):t),meio=`</div>${quadro}<div style="${F};font-size:14px;color:#1b2333;line-height:1.55;margin-top:16px">`;
   const btn="";
   return `<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head><body style="margin:0;padding:0;background:#ffffff">
@@ -284,7 +286,7 @@ function h3EmailTopo(F){let m,r;try{m=lgGet("main");r=lgGet("right")}catch(e){}
   // 0.9.170: cabeçalho com o nome da escola, o ano letivo e a data do horário (última importação/publicação do ano)
   let ano="",dt="";try{const A=anoAtivo();if(A){ano=anoNomeChave(A.nome)||A.nome||"";const q=ESD.porAno&&ESD.porAno[A.id]&&ESD.porAno[A.id].quando;if(q)dt=new Date(q).toLocaleDateString("pt-PT",{day:"numeric",month:"long",year:"numeric"})}}catch(e){}
   const sub=[ano?"Ano letivo "+ano:"",dt?"Horário de "+dt:""].filter(Boolean).join(" · ");
-  const tit=`<div style="${F};margin:0 0 16px"><div style="font-size:16px;font-weight:700;color:#163269;line-height:1.3">Escola Profissional da Ilha de São Jorge</div>${sub?`<div style="font-size:13px;color:#4a5262;margin-top:2px">${esc(sub)}</div>`:""}</div>`;
+  const tit=`<div style="${F};margin:0 0 18px;text-align:center"><div style="font-size:16px;font-weight:700;color:#163269;line-height:1.3">Escola Profissional da Ilha de São Jorge</div>${sub?`<div style="font-size:13px;color:#4a5262;margin-top:2px">${esc(sub)}</div>`:""}</div>`;
   if(!a&&!b)return tit;
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:760px;margin:0 0 14px;border-bottom:1px solid #e3e7ee"><tr><td style="padding:0 0 12px;vertical-align:middle">${a}</td><td style="padding:0 0 12px;vertical-align:middle" align="right">${b}</td></tr></table>`+tit}
 function h3EmailFundos(){let f;try{f=lgFootBarra()}catch(e){try{f=lgGet("foot")}catch(x){}}const im=h3LgImg(f,560,64,"Logótipos de financiamento do ano letivo");

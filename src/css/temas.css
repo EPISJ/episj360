@@ -35,7 +35,10 @@ html[data-tema="cobalto"] input[type=search],html[data-tema="cobalto"] input[typ
    0.9.178–0.9.181: revisto — os monogramas e o logótipo da app ficam em toda a app como os originais (fundo azul #163269,
    letra / logótipo branco e barra de cor). O filtro CSS que pintava o logótipo de azul não funciona no Safari (ficava branco
    sobre branco), por isso saiu. */
-/* 0.9.178: os ícones dos módulos voltam ao original — fundo azul da app (#163269), letra branca e a barra de cor do módulo */
+/* 0.9.185: na barra azul de cima os ícones dos módulos são brancos com a letra azul-cobalto (a barra de cor de cada módulo mantém-se);
+   fora da barra (menu Apps, entrada, Dashboard) ficam com o fundo azul da app e a letra branca */
+html[data-tema="cobalto"] .top svg.mseal>path:first-child{fill:#fff}
+html[data-tema="cobalto"] .top svg.mseal text{fill:var(--side)}
 html[data-tema="cobalto"] .top{background:var(--side)!important;-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom-color:var(--side2)}
 html[data-tema="cobalto"] .top .brand{color:#fff}
 html[data-tema="cobalto"] .top .brand b{color:#d8e4ff}

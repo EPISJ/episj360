@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.224 */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.225 */
 /* ===== src/css/fontes.css ===== */
 @font-face{font-family:Poppins;font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/poppins-latin-400.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:Poppins;font-style:normal;font-weight:500;font-display:swap;src:url(../fonts/poppins-latin-500.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -2368,9 +2368,9 @@ html.mv .ay-hero h1,html.mv .ay-hero h2{font-size:24px!important;line-height:1.2
 html.mv p.hint.mv-res{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;position:relative;cursor:pointer}
 html.mv p.hint.mv-res::after{content:"mais";position:absolute;right:0;bottom:0;padding-left:28px;background:linear-gradient(90deg,transparent,var(--card,#fff) 26px);color:var(--brand);font-weight:600}
 /* controlos segmentados e filas de botões que não cabem: deslizam na horizontal em vez de saírem do ecrã */
-html.mv .seg,html.mv .frseg,html.mv .fd-tabs,html.mv [role=tablist],html.mv .pp-tabs{overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap!important;max-width:100%;-webkit-overflow-scrolling:touch}
-html.mv .seg::-webkit-scrollbar,html.mv .frseg::-webkit-scrollbar,html.mv .fd-tabs::-webkit-scrollbar,html.mv [role=tablist]::-webkit-scrollbar{display:none}
-html.mv .seg>*,html.mv .frseg>*,html.mv .fd-tabs>*,html.mv [role=tablist]>*{flex:none;white-space:nowrap}
+html.mv .seg:not(.ay-rib .seg),html.mv .frseg,html.mv .fd-tabs,html.mv [role=tablist],html.mv .pp-tabs{overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap!important;max-width:100%;-webkit-overflow-scrolling:touch}
+html.mv .seg:not(.ay-rib .seg)::-webkit-scrollbar,html.mv .frseg::-webkit-scrollbar,html.mv .fd-tabs::-webkit-scrollbar,html.mv [role=tablist]::-webkit-scrollbar{display:none}
+html.mv .seg:not(.ay-rib .seg)>*,html.mv .frseg>*,html.mv .fd-tabs>*,html.mv [role=tablist]>*{flex:none;white-space:nowrap}
 /* alvos de toque e campos */
 html.mv input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),html.mv select,html.mv textarea{font-size:16px!important;min-height:44px;box-sizing:border-box}
 html.mv input[type=checkbox],html.mv input[type=radio]{width:20px;height:20px}
@@ -2592,3 +2592,71 @@ html.mv .mv-gpainel .gfundos img{max-height:38px;margin-top:10px}
 html.mv main>section.mv-entra{animation:mvEntra .22s cubic-bezier(.2,.8,.2,1)}
 html.mv main>section.mv-volta{animation:mvVolta .22s cubic-bezier(.2,.8,.2,1)}
 @media (prefers-reduced-motion:reduce){html.mv main>section.mv-entra,html.mv main>section.mv-volta,html.mv .mv-gpainel,html.mv .glogo .mv-glogo{animation:none!important}}
+
+/* =====================================================================================================
+   0.9.225: aspeto de app nativa no resto da app (na linha do ecrã de entrada)
+   ===================================================================================================== */
+html.mv{--mvfundo:#f2f3f7;--mvr:16px}
+html.mv body{background:var(--mvfundo)}
+/* barra de cima: o título pequeno só aparece quando o título grande sai do ecrã */
+html.mv .mv-top{box-shadow:none;transition:box-shadow .2s}
+html.mv:not(.mv-gvis) .mv-top{box-shadow:0 1px 0 rgba(0,0,0,.08),0 6px 18px rgba(10,25,60,.12)}
+html.mv .mv-tt{transition:opacity .18s,transform .18s}
+html.mv.mv-gvis:not(.mv-semg) .mv-tt{opacity:0;transform:translateY(4px)}
+/* título grande sobre o azul, conteúdo num painel arredondado */
+.mv-grande{display:none}
+html.mv .mv-grande{display:block;background:var(--side,#163269);color:#fff;padding:2px 20px 34px;margin:0 0 -22px;position:relative}
+html.mv .mv-grande small{display:block;font-size:13px;font-weight:500;color:rgba(255,255,255,.72);margin:0 0 1px}
+html.mv .mv-grande h2{margin:0;font-size:32px;line-height:1.12;font-weight:700;letter-spacing:-.025em;color:#fff}
+html.mv .mv-grande::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:22px;background:var(--mvfundo);border-radius:22px 22px 0 0}
+html.mv.mv-semg .mv-grande{display:none}
+html.mv main>section{position:relative;z-index:1}
+html.mv .ay-hero .mv-dup{display:none!important}
+/* blocos como «listas agrupadas» do iPhone: cartões arredondados com margem dos lados */
+html.mv main>section>.card,html.mv main>section .card{border-radius:var(--mvr)!important;border:0!important;margin:0 12px 12px!important;padding:16px!important;box-shadow:0 1px 2px rgba(15,23,42,.05)!important;background:#fff}
+html.mv main>section>.card:first-child{border-top:0!important}
+html.mv main section .card .card{margin:0 0 10px!important;box-shadow:none!important;border:1px solid #eceef3!important;border-radius:14px!important}
+html.mv main>section>:not(.card):not(iframe):first-child{margin-top:4px!important}
+html.mv .ay-hero{border:0!important;background:linear-gradient(160deg,#eaf1fd,#f6f9ff)!important}
+html.mv main h2{font-size:19px;font-weight:650;letter-spacing:-.01em}
+html.mv table.mvc tr{border:0;box-shadow:0 0 0 1px #eceef3;border-radius:14px}
+html.mv .tile,html.mv .ay-st{border-radius:14px!important;border:0!important;background:#f5f7fb!important}
+/* botões: principal azul cheio; secundário «tingido» (azul claro, sem contorno); importar continua verde */
+html.mv button.b,html.mv a.b,html.mv label.b{border-radius:12px;font-weight:600}
+html.mv button.b.s:not(.imp),html.mv a.b.s:not(.imp),html.mv label.b.s:not(.imp){background:#e9effa!important;color:var(--brand)!important;border-color:transparent!important;box-shadow:none!important}
+html.mv button.b.s:not(.imp):active,html.mv a.b.s:not(.imp):active{background:#dbe5f7!important}
+html.mv button.b:disabled{opacity:.45}
+html.mv .mv-sair{background:#fdecec!important;color:#c62828!important}
+/* campos: cinzento claro sem contorno, cantos de 12 px */
+html.mv input[type=text],html.mv input[type=email],html.mv input[type=number],html.mv input[type=date],html.mv input[type=time],html.mv input[type=password],html.mv input[type=search],html.mv input[type=url],html.mv input[type=tel],html.mv select,html.mv textarea{
+  background-color:#f2f4f8!important;border:1px solid transparent!important;border-radius:12px!important;height:auto;min-height:46px;padding-left:12px;padding-right:12px}
+html.mv select{padding-right:34px}
+html.mv textarea{padding-top:10px;padding-bottom:10px}
+html.mv input:focus,html.mv select:focus,html.mv textarea:focus{background-color:#fff!important;border-color:var(--brand)!important;box-shadow:0 0 0 3px rgba(26,95,208,.15)!important}
+html.mv table.mvc td>input:not([type=checkbox]),html.mv table.mvc td>select{min-height:40px}
+html.mv label{font-weight:500}
+/* controlos segmentados como no iPhone: calha cinzenta e o escolhido em branco */
+html.mv .frseg,html.mv .fd-tabs{background:#e9ebf0!important;border:0!important;border-radius:11px!important;padding:2px;gap:2px}
+html.mv .frseg button,html.mv .fd-tabs button{border:0!important;border-radius:9px!important;min-height:34px;color:var(--ink)}
+html.mv .frseg button.on,html.mv .fd-tabs button.on{background:#fff!important;color:var(--ink)!important;box-shadow:0 1px 3px rgba(15,23,42,.14)!important}
+/* barra de baixo à maneira do iPhone: só a cor do ícone e do texto (sem pastilha) */
+html.mv .mv-tabs{background:rgba(249,250,252,.94);border-top:.5px solid rgba(0,0,0,.14)}
+.mv-tabs>button:not(.mv-fab) svg{padding:2px 10px!important;background:none!important;width:26px;height:26px}
+.mv-tabs>button.on::before{display:none}
+.mv-tabs>button.on{color:var(--brand)}
+.mv-tabs>button.on:not(.mv-fab) svg{stroke-width:2.1}
+.mv-tabs>button:active{opacity:.6}
+/* toques: resposta imediata */
+html.mv .mv-li:active,html.mv table.mvc tr:active,html.mv .pl-c:active{transform:scale(.985);transition:transform .08s}
+/* avisos como «cápsula» */
+html.mv .toast{border-radius:16px!important;box-shadow:0 10px 30px rgba(10,25,60,.25)!important}
+/* folhas: fundo como o iPhone */
+html.mv .mv-fp{background:var(--mvfundo)}
+html.mv .mv-lista{background:#fff}
+html.mv .mv-fmods .mv-fc,html.mv .mv-fmais .mv-fc{padding-top:8px}
+html.mv .mv-est,html.mv .mv-eu{background:#fff;border-radius:14px}
+html.mv .mv-eu{padding:12px 14px;margin-bottom:12px}
+html.mv .mv-lic{border:0;background:#eef2f9}
+/* barra dos logótipos de financiamento: discreta, no fim */
+html.mv .fundos{background:#fff!important;border:0!important;box-shadow:0 1px 2px rgba(15,23,42,.05)!important;border-radius:var(--mvr)!important}
+html.mv main>section .mv-dup{display:none!important}

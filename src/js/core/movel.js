@@ -107,9 +107,18 @@ function mvJanelaFechar(){
   return false}
 
 /* ---------- barra de cima e barra de baixo ---------- */
+/* ---------- título grande (como nas apps do iPhone, 0.9.225) ----------
+   Por baixo da barra azul, o nome do ecrã em letra grande, sobre o mesmo azul, com o conteúdo a começar num painel arredondado
+   (como o ecrã de entrada). Ao deslizar para baixo, o título grande sai e o pequeno aparece na barra de cima. */
+function mvGrande(){let g=document.getElementById("mvGrande");const m=document.querySelector("main");if(!m)return null;
+  if(!g){g=document.createElement("div");g.id="mvGrande";g.className="mv-grande";g.innerHTML=`<small id="mvGModN"></small><h2 id="mvGTit"></h2>`;m.insertBefore(g,m.firstChild);
+    if("IntersectionObserver" in window){const io=new IntersectionObserver(E=>{const on=E[0].isIntersecting;document.documentElement.classList.toggle("mv-gvis",on)},{rootMargin:"-60px 0px 0px 0px",threshold:0});io.observe(g.querySelector("h2"))}}
+  return g}
 function mvAtualizar(){if(!MV||!MV.on)return;const t=curTab,m=(typeof modDeTab==="function"&&modDeTab(t))||curMod;
   const tit=document.getElementById("mvTit"),mn=document.getElementById("mvModN"),mb=document.getElementById("mvMod"),vb=document.getElementById("mvVoltar");
   if(tit)tit.textContent=mvTabNome(t)||mvModNome(m);if(mn)mn.textContent=mvModNome(m);
+  const G=mvGrande();if(G){const a=document.getElementById("mvGTit"),b=document.getElementById("mvGModN"),tt=mvTabNome(t)||mvModNome(m),mm=mvModNome(m);if(a.textContent!==tt)a.textContent=tt;if(b.textContent!==mm)b.textContent=mm;
+    const fr=document.body.classList.contains("esch")||document.body.classList.contains("s360");document.documentElement.classList.toggle("mv-semg",fr);if(fr)document.documentElement.classList.remove("mv-gvis")}
   if(mb&&mb.dataset.m!==m){mb.dataset.m=m;mb.innerHTML=mvModSvg(m)}
   const pai=MV_PAI[t];if(vb){vb.hidden=!(pai&&mvTabVis(pai));if(!vb.hidden)vb.setAttribute("aria-label","Voltar a "+mvTabNome(pai))}
   if(mb)mb.hidden=!!(vb&&!vb.hidden);
@@ -203,7 +212,9 @@ function mvArrumarJa(){if(!MV)return;MV.arr=0;if(!MV.on)return;const m=document.
   for(const id in MV_FORM){const f=document.getElementById(id);if(f&&!f.dataset.mvf)mvForm(f,MV_FORM[id])}
   m.querySelectorAll("section .card>h2+p.hint:not([data-mvh]),section .card>h2+.hint:not([data-mvh])").forEach(mvAjuda);
   m.querySelectorAll(".row:not(.mv-filt),.fd-filtros:not(.mv-filt)").forEach(mvFiltros);
-  m.querySelectorAll(".mzh2:not([data-mvd])").forEach(mvDia)}
+  m.querySelectorAll(".mzh2:not([data-mvd])").forEach(mvDia);
+  // no bloco de destaque, o título igual ao título grande não se repete
+  const tn=(mvTabNome(curTab)||"").toLowerCase();m.querySelectorAll(".ay-hero h1,.ay-hero h2,main>section .card>h2:first-child,main>section .card>.pp-head:first-child h2").forEach(h=>{h.classList.toggle("mv-dup",!!tn&&(h.textContent||"").replace(/\s+/g," ").trim().toLowerCase()===tn)})}
 
 /* ---------- horários no telemóvel: um dia de cada vez ----------
    mvDiasHtml(lista,sel,chave) desenha a fila de dias (Seg 23 · Ter 24 …); tocar num dia ou deslizar no horário muda de dia.

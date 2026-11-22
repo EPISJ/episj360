@@ -1523,3 +1523,9 @@ select:disabled{-webkit-appearance:none;appearance:none;background-image:none!im
 .ep-meu .em-li{display:flex;align-items:center;gap:8px;font-size:13px;padding:5px 0;border-top:1px solid #f0f2f5}.ep-meu .em-li:first-of-type{border-top:0}
 .ep-meu .em-li i{width:10px;height:10px;border-radius:3px;flex:none}.ep-meu .em-li .grow{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ep-meu .em-at{display:flex;flex-wrap:wrap;gap:8px}.ep-meu .em-at button{font-size:13px}
+
+/* 0.9.194: estatísticas do Formador */
+#estMeu h3{font-size:14px;margin:14px 0 8px}#estMeu .em-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px}
+.em-bar{display:grid;grid-template-columns:minmax(120px,1.2fr) 2fr 52px;gap:10px;align-items:center;font-size:13px;padding:4px 0}
+.em-bar .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.em-bar .b{height:9px;background:#eef1f6;border-radius:5px;overflow:hidden}.em-bar .b i{display:block;height:100%;border-radius:5px}.em-bar .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.em-falta div{font-size:13px;padding:4px 0;border-top:1px solid #f0f2f5}

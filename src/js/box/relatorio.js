@@ -144,7 +144,7 @@ async function verificarFundo0(){
       if(Date.now()-last>15000){last=Date.now();if(curTab==="rel")renderReport();if(curTab==="alt")renderAlt()}},()=>my!==bgRun||buTravado(),2);
     el.textContent=`${r.done-r.err} documentos lidos`;setTimeout(()=>{if(!bgOn)el.style.display="none"},6000)}
   catch(e){el.textContent="leitura interrompida"}
-  bgOn=false;nuvemTextosJa();if(curTab==="rel")renderReport();if(curTab==="alt")renderAlt();
+  bgOn=false;nuvemTextosJa();try{guidePubAgendar()}catch(e){} /* 0.9.194: pastas e estatísticas dos formadores */if(curTab==="rel")renderReport();if(curTab==="alt")renderAlt();
 }
 $("#qGo").onclick=async()=>{
   if(!SES){toast("Entre primeiro na Box");return}
@@ -424,7 +424,40 @@ $("#altNova").onclick=async()=>{if(!lastListing)return;const b=await criarBase(l
   if(b){altSel="B|"+b.t;BASEC=null;toast("Nova contagem iniciada: as alterações passam a contar a partir de agora")}else toast("Não foi possível guardar a contagem");renderAlt()};
 
 /* ---------- relatório de pastas ---------- */
-function buildTree(){
+/* 0.9.194: o que cada formador vê do Box360 (pastas e estatísticas só suas) — a Direção calcula a partir da análise e publica
+   em PUB.box.profs[id do formador] = {p:[[caminho, ficheiros na pasta], …], m:[{tu,di,mo,it:[[tipo, estado, pasta, data]]}]} */
+function boxPublico(){if(!lastListing||!folders||!folders.length)return null;let ev=null;try{ev=evaluate()}catch(e){return null}if(!ev)return null;
+  const own=new Map();for(const f of files)if(f.rawDir)own.set(f.rawDir,(own.get(f.rawDir)||0)+1);
+  const todas=[...new Set(folders)],out={};
+  for(const e of ev){const pid=profOf(e.mod);if(!pid)continue;const o=out[pid]||(out[pid]={raiz:new Set(),m:[]});
+    for(const r of e.modFolders||[])o.raiz.add(r.r.join("/"));
+    o.m.push({tu:e.mod.turma||"",di:e.mod.disc||"",mo:modTitle(e.mod),it:e.items.map(i=>{let d="";for(const f of i.hits||[]){const x=(f.f||f).date||"";if(x>d)d=x}return[(i.doc&&i.doc.nome)||"",i.state,i.falta||"",d.slice(0,10)]})})}
+  const R={t:lastListing.t||Date.now(),pasta:lastListing.pasta||"",nome:String(lastListing.pasta||"").split("/").filter(Boolean).pop()||"Análise",profs:{}};
+  for(const pid in out){const raiz=[...out[pid].raiz],S=new Set();
+    for(const p of todas)if(raiz.some(r=>p===r||p.startsWith(r+"/")))S.add(p);
+    for(const p of [...S]){const q=p.split("/");for(let i=1;i<q.length;i++)S.add(q.slice(0,i).join("/"))}
+    R.profs[pid]={p:[...S].sort().map(p=>[p,own.get(p)||0]),m:out[pid].m}}
+  return {id:String(lastListing.rootId||R.nome),d:R}}
+var BOX_SEL="";
+function boxAnalises(){const A=PUB&&PUB.box&&PUB.box.anal||{};return Object.entries(A).map(([id,d])=>({id,d})).sort((a,b)=>COLL_PTN.compare(String(b.d.nome||""),String(a.d.nome||""))||(b.d.t||0)-(a.d.t||0))}
+// escolha da análise guardada (formador): a mais recente por omissão
+function boxSelHTML(){const L=boxAnalises();if(L.length<2)return "";const cur=boxAtual();
+  return `<label class="boxsel" style="width:260px">Análise guardada<select data-boxsel>${L.map(x=>`<option value="${esc(x.id)}"${cur&&cur.id===x.id?" selected":""}>${esc(x.d.nome||x.id)}${x.d.t?" · "+new Date(x.d.t).toLocaleDateString("pt-PT"):""}</option>`).join("")}</select></label>`}
+function boxAtual(){const L=boxAnalises();return L.find(x=>x.id===BOX_SEL)||L[0]||null}
+document.addEventListener("change",e=>{const s=e.target.closest&&e.target.closest("[data-boxsel]");if(!s)return;BOX_SEL=s.value;try{if(curTab==="pas")renderTree();if(curTab==="est")renderEst()}catch(x){}});
+// formador (ou pré-visualização de um perfil sem Direção): só o que está publicado para si
+function boxMeu(){try{if(typeof podePublicar==="function"&&podePublicar()&&!PREV)return null}catch(e){}const X=boxAtual(),B=X&&X.d;if(!B||!B.profs)return {vazio:true};
+  const em=String(EU&&EU.email||"").toLowerCase(),me=(cfg.profs||[]).find(p=>String(profEmail(p)||p.email||"").toLowerCase()===em);
+  return me&&B.profs[me.id]?Object.assign({me,t:B.t,nome:B.nome},B.profs[me.id]):{vazio:true,me,nome:B.nome}}
+function buildTree(){const BM=boxMeu();if(BM)return buildTreeMeu(BM);return buildTree0()}
+function buildTreeMeu(BM){const nodes=new Map();
+  const ensure=p=>{if(nodes.has(p))return nodes.get(p);const parts=p.split("/");const n={path:p,name:parts[parts.length-1],kids:[],own:0,total:0,depth:parts.length};nodes.set(p,n);if(parts.length>1)ensure(parts.slice(0,-1).join("/")).kids.push(n);return n};
+  for(const [p,o] of BM.p||[])ensure(p).own=o;
+  let roots=[...nodes.values()].filter(n=>n.depth===1);const sum=n=>{n.kids.sort((a,b)=>COLL_PTN.compare(a.name,b.name));n.total=n.own+n.kids.reduce((a,k)=>a+sum(k),0);return n.total};roots.forEach(sum);
+  // o caminho completo a partir da pasta da análise (ex.: «DTP 2026.2027 › 997 Mecatrónica… › …»); só se saltam os níveis acima dela
+  while(roots.length===1&&roots[0].own===0&&roots[0].kids.length===1&&norm(roots[0].name)!==norm(BM.nome||""))roots=roots[0].kids;
+  const list=[];const walk=n=>{list.push(n);n.kids.forEach(walk)};roots.forEach(walk);return {nodes,roots,list,base:roots.length?roots[0].depth:1,meu:true}}
+function buildTree0(){
   const nodes=new Map();
   const ensure=p=>{if(nodes.has(p))return nodes.get(p);const parts=p.split("/");
     const n={path:p,name:parts[parts.length-1],kids:[],own:0,total:0,depth:parts.length};nodes.set(p,n);
@@ -455,9 +488,12 @@ function renderTree(){
   const empty=all.filter(n=>!n.total);
   $("#pTiles").innerHTML=`<div class="tile"><div class="v">${all.length}</div><div class="l">pastas</div></div>
    <div class="tile"><div class="v" style="color:var(--bad)">${empty.length}</div><div class="l">pastas vazias</div></div>
-   <div class="tile"><div class="v">${files.length}</div><div class="l">ficheiros</div></div>`;countUp($("#pTiles"));
+   <div class="tile"><div class="v">${T.meu?T.roots.reduce((a,r)=>a+r.total,0):files.length}</div><div class="l">ficheiros</div></div>`;countUp($("#pTiles"));
+  {const h2=$("#pas h2"),hn=$("#pas h2+.hint");if(h2&&!h2.dataset.o){h2.dataset.o=h2.textContent;if(hn)hn.dataset.o=hn.textContent}
+   if(h2)h2.textContent=T.meu?"As minhas pastas na Box":h2.dataset.o;
+   {let sl=$("#pBoxSel");if(!sl){sl=document.createElement("div");sl.id="pBoxSel";sl.className="row";sl.style.margin="0 0 10px";$("#pTiles").insertAdjacentElement("beforebegin",sl)}sl.innerHTML=boxMeu()?boxSelHTML():"";sl.hidden=!sl.innerHTML}if(hn)hn.textContent=T.meu?"As pastas dos módulos atribuídos a si, com o caminho completo e o número de ficheiros em cada uma (na própria pasta e no total). As pastas sem nenhum ficheiro aparecem a vermelho. Atualizado quando a Direção analisa a Box.":hn.dataset.o}
   $("#pMsg").textContent="";
-  if(!all.length){$("#pTree").innerHTML=`<p class="hint" style="margin:0">Faça primeiro a análise da Box (em Análise).</p>`;return}
+  if(!all.length){$("#pTree").innerHTML=`<p class="hint" style="margin:0">${boxMeu()?"Ainda não há pastas atribuídas a si publicadas pela Direção (a Direção tem de analisar a Box e ter módulos atribuídos a si).":"Faça primeiro a análise da Box (em Análise)."}</p>`;return}
   const q=norm($("#pTxt").value),lvl=+$("#pLvl").value;
   if($("#pShow").value==="vazias"){
     // só as pastas vazias de nível mais alto (se uma pasta está vazia, as subpastas também estão)

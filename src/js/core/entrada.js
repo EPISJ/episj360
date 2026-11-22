@@ -50,6 +50,7 @@ async function guideEntrarSB(){
   prog(40,"Perfil: "+(EU.admin?"Administrador":(EU.perfilNome||PERFIL_CURTO[EU.perfil]||"")));
   whoUI();aplicarPerfil();
   if(EU.admin)perfisMigrar();
+  try{if(sbAtivo&&sbAtivo())prefsTrazer()}catch(e){} // 0.9.154: tema e widgets da conta logo no início
   await guideCarregarModulos();
   try{await lgMigrar();aplicarLogos()}catch(e){}
   if(curTab&&curTab.startsWith("rc"))try{rcRender(curTab)}catch(e){}
@@ -80,6 +81,7 @@ async function guideEntrar(tok){
   window.__guideLogin=EU.email;
   prog(40,"Perfil: "+(EU.admin?"Administrador":(EU.perfilNome||PERFIL_CURTO[EU.perfil]||"")));
   whoUI();aplicarPerfil();
+  try{if(sbAtivo&&sbAtivo())prefsTrazer()}catch(e){} // 0.9.154: tema e widgets da conta logo no início
   await guideCarregarModulos();
   try{await lgMigrar();aplicarLogos()}catch(e){}
   if(curTab&&curTab.startsWith("rc"))try{rcRender(curTab)}catch(e){}

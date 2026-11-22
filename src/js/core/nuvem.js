@@ -165,8 +165,10 @@ async function nuvemTextos(force){if(!NUVOK()||nuvDesl())return;if(!force&&TX.si
   const arr=[];for(const r of TX.values())arr.push(r.sig?{...r,sig:b64(r.sig)}:r);
   await nuvemPut("tx",arr);nuvSetT("txN",arr.length)}
 // ao entrar: traz o que for mais recente na nuvem e envia o que for mais recente aqui
-async function nuvemTrazer(){
-  if(!NUVOK())return;NUV.ocupado=true;let mudou=false;
+// 0.9.154: nuvemTrazer(true) traz só a configuração (formadores, escola, atribuições) — o que a entrada precisa; as análises das pastas,
+// as contagens e os textos dos documentos (o que pesa) vêm depois, em segundo plano, com nuvemTrazer()
+async function nuvemTrazer(so1){
+  if(!NUVOK())return;if(!so1&&NUV.ocupado){for(let i=0;i<60&&NUV.ocupado;i++)await new Promise(r=>setTimeout(r,500))}NUV.ocupado=true;let mudou=false;
   try{
     const idx=(await (await nuvem("GET","")).json()).itens||{},L=nuvT();
     // 1) configuração, pontos de restauro, modelos, pasta
@@ -188,6 +190,7 @@ async function nuvemTrazer(){
     // e um computador com configuração própria mais recente ficava sem os logótipos do canto esquerdo e do canto direito)
     else if(E&&(!LOGOS.main||!LOGOS.right)&&!window.__lgNuv){window.__lgNuv=1;try{const e=await nuvemGet("estado");if(e&&e.logos&&typeof e.logos==="object"&&lgJuntar(e.logos))mudou=true}catch(x){}}
     else if(!E?(cfg.mods.length||cfg.profs.length):cfgT()>(E.t||0)){if(!cfgT())localStorage.setItem("boxcheck_cfg_t",String(Date.now()));await nuvemPut("estado",estadoAtual(),cfgT())}
+    if(!so1){
     // 2) análises de cada pasta
     const R=resumos();
     for(const k in idx){if(!k.startsWith("L_"))continue;const root=k.slice(2),loc=R[root];
@@ -212,6 +215,7 @@ async function nuvemTrazer(){
     if(TX.size&&(!idx.tx||TX.size>(nuvT().txN||0)))await nuvemTextos(true);
     // 0.9.113: contador dos pedidos à Box (somado entre computadores)
     if(idx.BU&&(idx.BU.t||0)>(L.BU||0)){try{buJuntar(await nuvemGet("BU"))}catch(x){}nuvSetT("BU",idx.BU.t)}
+    }
     NUV.ultimo=NUV.ultimo||Date.now();
   }catch(e){if(e.kind!=="nokv"){NUV.erro=e.message;console.warn(e)}}
   finally{NUV.ocupado=false;nuvemUI()}

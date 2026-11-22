@@ -524,20 +524,22 @@ function buildTree0(){
   const list=[];const walk=n=>{list.push(n);n.kids.forEach(walk)};roots.forEach(walk);
   return {nodes,roots,list,base:roots.length?roots[0].depth:1};
 }
-function treeLines(n,ind,out){out.push(`${"  ".repeat(ind)}${n.name}  [${n.own} na pasta · ${n.total} no total]${n.total?"":"  — VAZIA"}`);n.kids.forEach(k=>treeLines(k,ind+1,out));return out}
+/* 0.9.203: só a última pasta da árvore (sem subpastas) conta como vazia — uma pasta-mãe nunca aparece como vazia */
+const tVazia=n=>!n.kids.length&&!n.total;
+function treeLines(n,ind,out){out.push(`${"  ".repeat(ind)}${n.name}  [${n.own} na pasta · ${n.total} no total]${tVazia(n)?"  — VAZIA":""}`);n.kids.forEach(k=>treeLines(k,ind+1,out));return out}
 function treeText(){const {roots,list:all}=buildTree();
-  return `RELATÓRIO DE PASTAS — ${new Date().toLocaleDateString("pt-PT")}\n${all.length} pastas · ${all.filter(n=>!n.total).length} vazias · ${files.length} ficheiros\n\n`+roots.flatMap(r=>treeLines(r,0,[])).join("\n")}
+  return `RELATÓRIO DE PASTAS — ${new Date().toLocaleDateString("pt-PT")}\n${all.length} pastas · ${all.filter(tVazia).length} vazias · ${files.length} ficheiros\n\n`+roots.flatMap(r=>treeLines(r,0,[])).join("\n")}
 function treeCSV(){const {list,base}=buildTree();const q=v=>`"${String(v).replace(/"/g,'""')}"`;
   return [["Caminho","Pasta","Nível","Subpastas","Ficheiros na pasta","Ficheiros no total","Estado"]].concat(
-    list.map(n=>[n.path,n.name,n.depth-base,n.kids.length,n.own,n.total,n.total?"Com ficheiros":"Vazia"])).map(r=>r.map(q).join(";")).join("\n")}
+    list.map(n=>[n.path,n.name,n.depth-base,n.kids.length,n.own,n.total,tVazia(n)?"Vazia":n.total?"Com ficheiros":"Sem ficheiros (tem subpastas)"])).map(r=>r.map(q).join(";")).join("\n")}
 $("#pTxt").addEventListener("input",debounce(()=>renderTree(),160));["#pLvl","#pShow"].forEach(s=>$(s).addEventListener("input",()=>renderTree()));
 // 0.9.86: a árvore abre-se aos poucos — só se desenham as pastas abertas (com 13 000 pastas eram 7 s no iPad);
 // as fechadas desenham-se quando se carrega nelas
 let TREE=null;
-const treeNo=(n,open,inner)=>`<details class="fd${n.kids.length?"":" leaf"}${n.total?"":" empty"}"${open?" open":""} data-p="${esc(n.path)}"${!open&&n.kids.length?' data-lz="1"':""}><summary><span class="nm">${esc(n.name)}</span><span class="cnt">${n.own} na pasta · ${n.total} no total${n.kids.length?` · ${n.kids.length} subpasta(s)`:""}</span></summary>${inner}</details>`;
+const treeNo=(n,open,inner)=>`<details class="fd${n.kids.length?"":" leaf"}${tVazia(n)?" empty":""}"${open?" open":""} data-p="${esc(n.path)}"${!open&&n.kids.length?' data-lz="1"':""}><summary><span class="nm">${esc(n.name)}</span><span class="cnt">${n.own} na pasta · ${n.total} no total${n.kids.length?` · ${n.kids.length} subpasta(s)`:""}</span></summary>${inner}</details>`;
 function renderTree(){
   const T=buildTree(),{nodes,roots,list:all,base}=T;TREE=T;
-  const empty=all.filter(n=>!n.total);
+  const empty=all.filter(tVazia);
   $("#pTiles").innerHTML=`<div class="tile"><div class="v">${all.length}</div><div class="l">pastas</div></div>
    <div class="tile"><div class="v" style="color:var(--bad)">${empty.length}</div><div class="l">pastas vazias</div></div>
    <div class="tile"><div class="v">${T.meu?T.roots.reduce((a,r)=>a+r.total,0):files.length}</div><div class="l">ficheiros</div></div>`;countUp($("#pTiles"));
@@ -551,9 +553,9 @@ function renderTree(){
   const q=norm($("#pTxt").value),lvl=+$("#pLvl").value;
   if($("#pShow").value==="vazias"){
     // só as pastas vazias de nível mais alto (se uma pasta está vazia, as subpastas também estão)
-    const tops=empty.filter(n=>{const par=n.path.split("/").slice(0,-1).join("/");const p=nodes.get(par);return !p||p.total>0}).filter(n=>!q||norm(n.path).includes(q));
+    const tops=empty.filter(n=>!q||norm(n.path).includes(q)); // 0.9.203: as últimas pastas da árvore que estão vazias
     const L=tops.slice(0,2000);
-    $("#pTree").innerHTML=`<p class="hint">${tops.length} pasta(s) vazia(s) (as subpastas destas também estão vazias)${tops.length>L.length?` — a mostrar as primeiras ${L.length}; use «Procurar pasta» ou descarregue o Excel para ver todas`:""}:</p>`+L.map(n=>`<div style="padding:3px 0;border-bottom:1px dashed var(--line)">${esc(n.path)}${n.kids.length?` <span class="cnt hint">(+${n.kids.length} subpasta(s))</span>`:""}</div>`).join("");return}
+    $("#pTree").innerHTML=`<p class="hint">${tops.length} pasta(s) vazia(s) (só as últimas pastas de cada ramo)${tops.length>L.length?` — a mostrar as primeiras ${L.length}; use «Procurar pasta» ou descarregue o Excel para ver todas`:""}:</p>`+L.map(n=>`<div style="padding:3px 0;border-bottom:1px dashed var(--line)">${esc(n.path)}${n.kids.length?` <span class="cnt hint">(+${n.kids.length} subpasta(s))</span>`:""}</div>`).join("");return}
   // pastas que interessam à procura (a própria e as de cima), calculado uma só vez
   let keep=null;
   if(q){keep=new Set();for(const n of all)if(norm(n.name).includes(q)){let p=n.path;while(p&&!keep.has(p)){keep.add(p);const i=p.lastIndexOf("/");p=i>0?p.slice(0,i):""}}}

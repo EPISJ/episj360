@@ -187,21 +187,28 @@ function prepararDisposicao(){
 const contKey=c=>c.dataset.col||c.dataset.cont;
 function guardarDisposicao(sec){const o={};sec.querySelectorAll(".col,[data-cont]").forEach(c=>{o[contKey(c)]=[...c.children].filter(x=>x.classList.contains("blk")).map(x=>x.dataset.blk)});
   LAYOUT[sec.id]=o;try{localStorage.setItem(LAYKEY,JSON.stringify(LAYOUT))}catch(e){}prefsAgendar()}
-let DRG=null,MARK=null;
-document.querySelector("main").addEventListener("mousedown",e=>{const h=e.target.closest(".dh");if(h)h.parentElement.draggable=true});
-document.querySelector("main").addEventListener("mouseup",e=>{const h=e.target.closest(".dh");if(h&&!DRG)h.parentElement.draggable=false});
-document.querySelector("main").addEventListener("dragstart",e=>{const b=e.target.closest&&e.target.closest(".blk");if(!b||!b.draggable||e.target!==b)return;
-  DRG=b;e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain","quadro")}catch(x){}
-  MARK=document.createElement("div");MARK.className="dropmark";document.body.classList.add("arrastar");setTimeout(()=>b.classList.add("dragging"),0)});
-document.querySelector("main").addEventListener("dragover",e=>{if(!DRG)return;const sec=DRG.closest("section");
-  let c=e.target.closest(".col,[data-cont]");if(!c||c.closest("section")!==sec||DRG.contains(c))return;
-  e.preventDefault();e.dataTransfer.dropEffect="move";
-  const grid=!!c.dataset.cont,bs=[...c.children].filter(x=>x.classList.contains("blk")&&x!==DRG);
-  let antes=null;for(const x of bs){const r=x.getBoundingClientRect();if(grid?(e.clientY<r.bottom&&e.clientX<r.left+r.width/2)||e.clientY<r.top:e.clientY<r.top+r.height/2){antes=x;break}}
-  if(MARK.parentElement!==c||MARK.nextElementSibling!==antes)c.insertBefore(MARK,antes)});
-document.querySelector("main").addEventListener("drop",e=>{if(!DRG||!MARK||!MARK.parentElement)return;e.preventDefault();MARK.parentElement.insertBefore(DRG,MARK);guardarDisposicao(DRG.closest("section"));
-  if(curTab==="est")linhaTempo($("#eTime"))});
-document.querySelector("main").addEventListener("dragend",()=>{if(!DRG)return;DRG.classList.remove("dragging");DRG.draggable=false;DRG=null;if(MARK)MARK.remove();MARK=null;document.body.classList.remove("arrastar")});
+/* 0.9.187: arrastar os quadros com eventos do ponteiro (rato, trackpad e toque) em vez do arrastar-e-largar do HTML5, que no Safari
+   ficava preso: o quadro ficava esbatido e não se deixava largar. Agarra-se pela pega (⠿), a barra azul mostra onde vai ficar,
+   a página desliza sozinha perto das margens; Esc cancela. */
+let DRG=null,MARK=null,DRG_PID=null,DRG_ROLA=0,DRG_XY=null;
+function drgAlvo(x,y){if(!DRG)return;const sec=DRG.closest("section");DRG.style.pointerEvents="none";const el=document.elementFromPoint(x,y);DRG.style.pointerEvents="";
+  if(!el)return;let c=el.closest(".col,[data-cont]");if(!c||c.closest("section")!==sec||DRG.contains(c))return;
+  const grid=!!c.dataset.cont,bs=[...c.children].filter(z=>z.classList.contains("blk")&&z!==DRG);
+  let antes=null;for(const z of bs){const r=z.getBoundingClientRect();if(grid?(y<r.bottom&&x<r.left+r.width/2)||y<r.top:y<r.top+r.height/2){antes=z;break}}
+  if(MARK.parentElement!==c||MARK.nextElementSibling!==antes)c.insertBefore(MARK,antes)}
+function drgRolar(){if(!DRG||!DRG_XY)return;const y=DRG_XY[1],m=70,h=innerHeight;let d=0;if(y<m+60)d=-Math.ceil((m+60-y)/6);else if(y>h-m)d=Math.ceil((y-(h-m))/6);
+  if(d){scrollBy(0,d);drgAlvo(DRG_XY[0],DRG_XY[1])}DRG_ROLA=requestAnimationFrame(drgRolar)}
+function drgFim(ok){if(!DRG)return;cancelAnimationFrame(DRG_ROLA);const b=DRG;b.classList.remove("dragging");
+  if(ok&&MARK&&MARK.parentElement){MARK.parentElement.insertBefore(b,MARK);guardarDisposicao(b.closest("section"));if(curTab==="est")try{linhaTempo($("#eTime"))}catch(e){}}
+  if(MARK)MARK.remove();MARK=null;DRG=null;DRG_PID=null;DRG_XY=null;document.body.classList.remove("arrastar")}
+document.querySelector("main").addEventListener("pointerdown",e=>{const h=e.target.closest(".dh");if(!h||e.button>0)return;const b=h.parentElement;if(!b||!b.classList.contains("blk"))return;
+  e.preventDefault();DRG=b;DRG_PID=e.pointerId;DRG_XY=[e.clientX,e.clientY];try{h.setPointerCapture(e.pointerId)}catch(x){}
+  MARK=document.createElement("div");MARK.className="dropmark";document.body.classList.add("arrastar");b.classList.add("dragging");b.parentElement.insertBefore(MARK,b.nextElementSibling);
+  DRG_ROLA=requestAnimationFrame(drgRolar)});
+addEventListener("pointermove",e=>{if(!DRG||e.pointerId!==DRG_PID)return;e.preventDefault();DRG_XY=[e.clientX,e.clientY];drgAlvo(e.clientX,e.clientY)},{passive:false});
+addEventListener("pointerup",e=>{if(DRG&&e.pointerId===DRG_PID)drgFim(true)});
+addEventListener("pointercancel",e=>{if(DRG&&e.pointerId===DRG_PID)drgFim(false)});
+addEventListener("keydown",e=>{if(DRG&&e.key==="Escape")drgFim(false)});
 $("#layReset").onclick=()=>{LAYOUT={};try{localStorage.removeItem(LAYKEY)}catch(e){}prefsAgendar();prefsEnviar().finally(()=>setTimeout(()=>location.reload(),300))};
 prepararDisposicao();
 

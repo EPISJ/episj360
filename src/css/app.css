@@ -1499,3 +1499,6 @@ input[type=color].turcor::-webkit-color-swatch-wrapper{padding:2px}input[type=co
 /* 0.9.184: Dashboard dos perfis que não são da Direção — sem a lista «Para resolver», a pontuação dos dados da escola,
    os números da escola e a configuração (ficam a saudação, a linha do tempo do ano e os widgets do perfil) */
 body:not(.pf-dir) #esc .ep-todo,body:not(.pf-dir) #esc #epScore,body:not(.pf-dir) #esc .ep-cfg,body:not(.pf-dir) #esc #escTiles{display:none!important}
+
+/* 0.9.187: pega dos quadros com o ponteiro — sem gestos do navegador por cima (toque) */
+.dh{touch-action:none}body.arrastar{user-select:none;-webkit-user-select:none;cursor:grabbing}body.arrastar .dh{cursor:grabbing}

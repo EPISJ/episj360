@@ -132,7 +132,19 @@ $("#utiPrev").onchange=e=>{const v=e.target.value;if(!v)return;if(!utiOk()){e.ta
 function utiLerCampos(){if(!utiOk(1))return;const L=UTI.loja;L.admins=$("#utiAdmins").value.split(/[\s,;]+/).map(x=>x.trim().toLowerCase()).filter(x=>x.includes("@"));
   L.formandos={dominios:$("#utiDom").value.split(/[\s,;]+/).map(x=>x.trim().toLowerCase().replace(/^@/,"")).filter(Boolean),padrao:$("#utiPad").value.trim()}}
 {const g2=document.getElementById("utiGuardar2");if(g2)g2.onclick=()=>$("#utiGuardar").click()}
-$("#utiGuardar").onclick=async()=>{if(!UTI)return;utiLerCampos();const pad=UTI.loja.formandos.padrao;if(pad){try{new RegExp(pad)}catch(e){toast("O padrão dos formandos não é uma expressão regular válida");return}}
+/* 0.9.179: botão «Aplicar» ao lado dos administradores — grava logo; quem perde (ou ganha) o acesso de administrador sai da app
+   para o acesso novo se aplicar (a própria conta sai já; as outras saem na verificação seguinte, até 1 minuto) */
+$("#utiAdmAplicar").onclick=async()=>{if(!utiOk())return;const antes=new Set(UTI.loja.admins||[]);utiLerCampos();const depois=new Set(UTI.loja.admins||[]);
+  const sai=[...antes].filter(x=>!depois.has(x)),entra=[...depois].filter(x=>!antes.has(x));
+  if(!sai.length&&!entra.length){toast("A lista de administradores não mudou");return}
+  const eu=String(EU&&EU.email||"").toLowerCase(),euSai=sai.includes(eu);
+  if(!confirm(`Aplicar a lista de administradores?${entra.length?"\n\nPassam a administradores: "+entra.join(", "):""}${sai.length?"\n\nDeixam de ser administradores: "+sai.join(", "):""}\n\nQuem muda sai da EPISJ 360 e volta a entrar já com o acesso novo.${euSai?"\n\nA sua conta está entre as que deixam de ser administradoras: vai sair agora.":""}`))return;
+  await utiGravar();if(UTI_SUJO)return; // a gravação falhou
+  const ok=(UTI.loja.admins||[]).map(x=>String(x).toLowerCase());
+  if(euSai&&ok.includes(eu)){toast("O servidor manteve a sua conta como administradora (para não ficar a escola sem administradores)");return}
+  if(euSai){toast("Lista aplicada — a sair para aplicar o acesso novo…");setTimeout(()=>guideSair(),1200)}else toast("Lista de administradores aplicada")};
+$("#utiGuardar").onclick=()=>utiGravar();
+async function utiGravar(){if(!UTI)return;utiLerCampos();const pad=UTI.loja.formandos.padrao;if(pad){try{new RegExp(pad)}catch(e){UTI_SUJO=true;toast("O padrão dos formandos não é uma expressão regular válida");return}}
   utiEst("A guardar…");try{const j=await guideApi("/guide/perfis",{method:"POST",body:JSON.stringify(UTI.loja)});UTI.loja=j.loja;UTI_SUJO=false;MODS_OFF=Array.isArray(j.loja.modsOff)?j.loja.modsOff:[];aplicarPerfil();renderUti();toast("modsOff" in j.loja?"Perfis e módulos guardados":"Perfis guardados — falta atualizar o serviço na Cloudflare para desligar módulos")}
-  catch(e){utiEst(`<span style="color:var(--bad)">${esc(e.message)}</span>`)}};
+  catch(e){UTI_SUJO=true;utiEst(`<span style="color:var(--bad)">${esc(e.message)}</span>`)}}
 

@@ -47,12 +47,19 @@ function gateErroEntrada(e){const m=String((e&&e.message)||e||"");
   return `<b>Não foi possível confirmar a sua entrada.</b><br>Isto acontece quase sempre por causa de um <b>bloqueador de conteúdos ou de publicidade</b> (uBlock Origin, AdBlock, AdGuard, Ghostery, Privacy Badger, os escudos do Brave ou a proteção contra rastreio do Safari, Edge ou Firefox), que corta a ligação ao Office 365 ou à base de dados da app.
     <ol style="margin:8px 0 6px;padding-left:20px;text-align:left"><li>Desative o bloqueador para <b>episj360.episj.com</b> (no ícone da extensão, «desativar neste site»).</li><li>No Safari, Edge ou Firefox, ponha a proteção contra rastreio em «normal» para este site.</li><li><a href="#" id="gTentar">Tente outra vez</a>.</li></ol>
     <small style="opacity:.7">Erro técnico: ${esc(m)}</small>`}
+/* 0.9.179: se o acesso de administrador ou o perfil desta conta mudar (noutro computador, em Utilizadores), a app sai e volta
+   a entrar para o acesso novo se aplicar. Verifica a cada minuto e quando a página volta a ficar visível. */
+var EU_VIG=null;
+function euVigiar(){if(EU_VIG)return;const ver=async()=>{try{if(!EU||!SBSES||document.visibilityState==="hidden")return;const j=await sbRpc("g360_eu");if(!j)return;
+    if(!!j.admin!==!!EU.admin||(j.perfil||"")!==(EU.perfil||"")){clearInterval(EU_VIG);toast("O seu acesso à EPISJ 360 mudou — a sair para o aplicar…");setTimeout(()=>{try{nuvFilaJa()}catch(e){}guideSair()},2500)}}catch(e){}};
+  EU_VIG=setInterval(ver,60000);addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")ver()})}
 async function guideEntrarSB(){
   gateState("wait","");prog(30,"A confirmar o perfil…");
   let j=SBEU;if(!j||!j.perfil){try{j=await sbRpc("g360_eu");SBEU=j}catch(e){gateState("login",gateErroEntrada(e));const r=$("#gTentar");if(r)r.onclick=ev=>{ev.preventDefault();location.reload()};return}}
   if(!j||!j.perfil){const em=SBSES&&SBSES.user&&SBSES.user.email||"";gateState("login",`A conta <b>${esc(em)}</b> ainda não tem perfil na EPISJ 360. Peça à Direção que lho atribua. <a href="#" id="gSairSB">Entrar com outra conta</a>`);
     const a=$("#gSairSB");if(a)a.onclick=e=>{e.preventDefault();sbSair().then(()=>location.reload())};return}
   SBMEMBRO=j;EU=j;MODS_OFF=Array.isArray(j.modsOff)?j.modsOff:[];window.__guideLogin=EU.email;
+  euVigiar();
   msSilencioso(EU.email); // o Office 365 (email e OneDrive) liga-se em segundo plano, sem pedir nada
   prog(40,"Perfil: "+(EU.admin?"Administrador":(EU.perfilNome||PERFIL_CURTO[EU.perfil]||"")));
   whoUI();aplicarPerfil();

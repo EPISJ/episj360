@@ -426,6 +426,13 @@ $("#altNova").onclick=async()=>{if(!lastListing)return;const b=await criarBase(l
 /* ---------- relatório de pastas ---------- */
 /* 0.9.194: o que cada formador vê do Box360 (pastas e estatísticas só suas) — a Direção calcula a partir da análise e publica
    em PUB.box.profs[id do formador] = {p:[[caminho, ficheiros na pasta], …], m:[{tu,di,mo,it:[[tipo, estado, pasta, data]]}]} */
+/* 0.9.201: a turma tem outro código noutro ano (ex.: «A01 Mecatrónica Automóvel (24-27)» em 2026/2027 e «998 Mecatrónica Automóvel (24-27)»
+   em 2025/2026): procura a pasta do módulo pelo nome do curso e anos da turma, pela disciplina e pelo módulo */
+function modPastasOutroAno(ss,idx){if(ss.length<2)return[];const last=ss[ss.length-1],tur=ss[0],rem=tur.replace(/^[a-z]{0,2}\d+\s*[-–.]?\s*/,"").trim(),mid=ss.slice(1,-1);
+  const temTur=n=>n.some(c=>c===tur||(rem.length>4&&c.endsWith(rem)));
+  let ok=idx.recs.filter(r=>{const n=r.n;return n[n.length-1]===last&&temTur(n)&&mid.every(x=>n.includes(x))});
+  if(!ok.length){const disc=mid[mid.length-1];ok=idx.recs.filter(r=>{const n=r.n;return n[n.length-1]===last&&temTur(n)&&(!disc||n.includes(disc))})}
+  return ok}
 function boxPublico(){if(!lastListing||!folders||!folders.length)return null;let ev=null;try{ev=evaluate()}catch(e){return null}if(!ev)return null;
   const own=new Map();for(const f of files)if(f.rawDir)own.set(f.rawDir,(own.get(f.rawDir)||0)+1);
   const todas=[...new Set(folders)],out={};
@@ -433,7 +440,7 @@ function boxPublico(){if(!lastListing||!folders||!folders.length)return null;let
     let mf=e.modFolders||[];
     // 0.9.200: numa análise de outro ano letivo a pasta do módulo não tem o mesmo ano no caminho (ex.: o módulo está em «DTP 2026.2027 / A01…»
     // e a análise é a de «DTP 2025.2026»): procura-a sem as pastas do ano, pelo resto do caminho (turma, disciplina, módulo)
-    if(!mf.length){try{const idx=getIdx(),ss=segs(e.mod.pasta).filter(x=>!anoDe(x));if(ss.length){mf=idx.pick(ss,"folders");if(!mf.length){const f=idx.flex(ss);if(f)mf=idx.pick(f.ss,"folders")}}}catch(x){}}
+    if(!mf.length){try{const idx=getIdx(),ss=segs(e.mod.pasta).filter(x=>!anoDe(x));if(ss.length){mf=idx.pick(ss,"folders");if(!mf.length){const f=idx.flex(ss);if(f)mf=idx.pick(f.ss,"folders")}if(!mf.length)mf=modPastasOutroAno(ss,idx)}}catch(x){}}
     for(const r of mf)o.raiz.add(r.r.join("/"));
     o.m.push({tu:e.mod.turma||"",di:e.mod.disc||"",mo:modTitle(e.mod),it:e.items.map(i=>{let d="";for(const f of i.hits||[]){const x=(f.f||f).date||"";if(x>d)d=x}return[(i.doc&&i.doc.nome)||"",i.state,i.falta||"",d.slice(0,10)]})})}
   const R={t:lastListing.t||Date.now(),pasta:lastListing.pasta||"",nome:String(lastListing.pasta||"").split("/").filter(Boolean).pop()||"Análise",profs:{}};

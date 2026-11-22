@@ -11,7 +11,36 @@ function fpBtns(i){const fl=(i.q||[]).filter(x=>x.q),mk=(i.q||[]).filter(x=>x.fp
   if(mk.length)h+=`<br><span class="hint" style="margin:0">Assinalado como falso positivo: ${esc(mk.map(x=>x.f.name+" ("+x.fp+")").join("; "))}</span> <button class="b s fpb" data-on="0" data-k="${esc(JSON.stringify(mk.map(x=>fpKey(x.f))))}">Anular</button>`;
   return h}
 $("#report").addEventListener("click",e=>{const b=e.target.closest(".fpb");if(!b)return;marcarFP(JSON.parse(b.dataset.k),b.dataset.on==="1",b.dataset.t)});
-function renderReport(){
+/* 0.9.202: Relatório do Formador — uma vista própria (a da Direção fica igual): o que lhe falta entregar, por turma e módulo,
+   a partir da análise da Box publicada pela Direção; pode ver só o que falta ou tudo, copiar e imprimir / guardar em PDF */
+var RELM={so:"falta",q:""};
+const RELM_EST={ok:["ok","entregue"],warn:["warn","entregue — a confirmar"],modelo:["warn","entregue — não segue o modelo"],blank:["bad","não conta (vazio ou falso)"],missing:["bad","em falta"]};
+function relMeuDados(BM){const okS=s=>s==="ok"||s==="warn"||s==="modelo",q=norm(RELM.q||"");
+  return BM.m.map(m=>({m,it:m.it.map(x=>({tipo:x[0],st:x[1],pasta:x[2],d:x[3]})).filter(x=>(RELM.so!=="falta"||!okS(x.st))&&(!q||norm([m.tu,m.di,m.mo,x.tipo,x.pasta].join(" ")).includes(q)))})).filter(g=>g.it.length)
+    .sort((a,b)=>COLL_PTN.compare(a.m.tu+" "+a.m.mo,b.m.tu+" "+b.m.mo))}
+function relMeuTexto(BM){const L=relMeuDados(BM);return `RELATÓRIO DE ENTREGAS — ${(BM.me&&BM.me.nome)||""}\nAnálise: ${BM.nome||""}${BM.t?" ("+new Date(BM.t).toLocaleDateString("pt-PT")+")":""}\n${RELM.so==="falta"?"Só o que falta":"Todos os documentos"}\n\n`+
+  L.map(g=>`${[g.m.tu,g.m.di,g.m.mo].filter(Boolean).join(" · ")}\n`+g.it.map(x=>`  [${(RELM_EST[x.st]||["",x.st])[1]}] ${[x.tipo,x.pasta].filter(Boolean).join(" › ")}${x.d?" — "+new Date(x.d+"T12:00").toLocaleDateString("pt-PT"):""}`).join("\n")).join("\n\n")}
+function renderRelMeu(BM){const sec=$("#rel");if(!sec)return;let box=$("#relMeu");
+  if(!box){box=document.createElement("div");box.id="relMeu";sec.insertAdjacentElement("afterbegin",box);
+    box.addEventListener("input",e=>{if(e.target.id==="rmQ"){RELM.q=e.target.value;relMeuLista()}});
+    box.addEventListener("change",e=>{if(e.target.id==="rmSo"){RELM.so=e.target.value;relMeuLista()}});
+    box.addEventListener("click",e=>{const b=e.target.closest("[data-rm]");if(!b)return;const BM2=boxMeu();if(!BM2||BM2.vazio)return;
+      if(b.dataset.rm==="cp")copy(relMeuTexto(BM2));else printText("Relatório de entregas",relMeuTexto(BM2))})}
+  [...sec.querySelectorAll(".cols,.tiles,.card,.blk")].forEach(x=>{if(!x.contains(box)&&!box.contains(x))x.hidden=true});box.hidden=false;
+  const SEL=boxSelHTML();
+  if(BM.vazio||!(BM.m||[]).length){box.innerHTML=`<div class="card"><h2>O meu relatório de entregas</h2>${SEL?`<div class="row">${SEL}</div>`:""}<p class="hint">Ainda não há dados seus publicados pela Direção (a Direção tem de analisar a Box e ter módulos atribuídos a si).</p></div>`;return}
+  const okS=s=>s==="ok"||s==="warn"||s==="modelo",it=BM.m.flatMap(m=>m.it),tot=it.length,ent=it.filter(x=>okS(x[1])).length,nc=it.filter(x=>x[1]==="blank").length,conf=it.filter(x=>x[1]==="warn"||x[1]==="modelo").length;
+  const st=(l,v,c)=>`<div class="ay-st"><small>${esc(l)}</small><b${c?` style="color:${c}"`:""}>${v}</b></div>`;
+  box.innerHTML=`<div class="card"><h2>O meu relatório de entregas</h2><p class="hint">Os documentos dos módulos atribuídos a si, ${esc(BM.nome?"na análise «"+BM.nome+"»":"")}${BM.t?" de "+new Date(BM.t).toLocaleDateString("pt-PT"):""}. Atualizado quando a Direção analisa a Box.</p>
+    <div class="ay-stats" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:8px 0 12px">${st("documentação entregue",(tot?Math.round(ent*100/tot):0)+"%")}${st("em falta",tot-ent,tot-ent?"var(--bad)":"")}${st("entregues (de "+tot+")",ent)}${st("a confirmar",conf,conf?"#b45309":"")}${st("não contam (vazios/falsos)",nc,nc?"var(--bad)":"")}</div>
+    <div class="row" style="align-items:flex-end">${SEL}<label style="width:200px">Mostrar<select id="rmSo"><option value="falta"${RELM.so==="falta"?" selected":""}>Só o que falta</option><option value="tudo"${RELM.so!=="falta"?" selected":""}>Todos os documentos</option></select></label>
+      <label class="grow">Procurar<input type="text" id="rmQ" value="${esc(RELM.q)}" placeholder="turma, módulo ou documento"></label><button class="b s" data-rm="cp" type="button">Copiar</button><button class="b s" data-rm="pdf" type="button">Imprimir / guardar PDF</button></div></div>
+    <div id="rmLista"></div>`;relMeuLista()}
+function relMeuLista(){const el=$("#rmLista"),BM=boxMeu();if(!el||!BM||BM.vazio)return;const L=relMeuDados(BM);
+  el.innerHTML=L.length?L.map(g=>{const f=g.it.filter(x=>!(x.st==="ok"||x.st==="warn"||x.st==="modelo")).length;
+    return `<div class="card rm-g"><h3>${esc([g.m.tu,g.m.mo].filter(Boolean).join(" · "))}${g.m.di?` <span class="hint" style="font-weight:400">· ${esc(g.m.di)}</span>`:""}${f?` <span class="tag bad">${f} em falta</span>`:` <span class="tag ok">completo</span>`}</h3>${g.it.map(x=>{const [cl,tx]=RELM_EST[x.st]||["",x.st];return `<div class="mit"><span class="tag ${cl}" style="flex:none">${esc(tx)}</span><div><div>${esc(x.tipo||x.pasta||"")}</div>${x.pasta&&x.pasta!==x.tipo?`<div class="hint" style="margin:0">${esc(x.pasta)}</div>`:""}${x.d?`<div class="hint" style="margin:0">entregue a ${esc(new Date(x.d+"T12:00").toLocaleDateString("pt-PT"))}</div>`:""}</div></div>`}).join("")}</div>`}).join("")
+    :`<div class="card"><p class="msg ok" style="margin:0">${RELM.so==="falta"?"Não lhe falta entregar nada nesta análise.":"Nada encontrado."}</p></div>`}
+function renderReport(){{let BM=null;try{BM=boxMeu()}catch(e){}if(BM){renderRelMeu(BM);return}const m=$("#relMeu");if(m){m.hidden=true;[...$("#rel").querySelectorAll(".cols,.tiles,.card,.blk")].forEach(x=>{if(!m.contains(x))x.hidden=false})}}
   const ev=evaluate(),T=byTeacher(ev);
   const fp=$("#fProf").value;
   $("#fProf").innerHTML=`<option value="">Todos</option>`+T.map(t=>`<option value="${t.p.id}" ${t.p.id===fp?"selected":""}>${esc(t.p.nome)}</option>`).join("");
@@ -467,7 +496,7 @@ function boxAnalises(){const A=PUB&&PUB.box&&PUB.box.anal||{};return Object.entr
 function boxSelHTML(){const L=boxAnalises();if(!L.length)return "";const cur=boxAtual(); // 0.9.198: sempre à vista (também com uma só análise), para se saber qual está a ser vista
   return `<label class="boxsel" style="width:260px">Análise guardada<select data-boxsel>${L.map(x=>`<option value="${esc(x.id)}"${cur&&cur.id===x.id?" selected":""}>${esc(x.d.nome||x.id)}${x.d.t?" · "+new Date(x.d.t).toLocaleDateString("pt-PT"):""}</option>`).join("")}</select></label>`}
 function boxAtual(){const L=boxAnalises();return L.find(x=>x.id===BOX_SEL)||L[0]||null}
-document.addEventListener("change",e=>{const s=e.target.closest&&e.target.closest("[data-boxsel]");if(!s)return;BOX_SEL=s.value;try{if(curTab==="pas")renderTree();if(curTab==="est")renderEst()}catch(x){}});
+document.addEventListener("change",e=>{const s=e.target.closest&&e.target.closest("[data-boxsel]");if(!s)return;BOX_SEL=s.value;try{if(curTab==="pas")renderTree();if(curTab==="est")renderEst();if(curTab==="rel")renderReport()}catch(x){}});
 // formador (ou pré-visualização de um perfil sem Direção): só o que está publicado para si
 function boxMeu(){try{if(typeof podePublicar==="function"&&podePublicar()&&!PREV)return null}catch(e){}const X=boxAtual(),B=X&&X.d;if(!B||!B.profs)return {vazio:true};
   const em=String(EU&&EU.email||"").toLowerCase(),me=(cfg.profs||[]).find(p=>String(profEmail(p)||p.email||"").toLowerCase()===em);

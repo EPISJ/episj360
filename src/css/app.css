@@ -1557,3 +1557,6 @@ table.crano tr.r1 td.out,table.crano tr.r2 td.out,table.crano tr.r1 td.nx,table.
 table.crano tr.r1 td:not(.crm){border-bottom:0!important}table.crano tr.r2 td:not(.crm)::before{content:none}
 table.crano tr.r2 td:not(.crm){background-image:linear-gradient(#dfe4ec,#dfe4ec);background-size:calc(100% - 8px) 1px;background-position:center top;background-repeat:no-repeat}
 table.crano tr.r2 td.out,table.crano tr.r2 td.nx{background-image:none}
+
+/* 0.9.202: relatório do Formador */
+#relMeu .rm-g h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}

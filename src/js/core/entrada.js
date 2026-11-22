@@ -179,6 +179,7 @@ function aplicarPerfil(){
     if(!b.dataset.t0)b.dataset.t0=b.title;b.title=off?b.dataset.t0+" — DESLIGADO: só os administradores o veem":b.dataset.t0});
   document.querySelectorAll("#nav .mgrp.gl").forEach(g=>g.hidden=![...g.querySelectorAll("button[data-t]")].some(b=>!b.hidden));
   const ro=soLeitura()&&!PREV;document.body.classList.toggle("ro",ro);const u=document.querySelector(".undo");if(u)u.style.display=ro||RO?"none":"";
+  try{h3ModoAplicar()}catch(e){} // 0.9.136: Horários360 Simples / Completa (só a Direção escolhe)
   const pf=perfilAtual(),l=$("[data-mhlbl]");if(l)l.textContent=pf==="form"?"Horário da turma":pf==="prof"?"O meu horário":"Horários publicados";
   let bar=$("#pvbar");if(PREV){if(!bar){bar=document.createElement("div");bar.id="pvbar";bar.className="pvbar";document.querySelector("main").prepend(bar)}
     bar.innerHTML=`${ico("eye")} A pré-visualizar como <b>${esc(PERFIL_CURTO[PREV])}</b> — é só o que aparece; os dados continuam os seus.<button class="b s" id="pvOut">Sair da pré-visualização</button>`;$("#pvOut").onclick=()=>{PREV="";aplicarPerfil();show("uti")}}
@@ -215,7 +216,7 @@ async function guidePublicar(manual){if(!podePublicar()||RO)return;
   if(!cfg.profs.length&&!escData().turmas.length){if(manual)toast("Ainda não há turmas nem formadores para publicar");return}
   const porAno={},E0=escData(),hj=hoje(),anoOk=k=>{if(k===E0.ativo)return true;const a=E0.anos.find(x=>x.id===k);return !!(a&&a.inicio&&a.inicio>hj)}; // 0.9.55: só o ano ativo e os que ainda vão começar
   for(const [k,v] of Object.entries(ESD.porAno||{}))if(v&&v.estado&&anoOk(k))porAno[k]={estado:v.estado,quando:v.quando||0};
-  const body={v:1,t:Date.now(),por:EU.email,escola:cfg.escola,profs:cfg.profs.map(p=>({id:p.id,nome:p.nome,abrev:p.abrev||"",email:String(p.email||"").trim().toLowerCase()})),es:{porAno,mapaT:ESD.mapaT||{},mapaC:ESD.mapaC||{}}};try{body.cr=crPublico()}catch(e){} // 0.9.59: pontos de situação do Crono360
+  const body={v:1,t:Date.now(),por:EU.email,escola:cfg.escola,profs:cfg.profs.map(p=>({id:p.id,nome:p.nome,abrev:p.abrev||"",email:String(p.email||"").trim().toLowerCase()})),es:{porAno,mapaT:ESD.mapaT||{},mapaC:ESD.mapaC||{}}};try{body.cr=crPublico()}catch(e){}try{if(H3&&H3.sal)body.h3={sal:H3.sal}}catch(e){} // 0.9.136: tópicos das notificações dos formadores (Horários360) // 0.9.59: pontos de situação do Crono360
   // 0.9.50: o que já está publicado não volta a ser enviado (com o tempo real, cada computador da Direção publicaria o mesmo)
   const sx=JSON.stringify({...body,t:0,por:""}),sig=sx.length+":"+esHash(sx);let sig0="";try{sig0=localStorage.getItem("guide_pub_sig")||""}catch(e){}
   if(!manual&&sig===sig0&&PUBT&&!PUBERR){pubUI();return}

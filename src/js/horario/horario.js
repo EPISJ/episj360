@@ -203,6 +203,7 @@ function esAjustar(fr){try{const w=fr.contentWindow,d=fr.contentDocument;if(!d||
     cab.appendChild(im);lg.replaceWith(cab);const nm=cx.querySelector(".fd");
     if(nm){nm.style.cssText+=";line-height:normal;padding:9px 5px 8px;font-weight:600";nm.className="g-mh";nm.removeAttribute("style");nm.innerHTML='<span>Horários360</span><span class="g-msub">horários da escola</span>'}cab.classList.add("g-logo")}} // 0.9.101: classes (as cores vêm do tema)
   if(!d.getElementById("guide-tema2")){const s2=d.createElement("style");s2.id="guide-tema2";s2.textContent=esTema2();d.head.appendChild(s2)}
+  try{h3EsMenu(d)}catch(e){console.warn(e)} // 0.9.136: Simples / Completa e o caminho de volta também no menu do editor
   esTemaSinc();
   fr.classList.add("pronto")}catch(e){console.warn("Horários360/tema",e);fr.classList.add("pronto")}}
 /* ---------- 0.9.101: o Horários360 congruente com o resto da EPISJ 360 ----------
@@ -337,11 +338,13 @@ const ES_PAL_RE=/(^|[^\p{L}])(Professor(?:es|as|a)?|professor(?:es|as|a)?|PROFES
 const ES_OE_RE=/(^|[^\p{L}])([Dd])iretor(es|as?)? d[ae] [Tt]urma(?=[^\p{L}]|$)/gu;
 function esOE(v){return v.replace(ES_OE_RE,(m,a,d,f)=>a+(d==="D"?"O":"o")+"rientador"+(f==="es"?"es educativos":f==="as"?"as educativas":f==="a"?"a educativa":" educativo"))
   .replace(/(^|[^\p{L}])(do|o|ao|pelo) DT(?=[^\p{L}]|$)/gu,"$1$2 orientador educativo").replace(/\(DT\)/g,"(OE)").replace(/(^|[^\p{L}])DT:/gu,"$1Orientador educativo:")}
-function esRotularTxt(v){return esOE(v.replace(ES_PAL_RE,(m,a,w)=>a+(ES_PAL[w]||w)))}
+// 0.9.136: também as abreviaturas («profs», «prof.») e «docente(s)» sozinho (fica «serviço docente», o nome oficial da DSD)
+const ES_PAL2_RE=/(^|[^\p{L}])(Profs|profs|Prof\.|prof\.|Docentes|docentes|Docente|docente)(?=[^\p{L}]|$)/gu,ES_PAL2={Profs:"Formadores",profs:"formadores","Prof.":"Form.","prof.":"form.",Docentes:"Formadores",docentes:"formadores",Docente:"Formador",docente:"formador"};
+function esRotularTxt(v){return esOE(v.replace(ES_PAL_RE,(m,a,w)=>a+(ES_PAL[w]||w)).replace(ES_PAL2_RE,(m,a,w,o,str)=>/servi[çc]o\s*$/i.test(str.slice(0,o+a.length))?m:a+(ES_PAL2[w]||w)))}
 function esRotular(d){if(!d||!d.body)return;const w=d.createTreeWalker(d.body,4);let n;
-  while(n=w.nextNode()){const v=n.nodeValue;if(!v||!/rofess|lun|ROFESS|LUN|iretor|DT/.test(v))continue;const p=n.parentNode;if(p&&/^(SCRIPT|STYLE|TEXTAREA)$/.test(p.nodeName))continue;const r=esRotularTxt(v);if(r!==v)n.nodeValue=r}
-  d.querySelectorAll("[placeholder],[title],[aria-label]").forEach(el=>{for(const a of["placeholder","title","aria-label"]){const v=el.getAttribute(a);if(v&&/rofess|lun|iretor|DT/i.test(v)){const r=esRotularTxt(v);if(r!==v)el.setAttribute(a,r)}}});
-  d.querySelectorAll("option").forEach(o=>{const v=o.textContent;if(/rofess|lun|iretor|DT/i.test(v)){const r=esRotularTxt(v);if(r!==v)o.textContent=r}})}
+  while(n=w.nextNode()){const v=n.nodeValue;if(!v||!/rof|lun|ROF|LUN|iretor|DT|ocente/.test(v))continue;const p=n.parentNode;if(p&&/^(SCRIPT|STYLE|TEXTAREA)$/.test(p.nodeName))continue;const r=esRotularTxt(v);if(r!==v)n.nodeValue=r}
+  d.querySelectorAll("[placeholder],[title],[aria-label]").forEach(el=>{for(const a of["placeholder","title","aria-label"]){const v=el.getAttribute(a);if(v&&/rof|lun|iretor|DT|ocente/i.test(v)){const r=esRotularTxt(v);if(r!==v)el.setAttribute(a,r)}}});
+  d.querySelectorAll("option").forEach(o=>{const v=o.textContent;if(/rof|lun|iretor|DT|ocente/i.test(v)){const r=esRotularTxt(v);if(r!==v)o.textContent=r}})}
 
 function esRecarregar(forcar){if(!$("#esFr"))return;if(curTab!=="esch"){if(forcar)ES_SIG="";return}if(forcar||ES_SIG!==esSig())esAbrir()}
 function esMostrar(){document.body.classList.add("esch");const fr=$("#esFr");if(!fr.src&&!fr.srcdoc||ES_ANO!==anoAtivo().id||ES_SIG!==esSig())esAbrir()}

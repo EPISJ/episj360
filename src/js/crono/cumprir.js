@@ -518,6 +518,7 @@ if(curTab&&curTab.startsWith("cr"))setTimeout(()=>{try{crRender(curTab)}catch(e)
 // abre o Horários360 já no período do horário novo (o período ativo passa a ser o que está em vigor a partir da data escolhida)
 function cpAbrirHorario(){const a=crAnoSel(),x=ESD.porAno[a.id];if(x&&x.estado&&crPodeEditar())try{const st=JSON.parse(x.estado),L=cpVersoes(st),v=cpVersaoEm(L,CP.de||calHoje());
     if(v&&!v._ativo&&!v._unico){L.forEach(q=>delete q._ativo);v._ativo=true;cpGravarVersoes(st,L);x.estado=JSON.stringify(st);x.quando=Date.now();esdGuardar();ES_SIG=""}}catch(e){console.warn(e)}
+  try{if(!h3EschOk()){H3_IMP=true;aplicarPerfil()}}catch(e){} // 0.9.136: na versão simples do Horários360 o editor abre na mesma para isto
   mostrarModulo("eduschedule",false);show("esch")}
 
 /* ---------- widgets do Painel ---------- */

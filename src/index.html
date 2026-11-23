@@ -1274,18 +1274,27 @@
   <div class="card" id="privCard">
     <h2>Modo de privacidade</h2>
     <p class="hint">Bloqueia o ecrã quando se afasta do computador ou vai projetar: tudo fica desfocado até escrever o código de desbloqueio. Use o botão <b>Bloquear</b>, em cima, ou deixe a app bloquear-se sozinha. O código é só seu (guardado na sua conta de forma cifrada, nunca em claro) e vale em todos os computadores e no iPad.</p>
-    <p class="privest" id="privEst"></p>
-    <div class="privbox">
-      <label id="privAtualL">Código atual<input type="password" id="privAtual" inputmode="numeric" maxlength="8" autocomplete="off"></label>
-      <label>Código novo <span class="hint">(4 a 8 algarismos)</span><input type="password" id="privNovo" inputmode="numeric" maxlength="8" autocomplete="new-password"></label>
-      <label>Repetir o código novo<input type="password" id="privNovo2" inputmode="numeric" maxlength="8" autocomplete="new-password"></label>
-      <button class="b" type="button" id="privGuardar">Guardar código</button>
-      <button class="b s" type="button" id="privTirar">Remover código</button>
+    <!-- 0.9.232: estado e uso no dia a dia em cima; mudar/remover o código numa secção à parte -->
+    <div class="privtop">
+      <p class="privest" id="privEst"></p>
+      <div class="privacoes">
+        <label>Bloquear sozinha<select id="privMin"><option value="0">Nunca</option><option value="5">Após 5 minutos sem uso</option><option value="10">Após 10 minutos sem uso</option><option value="15">Após 15 minutos sem uso</option><option value="30">Após 30 minutos sem uso</option><option value="60">Após 1 hora sem uso</option></select></label>
+        <button class="b" type="button" id="privAgora">Bloquear agora</button>
+      </div>
     </div>
-    <div class="privbox" style="margin-top:14px">
-      <label>Bloquear sozinha<select id="privMin"><option value="0">Nunca</option><option value="5">Após 5 minutos sem uso</option><option value="10">Após 10 minutos sem uso</option><option value="15">Após 15 minutos sem uso</option><option value="30">Após 30 minutos sem uso</option><option value="60">Após 1 hora sem uso</option></select></label>
-      <button class="b s" type="button" id="privAgora">Bloquear agora</button>
-    </div>
+    <details class="privcod" id="privCodBox">
+      <summary id="privCodTit">Mudar ou remover o código</summary>
+      <div class="privgrid">
+        <label id="privAtualL">Código atual<input type="password" id="privAtual" inputmode="numeric" maxlength="8" autocomplete="off"></label>
+        <label>Código novo<input type="password" id="privNovo" inputmode="numeric" maxlength="8" autocomplete="new-password" placeholder="4 a 8 algarismos"></label>
+        <label>Repetir o código novo<input type="password" id="privNovo2" inputmode="numeric" maxlength="8" autocomplete="new-password" placeholder="igual ao de cima"></label>
+      </div>
+      <div class="privbts">
+        <button class="b" type="button" id="privGuardar">Guardar código</button>
+        <span class="grow"></span>
+        <button class="b s privdel" type="button" id="privTirar">Remover código</button>
+      </div>
+    </details>
   </div>
   <div class="card">
     <h2>Logótipos dos Documentos</h2>

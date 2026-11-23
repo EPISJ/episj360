@@ -100,9 +100,23 @@ html[data-priv="on"] body>*:not(#privLock){filter:blur(14px);pointer-events:none
 #privLock.erro .pl-card{animation:plAbana .35s}
 @keyframes plAbana{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 .privbtn{margin-right:8px}
-.privbox{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
-.privbox label{width:170px}
-.privest{display:inline-flex;align-items:center;gap:6px;font-size:13px;margin:0 0 12px}
+/* 0.9.232: Definições › Modo de privacidade */
+.privtop{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px 24px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--card,#fff);margin:4px 0 12px}
+.privest{display:flex;align-items:center;gap:10px;font-size:13.5px;margin:0;flex:1 1 280px;min-width:0}
+.privest .tag{flex:none}
+.privacoes{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.privacoes label{width:230px}
+.privcod{border:1px solid var(--line);border-radius:12px;padding:0 16px}
+.privcod>summary{cursor:pointer;list-style:none;padding:12px 0;font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
+.privcod>summary::-webkit-details-marker{display:none}
+.privcod>summary::before{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s;margin-right:2px}
+.privcod[open]>summary::before{transform:rotate(45deg)}
+.privgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;align-items:end}
+.privgrid label{width:auto}
+.privbts{display:flex;align-items:center;gap:10px;margin:14px 0 16px}
+.privbts .grow{flex:1}
+.privdel{color:#b42318}
+.privdel:hover{border-color:#f3b8b2;background:#fff5f4}
 /* 0.9.107: Folder360 — arquivo físico dos dossiers */
 .mods button[data-m="folder"]{--mc:#c99a6e}.mgrp[data-m="folder"]{--mc:#c99a6e}
 .fd-cols{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
@@ -327,3 +341,7 @@ html[data-tema="cobalto"] nav.side .h3modo button+button{border-left-color:rgba(
   html[data-tema="cobalto"] body:not(.esch) nav.side .sblogo image:not(.lgaz),html[data-tema="cobalto"] #esBrand .sblogo image:not(.lgaz){display:none}
   html[data-tema="cobalto"] body:not(.esch) nav.side .sblogo .lgaz,html[data-tema="cobalto"] #esBrand .sblogo .lgaz{display:inline}
 }
+.privgrid label,.privacoes label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:500}
+.privgrid input,.privacoes select{width:100%;box-sizing:border-box}
+.privcod [hidden],.privtop [hidden]{display:none!important}
+.privbts .b.privdel{color:#b42318}

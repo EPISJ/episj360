@@ -298,7 +298,8 @@ $("#privEsq").onclick=()=>{if(!confirm("Esqueceu-se do código?\n\nA sessão do 
   try{localStorage.removeItem(PRIV_ON)}catch(e){}try{guideSair()}catch(e){location.reload()}};
 $("#privBtn").onclick=()=>privBloquear();
 function renderPriv(){const o=privDe(),tem=!!(o&&o.h),e=$("#privEst");if(!e)return;
-  e.innerHTML=tem?`<span class="tag ok">código definido</span> Pode bloquear com o botão <b>Bloquear</b>, em cima.`:`<span class="tag warn">sem código</span> Defina um código para poder bloquear o ecrã.`;
+  e.innerHTML=tem?`<span class="tag ok">código definido</span><span>Pode bloquear com o botão <b>Bloquear</b>, em cima, ou aqui ao lado.</span>`:`<span class="tag warn">sem código</span><span>Defina um código abaixo para poder bloquear o ecrã.</span>`;
+  {const bx=$("#privCodBox");if(bx){$("#privCodTit").textContent=tem?"Mudar ou remover o código":"Definir o código de desbloqueio";const k=tem?"1":"0";if(bx.dataset.v!==k){bx.open=!tem;bx.dataset.v=k}}} // aberta só quando falta definir o código // 0.9.232
   $("#privAtualL").hidden=!tem;$("#privTirar").hidden=!tem;$("#privAgora").disabled=!tem;$("#privGuardar").textContent=tem?"Mudar o código":"Guardar código";
   $("#privMin").value=String(o&&o.min||0);$("#privMin").disabled=!tem}
 $("#privGuardar").onclick=async()=>{const o=privDe(),a=$("#privAtual").value.trim(),n=$("#privNovo").value.trim(),n2=$("#privNovo2").value.trim();

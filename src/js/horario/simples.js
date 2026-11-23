@@ -128,7 +128,7 @@ async function hsRender(){await null;try{await esdPronto}catch(e){}try{await h3C
     if(pf==="prof"){const me=(cfg.profs||[]).find(p=>String(p.email||"").toLowerCase()===String(EU&&EU.email||""));const t=me&&T.find(t=>t.id===me.id||(ESD.mapaT||{})[t.id]===me.id);if(t)H3S.quem=t.id}
     if(pf==="form"){const tc=(EU&&EU.turma)||lsJ("guide_mh_turma","");const c=C.find(c=>norm(c.name)===norm(tc));if(c)H3S.quem=c.id}}
   if(pf==="form")H3S.tipo="c";tipoEl.value=H3S.tipo;
-  const L=H3S.tipo==="t"?T.map(t=>[t.id,t.name+(t.short&&t.short!==t.name?" ("+t.short+")":"")]):H3S.tipo==="r"?R.map(r=>[r.id,r.name]):C.map(c=>[c.id,c.name+(c.full&&c.full!==c.name?" — "+c.full:"")]);
+  const L=H3S.tipo==="t"?T.map(t=>[t.id,tchRot(t)]):H3S.tipo==="r"?R.map(r=>[r.id,r.name]):C.map(c=>[c.id,c.name+(c.full&&c.full!==c.name?" — "+c.full:"")]);
   if(!L.some(x=>x[0]===H3S.quem))H3S.quem=(L[0]||[""])[0];
   quemEl.innerHTML=L.map(([id,n])=>`<option value="${esc(id)}"${id===H3S.quem?" selected":""}>${esc(n)}</option>`).join("");
   const hj=calHoje();if(!H3S.seg){let d=hj;const w=calD(d).getDay();if(w===6)d=calMais(d,2);else if(w===0)d=calMais(d,1);H3S.seg=h3Seg(d)}
@@ -200,7 +200,7 @@ async function hsForRender(){await null;try{await esdPronto}catch(e){}try{await 
   const ocup=dias.map(()=>new Array(NP).fill(0));let tot=0;const fim=calMais(H3S.seg,D.length-1);
   const IV=h3Intervalos(P),ivA=pi=>pi&&IV.has(pi-1)?" ivl":""; // 0.9.226: separação dos intervalos
   let h=`<div class="tw hsfw"><table class="hsf"><thead><tr><th class="nm" rowspan="2">Formador</th>${dias.map((d,di)=>`<th colspan="${NP}" class="dsep${di%2?" alt":""}${d.dt===hj?" hj":""}${d.nl||d.fora?" nl":""}">${esc(d.nome)} <small>${esc(calDM(d.dt))}</small>${d.dt===hj?` <i class="hjt">hoje</i>`:""}${d.nl?`<em>${esc(d.nl.n)}</em>`:d.fora?`<em>fora do ano letivo</em>`:""}</th>`).join("")}<th rowspan="2" class="tt">Tempos</th></tr><tr>${dias.map((d,di)=>P.map((p,pi)=>`<th class="${pi===0?"dsep":""}${ivA(pi)}${di%2?" alt":""}${d.dt===hj?" hj":""}" title="${esc((p.start||"")+(p.end?"–"+p.end:"")+(IV.get(pi-1)&&pi?"\n"+h3IvTxt(IV.get(pi-1))+" antes":""))}">${esc(p.label||pi+1)}</th>`).join("")).join("")}</tr></thead><tbody>`;
-  for(const {t,n} of mostra){let r=`<td class="nm"><a href="#" data-hsver="${esc(t.id)}" title="Ver a semana de ${esc(t.name||"")}">${esc(t.name||t.short||"—")}</a>${t.short&&t.short!==t.name?` <span class="sg">${esc(t.short)}</span>`:""}</td>`;
+  for(const {t,n} of mostra){let r=`<td class="nm"><a href="#" data-hsver="${esc(t.id)}" title="Ver a semana de ${esc(t.name||"")}">${esc(tchRot(t))}</a></td>`;
     dias.forEach((d,di)=>{const m=cel(t,d),base=(d.nl||d.fora?" nl":"")+(di%2?" alt":"")+(d.dt===hj?" hj":"");
       for(let pi=0;pi<NP;){const L=m&&m.get(d.i+"|"+pi),cl=(pi===0?"dsep":"")+ivA(pi)+base;
         if(!L){r+=`<td class="${cl}"></td>`;pi++;continue}
@@ -227,7 +227,7 @@ function hsForMovel(st,dias,P,mostra,cel,hj,eu){const NP=P.length,n=dias.length,
       const x=L[0],cor=h3Cor(st,x,"t"),pa=P[pi]||{};tem++; // 0.9.226: um tempo por bloco
       r+=`<div class="on" style="--sc:${esc(cor)};background:${h3Tinta(cor,.18)};color:${h3Escuro(cor)}" title="${esc([x.nome||x.disc,x.tu,x.sala,(pa.start||"")+(pa.end?"–"+pa.end:"")].filter(Boolean).join(" · "))}"><b>${esc(x.tu||x.disc)}</b></div>`+ivI(pi)}
     if(tem)emAula++;
-    return `<div class="mv-hsfr${eu(t)?" eu":""}${tem?"":" vz"}"><div class="mv-hsfn"><a href="#" data-hsver="${esc(t.id)}">${esc(t.name||t.short||"—")}</a><small>${tem?tem+" tempo"+(tem>1?"s":"")+" neste dia":"sem aulas neste dia"} · ${nt} na semana</small></div><div class="mv-hsfs" style="${cols}">${r}</div></div>`}).join("");
+    return `<div class="mv-hsfr${eu(t)?" eu":""}${tem?"":" vz"}"><div class="mv-hsfn"><a href="#" data-hsver="${esc(t.id)}">${esc(tchRot(t))}</a><small>${tem?tem+" tempo"+(tem>1?"s":"")+" neste dia":"sem aulas neste dia"} · ${nt} na semana</small></div><div class="mv-hsfs" style="${cols}">${r}</div></div>`}).join("");
   return bar+aviso+`<div class="mv-hsf"><div class="mv-hsft">${emAula} formador${emAula===1?"":"es"} em aula · ${esc(calDM(d.dt,{weekday:"long",day:"numeric",month:"long"}))}</div>${cab}${linhas}</div>`}
 $("#hsForOut").addEventListener("click",e=>{const b=e.target.closest("[data-hsft]");if(!b)return;H3F.todos=b.dataset.hsft==="1";hsForRender()});
 $("#hsForQ").oninput=debounce(()=>{H3F.q=$("#hsForQ").value;hsForRender()},200);

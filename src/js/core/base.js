@@ -1,6 +1,6 @@
 const COLL_PT=new Intl.Collator("pt"),COLL_PTN=new Intl.Collator("pt",{numeric:true}); // 0.9.86: ordenar com um só comparador (muito mais rápido do que localeCompare a cada comparação)
 const ICO={"cloud": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M17.5 19H8a5 5 0 1 1 1.1-9.9A6 6 0 0 1 20.5 11a4 4 0 0 1-3 8z\"/></svg>", "alert": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z\"/><path d=\"M12 9v4M12 17h.01\"/></svg>", "cal": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18M8 3v4M16 3v4\"/></svg>", "eye": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg>", "pencil": "<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 20h9\"/><path d=\"M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z\"/></svg>"};const ico=k=>ICO[k]||""; // 0.9.82: ícones de linha em vez de emojis
-const VERSAO="0.9.229"; // versão da EPISJ 360 — sobe a cada alteração publicada
+const VERSAO="0.9.230"; // versão da EPISJ 360 — sobe a cada alteração publicada
 const BC_VER="1.25"; // versão do módulo Box360
 /* 0.9.193: os formadores aparecem sempre ordenados pelo código (AG, AM, CB…); sem código ficam no fim, pelo nome */
 function cmpCod(ca,cb,na,nb){ca=String(ca||"").trim();cb=String(cb||"").trim();if(!ca!==!cb)return ca?-1:1;return COLL_PTN.compare(ca,cb)||COLL_PT.compare(String(na||""),String(nb||""))}
@@ -12,7 +12,12 @@ const boxOkS=s=>s==="ok"||s==="warn"||s==="modelo",boxFaltaS=s=>s==="missing"||s
 // item publicado [secção, estado, pasta, data, subpasta, obs] → objeto; «onde» = a subpasta dentro do módulo (ex.: «Teste Prático › Ana»), nunca o nome do próprio módulo
 function boxItem(x,m){const pasta=x[2]||"",sub=x[4]||"",pm=norm(pasta);let onde=sub;if(!onde&&pasta&&pm!==norm(m&&m.mo||"")){let mod=false;try{mod=isModLike(pm)}catch(e){}if(!mod)onde=pasta}
   return{tipo:docNome(x[0]),st:x[1],pasta,d:x[3]||"",sub,obs:x[5]||"",onde}}
-const profRot=p=>p?(p.cod?String(p.cod).trim()+" · ":"")+(p.nome||"(sem nome)"):""; // 0.9.215: «código · nome» em toda a app
+const profRot=p=>p?(p.cod?"("+String(p.cod).trim()+") ":"")+(p.nome||"(sem nome)"):""; // 0.9.230: «(código) Nome» em toda a app (antes «código · nome»)
+// 0.9.230: «código + nome» sem repetir o código quando o nome já começa por ele (ex.: «A03 - Ação Educativa (24/27)», não «A03 — A03 - Ação…»)
+function rotCodNome(cod,nome){cod=String(cod||"").trim();nome=String(nome||"").trim();if(!cod)return nome;if(!nome)return cod;const c=norm0(cod),n=norm0(nome);
+  return n===c||n.startsWith(c+" ")||n.startsWith(c+"-")||n.startsWith(c+"·")||n.startsWith(c+"—")?nome:cod+" — "+nome}
+const turRot=t=>t?rotCodNome(t.cod,turmaNome(t)):""; // turma da Escola360
+const clsRot=c=>c?rotCodNome(c.name,c.full):"";       // turma do horário (st.classes)
 // 0.9.229: código do formador do horário = o código da Escola360 (se estiver ligado) ou a sigla do Untis; rótulo «(código) Nome»
 function tchCod(t){if(!t)return "";let p=null;try{p=(cfg.profs||[]).find(x=>x.id===t.id)||(cfg.profs||[]).find(x=>x.id===((typeof ESD!=="undefined"&&ESD&&ESD.mapaT)||{})[t.id])}catch(e){}return String((p&&p.cod)||t.short||"").trim()}
 const tchRot=t=>{if(!t)return "";const c=tchCod(t);return (c?"("+c+") ":"")+(t.name||t.short||"—")};

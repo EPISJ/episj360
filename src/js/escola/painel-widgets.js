@@ -137,7 +137,7 @@ const WIDGETS=[
  {id:"carga",mod:"eduschedule",nome:"Carga dos formadores",desc:"Tempos semanais colocados por formador, com a média da escola",r(){
    const st=mhEstado();if(!st)return wgVazio("Ainda não há horário.");const les=new Map((st.lessons||[]).map(l=>[l.id,l])),M=new Map();
    for(const c of st.cards||[]){if(c.day==null)continue;const l=les.get(c.lessonId);if(!l)continue;new Set((l.linhas||[]).map(x=>x.t).filter(Boolean)).forEach(t=>M.set(t,(M.get(t)||0)+(c.len||1)))}
-   const T=(st.teachers||[]).map(t=>({n:t.name+(t.short?" ("+t.short+")":""),v:M.get(t.id)||0})).sort((a,b)=>b.v-a.v);if(!T.length)return wgVazio("Sem formadores no horário.");
+   const T=(st.teachers||[]).map(t=>({n:tchRot(t),v:M.get(t.id)||0})).sort((a,b)=>b.v-a.v);if(!T.length)return wgVazio("Sem formadores no horário.");
    const mx=Math.max(1,T[0].v),med=T.reduce((s,t)=>s+t.v,0)/T.length;
    return `<p class="wg-t">Média: <b>${med.toFixed(1)}</b> tempos por semana</p><div class="wg-scr">${T.map(t=>`<div class="wg-row"><span class="wg-k wg-el" title="${esc(t.n)}">${esc(t.n)}</span>${wgBarra(t.v*100/mx,t.v>med*1.25?"var(--warn,#d97706)":t.v<med*.6?"#94a3b8":"#7c3aed")}<b>${t.v}</b></div>`).join("")}</div>`}},
  {id:"esphoje",mod:"roomcheck",nome:"Espaços hoje",desc:"Cada espaço com os tempos do dia, livres ou ocupados",r(){

@@ -77,7 +77,7 @@ function renderReport(){{let BM=null;try{BM=boxMeu()}catch(e){}if(BM){renderRelM
     if(!rows.length)continue;nTot++;if(nVis>=REL_N)continue;nVis++;
     const lim=REL_L[t.p.id]||150,resto=rows.length-lim;if(resto>0)rows.length=lim; // e no máximo 150 linhas por formador de cada vez (o grupo "sem formador" pode ter milhares)
     const pc=t.tot?Math.round(t.ok/t.tot*100):100;
-    html+=`<div class="prof"><div class="hd"><b>${esc(t.p.nome)}</b>${t.p.cod?`<span class="tag" style="background:#eef1f5;color:#4a5260">${esc(t.p.cod)}</span>`:""}<span class="hint" style="margin:0">${esc(t.p.email)}</span><span class="grow"></span>
+    html+=`<div class="prof"><div class="hd"><b>${esc(profRot(t.p))}</b><span class="hint" style="margin:0">${esc(t.p.email)}</span><span class="grow"></span>
       <div class="bar"><i style="width:${pc}%"></i></div><span>${t.ok}/${t.tot}</span>
       ${t.miss?`<span class="tag bad">${t.miss} em falta</span>`:`<span class="tag ok">completo</span>`}${t.miss&&t.p.id!=="_"?`<button class="b s pdfb" data-rpdf="${t.p.id}" title="Exportar em PDF o que este formador tem em falta">PDF</button>`:""}</div>
       <div style="padding:4px 12px 10px;overflow-x:auto"><table class="rtab rt"><thead><tr><th>Turma</th><th>Disciplina</th><th>Módulo/UFCD</th><th>Localização na Box</th><th>O que está em falta</th><th>Observações</th></tr></thead><tbody>

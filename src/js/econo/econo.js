@@ -33,7 +33,7 @@ function ecoTurmaInfo(id){try{const t=escData().turmas.find(x=>x.id===id);if(!t)
 function ecoUfcds(tid,profId){try{const p=pcDe(tid);if(!p)return[];return ecoUniq(p.linhas.filter(l=>!profId||l.f===profId).map(l=>[l.disc,l.mod].filter(Boolean).join(" — ")))}catch(e){return[]}}
 function ecoEuProf(){try{const e=norm(EU&&EU.email||"");return e?(cfg.profs||[]).find(p=>norm(p.email||"")===e)||null:null}catch(e){return null}}
 function ecoTurmasDoProf(p){if(!p)return ecoTurmas();try{const ids=new Set(pcPlanos().filter(x=>x.anoId===anoAtivo().id&&x.linhas.some(l=>l.f===p.id)).map(x=>x.turmaId));const L=ecoTurmas().filter(t=>ids.has(t.id));return L.length?L:ecoTurmas()}catch(e){return ecoTurmas()}}
-function ecoProfsNomes(){try{return(cfg.profs||[]).map(p=>p.nome).filter(Boolean).sort(COLL_PT.compare)}catch(e){return[]}}
+function ecoProfsNomes(){try{return(cfg.profs||[]).slice().sort(cmpProf).map(p=>p.nome).filter(Boolean)}catch(e){return[]}}
 function ecoPeriodoAno(){const a=anoAtivo();const i=a&&a.ini?+a.ini:new Date().getFullYear();return[i+"-09-01",(i+1)+"-08-31",a&&a.nome||""]}
 
 // ---------- render ----------

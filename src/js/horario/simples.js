@@ -128,7 +128,7 @@ async function hsRender(){await null;try{await esdPronto}catch(e){}try{await h3C
     if(pf==="prof"){const me=(cfg.profs||[]).find(p=>String(p.email||"").toLowerCase()===String(EU&&EU.email||""));const t=me&&T.find(t=>t.id===me.id||(ESD.mapaT||{})[t.id]===me.id);if(t)H3S.quem=t.id}
     if(pf==="form"){const tc=(EU&&EU.turma)||lsJ("guide_mh_turma","");const c=C.find(c=>norm(c.name)===norm(tc));if(c)H3S.quem=c.id}}
   if(pf==="form")H3S.tipo="c";tipoEl.value=H3S.tipo;
-  const L=H3S.tipo==="t"?T.map(t=>[t.id,tchRot(t)]):H3S.tipo==="r"?R.map(r=>[r.id,r.name]):C.map(c=>[c.id,c.name+(c.full&&c.full!==c.name?" — "+c.full:"")]);
+  const L=H3S.tipo==="t"?T.map(t=>[t.id,tchRot(t)]):H3S.tipo==="r"?R.map(r=>[r.id,r.name]):C.map(c=>[c.id,clsRot(c)]);
   if(!L.some(x=>x[0]===H3S.quem))H3S.quem=(L[0]||[""])[0];
   quemEl.innerHTML=L.map(([id,n])=>`<option value="${esc(id)}"${id===H3S.quem?" selected":""}>${esc(n)}</option>`).join("");
   const hj=calHoje();if(!H3S.seg){let d=hj;const w=calD(d).getDay();if(w===6)d=calMais(d,2);else if(w===0)d=calMais(d,1);H3S.seg=h3Seg(d)}

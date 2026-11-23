@@ -12,7 +12,7 @@ function pcDe(tid,aid){aid=aid||anoAtivo().id;return pcPlanos().find(p=>p.turmaI
 function pcNorm(p){if(!p.fct||typeof p.fct!=="object")p.fct={horas:null,semanas:null,dias:null};if(!Array.isArray(p.linhas))p.linhas=[];if(!Array.isArray(p.cargos))p.cargos=[];return p}
 function pcNovo(t,aid){const p=pcNorm({id:uid(),turmaId:t.id,anoId:aid||anoAtivo().id,semanas:null});pcPlanos().push(p);return p}
 const pcProf=id=>cfg.profs.find(p=>p.id===id)||null;
-const pcProfNome=id=>{if(!id)return "";const p=pcProf(id);return p?(p.cod?p.cod+" - ":"")+p.nome:"(formador apagado)"};
+const pcProfNome=id=>{if(!id)return "";const p=pcProf(id);return p?profRot(p):"(formador apagado)"};
 function pcProfOpts(sel){const ok=!sel||pcProf(sel);return `<option value="">— sem formador —</option>`+(ok?"":`<option value="${esc(sel)}" selected>(formador apagado)</option>`)+
   cfg.profs.slice().sort(cmpProf).map(p=>`<option value="${p.id}" ${p.id===sel?"selected":""}>${esc(profRot(p))}</option>`).join("")}
 // horas por semana e tempos semanais (como no Excel: horas ÷ semanas de aulas, e esse valor arredondado para cima)
@@ -260,7 +260,7 @@ function renderDSD(){const a=anoAtivo(),M=dsdDados(a.id),out=$("#dsdOut"),soEu=d
   out.innerHTML=h}
 var DSD_N=200;
 function dsdDetalhe(id,M){const r=M.get(id),p=id?pcProf(id):null,a=anoAtivo();
-  const tit=id?`${p?(p.cod?p.cod+" - ":"")+p.nome:"(formador apagado)"}`:"Sem formador atribuído";
+  const tit=id?`${p?profRot(p):"(formador apagado)"}`:"Sem formador atribuído";
   if(!r)return `<div class="msg info"><b>${esc(tit)}</b> não tem serviço atribuído nos planos curriculares de ${esc(a.nome)}.</div>`+dsdNLSec(id,a);
   const porT=new Map();for(const x of r.let.concat(r.nl)){if(!x.t)continue;if(!porT.has(x.t.id))porT.set(x.t.id,{t:x.t,p:x.p,let:[],nl:[]});(x.l?porT.get(x.t.id).let:porT.get(x.t.id).nl).push(x)}
   let h=`<div class="pchead"><div><b>${esc(tit)}</b><span>${id?`Área(s): ${esc([...r.areas].map(k=>PC_AREA_NOME[k]).join(", ")||"—")} · `:""}${r.turmas.size} turma(s)${p&&p.email?" · "+esc(p.email):""}</span></div></div>
@@ -371,7 +371,7 @@ function pdfDsdCab(doc,a,p,areas,primeira){const W=210,{main:m,right:r}=LOGOS;
   if(r){const[w,h]=lgFitArea(r,260,40,18);doc.addImage(r.src,lgFmt(r),W-14-w,19-h/2,w,h,"lgRight")}
   doc.setTextColor(0);doc.setFont("helvetica","bold");doc.setFontSize(12);
   [escData().nome||"Escola Profissional da Ilha de São Jorge","Ano Letivo "+a.nome,"Distribuição de Serviço Docente"].forEach((t,i)=>doc.text(pdfTxt(t),W/2,13+i*6,{align:"center"}));
-  const nome=pdfTxt(`${p.cod?p.cod+" - ":""}${p.nome}`);doc.setFontSize(8);
+  const nome=pdfTxt(profRot(p));doc.setFontSize(8);
   if(primeira){doc.setFont("helvetica","normal");doc.text("Formador(a): ",62,33.5);const x=62+doc.getTextWidth("Formador(a): ");doc.setFont("helvetica","bold");doc.text(nome,x,33.5);
     const ar=pdfTxt(areas||"-");doc.text(ar,W-16,33.5,{align:"right"});const wa=doc.getTextWidth(ar);doc.setFont("helvetica","normal");doc.text("Área(s):",W-16-wa-1.2,33.5,{align:"right"})}
   else{doc.setFont("helvetica","normal");doc.text(nome,W/2+18,33.5)}}

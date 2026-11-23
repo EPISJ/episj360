@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.229 — ecrã do módulo «pap», carregado quando é aberto */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.230 — ecrã do módulo «pap», carregado quando é aberto */
 "use strict";
 // ===== src/js/pap/pap.js =====
 /* PAP360 — ecrã do módulo (carregado só quando o PAP360 é aberto; os dados estão em pap/pap-dados.js) */
@@ -29,7 +29,7 @@ function papInicio(){const a=papAnoSel(),E=escData(),L=PAP.provas.filter(p=>p.an
   if(PAP_NOVA&&papEd()){const T=turmasDoAno(a).slice().sort((x,y)=>((y.anoFim===a.ini+1)-(x.anoFim===a.ini+1))||COLL_PTN.compare(String(x.cod),String(y.cod)));
     $("#papNovaBox").innerHTML=`<div class="pp-box"><h3>Nova prova</h3><div class="pp-form">
       <label>Ano letivo<select id="papNAno">${anosOrd().reverse().map(x=>`<option value="${x.id}"${x.id===a.id?" selected":""}>${esc(x.nome)}</option>`).join("")}</select></label>
-      <label class="w2">Turma<select id="papNTur"><option value="">— sem turma (escrever o curso à mão) —</option>${T.map(t=>`<option value="${t.id}">${esc(t.cod)} · ${esc(turmaNome(t))}${t.anoFim===a.ini+1?" — finalistas":""}</option>`).join("")}</select></label>
+      <label class="w2">Turma<select id="papNTur"><option value="">— sem turma (escrever o curso à mão) —</option>${T.map(t=>`<option value="${t.id}">${esc(turRot(t))}${t.anoFim===a.ini+1?" — finalistas":""}</option>`).join("")}</select></label>
       <label>Fase<select id="papNFase"><option value="1">1.ª fase</option><option value="2">2.ª fase</option><option value="3">3.ª fase</option><option value="esp">Época especial</option></select></label></div>
       <p class="hint" style="margin:8px 0 0">Os formandos vêm de <b>Escola360 › Formandos</b>; o responsável de curso e o orientador educativo, dos cargos do <b>Plano Curricular</b> da turma (ou o orientador educativo indicado em Escola › Turmas).</p>
       <div class="row" style="margin-top:10px"><button class="b" id="papNCriar">Criar a prova</button><button class="b s" id="papNCanc">Cancelar</button></div></div>`;
@@ -87,7 +87,7 @@ function papImpUI(){const R=PAP_IMP,el=$("#papImpBox");if(!R||!papEd()){el.inner
   el.innerHTML=`<div class="pp-box pp-imp"><h3>Importar «${esc(R.ficheiro)}»</h3>
     <div class="pp-chips" style="margin-bottom:8px"><span class="pp-chip">${esc(R.curso||"curso sem nome")}</span><span class="pp-chip">${R.cands.length} formando${R.cands.length===1?"":"s"}</span><span class="pp-chip">${R.nGrelhas} grelha${R.nGrelhas===1?"":"s"}</span><span class="pp-chip">${R.contactos.length} contacto${R.contactos.length===1?"":"s"} do júri</span>${R.fse?`<span class="pp-chip mu">Projeto ${esc(R.fse)}</span>`:""}</div>
     <div class="pp-form"><label>Ano letivo<select id="papIAno">${anosOrd().reverse().map(x=>`<option value="${x.id}"${x.id===a.id?" selected":""}>${esc(x.nome)}</option>`).join("")}</select></label>
-      <label class="w2">Turma da EPISJ 360<select id="papITur"><option value="">— sem turma —</option>${T.map(t=>`<option value="${t.id}"${t.id===R.turmaId?" selected":""}>${esc(t.cod)} · ${esc(turmaNome(t))}</option>`).join("")}</select></label>
+      <label class="w2">Turma da EPISJ 360<select id="papITur"><option value="">— sem turma —</option>${T.map(t=>`<option value="${t.id}"${t.id===R.turmaId?" selected":""}>${esc(turRot(t))}</option>`).join("")}</select></label>
       <label>Fase<select id="papIFase"><option value="1">1.ª fase</option><option value="2">2.ª fase</option><option value="3">3.ª fase</option><option value="esp">Época especial</option></select></label></div>
     <label class="chip" style="margin-top:10px"><input type="checkbox" id="papIEsc" checked> acrescentar à Escola360 › Formandos os formandos que lá faltam (na turma escolhida)</label>
     <div class="pp-prev" style="margin-top:10px"><table class="rt"><thead><tr><th>N.º</th><th>Nome</th><th>Apresenta</th><th class="hm">Júri externo</th><th>Data</th><th>Hora</th><th>Nota</th></tr></thead><tbody>${R.cands.map(c=>{const f=fin(c);return `<tr><td>${esc(c.num||"")}</td><td>${esc(c.nome)}</td><td>${c.inc?"Sim":"Não"}</td><td class="hm">${esc([c.j1,c.j2].filter(Boolean).join(", "))}</td><td>${esc(papDMA(c.data))}</td><td>${esc(c.hora||"")}</td><td><b>${f===null?"—":f}</b></td></tr>`}).join("")}</tbody></table></div>
@@ -123,7 +123,7 @@ function papProvaUI(){const P=papProva();if(!P){$("#papCab").innerHTML="";papSem
   const dc=papDatasCal(P);
   $("#papCab").innerHTML=`<div class="pp-form">
     <label>Ano letivo<select data-pk="anoId" ${dis}>${anosOrd().reverse().map(x=>`<option value="${x.id}"${x.id===P.anoId?" selected":""}>${esc(x.nome)}</option>`).join("")}</select></label>
-    <label class="w2">Turma<select data-pk="turmaId" ${dis}><option value="">— sem turma —</option>${T.map(x=>`<option value="${x.id}"${x.id===P.turmaId?" selected":""}>${esc(x.cod)} · ${esc(turmaNome(x))}</option>`).join("")}</select></label>
+    <label class="w2">Turma<select data-pk="turmaId" ${dis}><option value="">— sem turma —</option>${T.map(x=>`<option value="${x.id}"${x.id===P.turmaId?" selected":""}>${esc(turRot(x))}</option>`).join("")}</select></label>
     <label>Fase<select data-pk="fase" ${dis}>${[["1","1.ª fase"],["2","2.ª fase"],["3","3.ª fase"],["esp","Época especial"]].map(([v,n])=>`<option value="${v}"${P.fase===v?" selected":""}>${n}</option>`).join("")}</select></label>
     <label class="w2">Curso<input type="text" data-pk="curso" value="${esc(P.curso||"")}" ${dis}></label>
     <label>Projeto n.º<input type="text" data-pk="fse" value="${esc(P.fse||"")}" placeholder="${esc(t&&t.fse||"")}" ${dis} title="Se ficar em branco, usa o código FSE da turma (Escola360 › Turmas)"></label>

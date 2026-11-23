@@ -216,7 +216,7 @@ function entSec(doc,D,y,geral){const W=doc.internal.pageSize.getWidth(),H=doc.in
   if(y>H-PDF_BOT-60){doc.addPage();y=PDF_TOP+4}
   const pct=D.tot?Math.round(D.ent*100/D.tot):0,dt=x=>x?new Date(x+"T12:00").toLocaleDateString("pt-PT"):"—";
   // formador e análise
-  doc.setFont("helvetica","bold");doc.setFontSize(geral?11:12);doc.setTextColor(22,50,105);const nm=pdfTxt((D.cod?D.cod+" · ":"")+D.nome);doc.text(nm,X,y);
+  doc.setFont("helvetica","bold");doc.setFontSize(geral?11:12);doc.setTextColor(22,50,105);const nm=pdfTxt((D.cod?"("+D.cod+") ":"")+D.nome);doc.text(nm,X,y);
   doc.setFont("helvetica","normal");doc.setFontSize(8.5);doc.setTextColor(90);
   doc.text(pdfTxt([D.email,D.analise?"Análise da Box: "+D.analise+(D.t?" ("+new Date(D.t).toLocaleDateString("pt-PT")+")":""):"",D.so==="tudo"?"Todos os documentos":"Só os documentos em falta"].filter(Boolean).join("  ·  ")),X,y+5);
   y+=9;
@@ -249,7 +249,7 @@ function entTitulo(doc,t,sub){const W=doc.internal.pageSize.getWidth();doc.setFo
 async function pdfEntregas(L,geral){const J=await loadPDF(),doc=new J({unit:"mm",format:"a4"});
   const emit="Emitido a "+new Date().toLocaleDateString("pt-PT",{day:"numeric",month:"long",year:"numeric"});
   let y=entTitulo(doc,geral?"Documentos em falta — relatório geral":"Documentos em falta","Escola Profissional da Ilha de São Jorge  ·  "+emit);
-  if(geral){const res=geral.map(D=>[pdfTxt((D.cod?D.cod+" · ":"")+D.nome),pdfTxt(D.email||""),String(D.nf),(D.tot?Math.round(D.ent*100/D.tot):0)+"%"]);
+  if(geral){const res=geral.map(D=>[pdfTxt((D.cod?"("+D.cod+") ":"")+D.nome),pdfTxt(D.email||""),String(D.nf),(D.tot?Math.round(D.ent*100/D.tot):0)+"%"]);
     const tot=geral.reduce((a,D)=>a+D.tot,0),ent=geral.reduce((a,D)=>a+D.ent,0),nf=geral.reduce((a,D)=>a+D.nf,0);
     doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(22,50,105);doc.text(pdfTxt(`Resumo por formador — entregue ${ent} de ${tot} (${tot?Math.round(ent*100/tot):0}%) · em falta ${nf}`),14,y);
     doc.autoTable({startY:y+3,head:[["Formador","Email","Em falta","Entregue"]],body:res,margin:{top:PDF_TOP,bottom:PDF_BOT+2,left:14,right:14},theme:"plain",

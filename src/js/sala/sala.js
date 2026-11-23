@@ -209,7 +209,7 @@ function rcCamposLigar(sf){const ps=$("#rcPs"+sf),pi=$("#rcP"+sf),ts=$("#rcTs"+s
 /* ---------- nova reserva ---------- */
 function rcNova(o){const hoje=rcHoje(),E=RC.esp.filter(e=>e.on);const e=(o.e&&o.e!=="\u0000"?o.e:"")||RCV.esp||(E[0]||{}).id;
   const d=o.d&&o.d>=hoje?o.d:((RCV.sem||hoje)>hoje?RCV.sem:hoje);const h0=Number.isFinite(o.h0)?o.h0:600,h1=Number.isFinite(o.h1)?o.h1:Math.min(1439,h0+90);
-  const profs=(cfg.profs||[]).map(p=>p.nome).filter(Boolean),turmas=(()=>{let L=[];try{L=turmasDoAno().map(t=>t.cod+(t.nome?" — "+t.nome:""))}catch(_){}if(!L.length)L=[...new Set((cfg.mods||[]).map(m=>m.turma).filter(Boolean))].sort((a,b)=>COLL_PT.compare(a,b));return L})();
+  const profs=(cfg.profs||[]).slice().sort(cmpProf).map(p=>p.nome).filter(Boolean),turmas=(()=>{let L=[];try{L=turmasDoAno().map(t=>t.nome?rotCodNome(t.cod,t.nome):t.cod)}catch(_){}if(!L.length)L=[...new Set((cfg.mods||[]).map(m=>m.turma).filter(Boolean))].sort((a,b)=>COLL_PT.compare(a,b));return L})();
   const temMail=!!(msCfg()&&msCfg().clientId);
   rcAbrir("Nova reserva",`<div class="rc-f">
     <span class="rc-l">Espaço</span><div class="rc-ops">${E.map(x=>`<label class="rc-op" style="--c:${esc(x.c)}"><input type="radio" name="rcE" value="${esc(x.id)}" ${x.id===e?"checked":""}><i></i>${esc(x.n)}</label>`).join("")}</div>

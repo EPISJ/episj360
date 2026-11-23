@@ -40,8 +40,10 @@ function ecoEurP(v){return(Math.round((+v||0)*100)/100).toLocaleString("pt-PT",{
 function ecoN(v){const n=Math.round((+v||0)*1000)/1000;return n.toLocaleString("pt-PT",{maximumFractionDigits:3})}
 function ecoNum(s){const x=String(s??"").trim().replace(/\s/g,"").replace(/€/g,"");if(!x)return NaN;return +(/,\d{1,3}$/.test(x)?x.replace(/\./g,"").replace(",","."):x.replace(/,/g,""))}
 // ---------- guardar e nuvem (como o Folder360) ----------
+// 0.9.231: nunca enviar para a nuvem antes da primeira leitura — uma sessão nova (dados só em memória) que guardasse antes de ler apagava tudo o que lá estava (aconteceu ao Folder360 a 23/11/2026); até lá, guardar = ler, juntar e só depois enviar
+var ECO_SINC=false,ECF_SINC=false;
 function ecoGuardar(o){if((RO&&!ecoEcon())||LIMPAR)return;const t=Date.now();if(o){o.em=t;o.mod=String(EU&&EU.email||"")}ECO.t=t;ecoCalcC=null;DB.put("kv","econo",ECO);clearTimeout(ecoH);
-  nuvFila("ecoH",()=>{try{if(ecoEcon())ecoNuvPut().catch(e=>toast("Econo360: não foi possível guardar na nuvem — "+(e.message||e)));else if(NUVOK()&&!nuvDesl())nuvemPut("EC",ECO,ECO.t)}catch(e){}},2500);if(typeof ecoCatAgendar==="function")ecoCatAgendar()}
+  nuvFila("ecoH",()=>{try{if(!ECO_SINC){ecoTrazerNuvem();return}if(ecoEcon())ecoNuvPut().catch(e=>toast("Econo360: não foi possível guardar na nuvem — "+(e.message||e)));else if(NUVOK()&&!nuvDesl())nuvemPut("EC",ECO,ECO.t)}catch(e){}},2500);if(typeof ecoCatAgendar==="function")ecoCatAgendar()}
 function ecoJuntar(a,b){const del=Object.assign({},b.del||{},a.del||{});
   const pick=(L1,L2)=>{const m=new Map();for(const x of(L2||[]).concat(L1||[]))if(x&&x.id&&!del[x.id]){const q=m.get(x.id);if(!q||(x.em||0)>=(q.em||0))m.set(x.id,x)}return[...m.values()]};
   const def=a.def&&b.def?((b.def.em||0)>(a.def.em||0)?b.def:a.def):(a.def||b.def||null);
@@ -49,10 +51,10 @@ function ecoJuntar(a,b){const del=Object.assign({},b.del||{},a.del||{});
 function ecoSig(x){const L=x.art.concat(x.mov,x.forn,x.enc,x.inv);return L.length+"|"+Math.max(0,...L.map(d=>d.em||0))}
 async function ecoTrazerNuvem(){try{await ecoCarregar();const econ=ecoEcon();if(!econ&&(RO||!NUVOK()||nuvDesl()))return;const idx=(await(await(econ?sbNuvem("GET",""):nuvem("GET",""))).json()).itens||{};
     await ecfTrazerNuvem(idx,econ);
-    if(idx.EC&&(idx.EC.t||0)>(ECO.t||0)){const j=ecoNorm(econ?await ecoNuvGet():await nuvemGet("EC")),n=ecoJuntar(ECO,j);
+    if(idx.EC&&((idx.EC.t||0)>(ECO.t||0)||!ECO_SINC)){const j=ecoNorm(econ?await ecoNuvGet():await nuvemGet("EC")),n=ecoJuntar(ECO,j);ECO_SINC=true;
       const dif=ecoSig(n)!==ecoSig(j)||JSON.stringify(n.def)!==JSON.stringify(j.def);
       ECO=n;ecoCalcC=null;DB.put("kv","econo",ECO);if(dif){if(econ)ecoNuvPut(Date.now()).catch(()=>{});else nuvemPut("EC",ECO,Date.now())}if(curTab&&/^eco[A-Z]/.test(curTab))ecoRender(curTab)}
-    else if((ECO.t||0)>((idx.EC||{}).t||0)&&(ECO.art.length||ECO.mov.length)){if(econ)await ecoNuvPut();else await nuvemPut("EC",ECO,ECO.t)}}
+    else{ECO_SINC=true;if((ECO.t||0)>((idx.EC||{}).t||0)&&(ECO.art.length||ECO.mov.length)){if(econ)await ecoNuvPut();else await nuvemPut("EC",ECO,ECO.t)}}}
   catch(e){if(e&&e.kind!=="nokv")console.warn("Econo360/nuvem",e)}}
 
 // ---------- 0.9.160: faturas (peça «EF» em g360_estado; ficheiros no bucket privado «eco-faturas» do Supabase) ----------
@@ -62,16 +64,16 @@ function ecfNorm(v){const o=v&&typeof v==="object"?v:{};return{t:+o.t||0,fat:Arr
 function ecfCarregar(){return ecfPronto||(ecfPronto=DB.get("kv","econofat").then(v=>{if(!RO||ecoEcon()){const n=ecfNorm(v);if((n.t||0)>=(ECF.t||0))ECF=n}}).catch(()=>{}))}
 ecfCarregar();
 function ecfGuardar(o){if((RO&&!ecoEcon())||LIMPAR)return;const t=Date.now();if(o){o.em=t;o.mod=String(EU&&EU.email||"")}ECF.t=t;DB.put("kv","econofat",ECF);
-  nuvFila("ecfH",()=>{try{if(ecoEcon())gz(ECF).then(b=>sbNuvem("PUT","EF",b,ECF.t)).catch(e=>toast("Econo360: não foi possível guardar as faturas na nuvem — "+(e.message||e)));else if(NUVOK()&&!nuvDesl())nuvemPut("EF",ECF,ECF.t)}catch(e){}},2000)}
+  nuvFila("ecfH",()=>{try{if(!ECF_SINC){ecoTrazerNuvem();return}if(ecoEcon())gz(ECF).then(b=>sbNuvem("PUT","EF",b,ECF.t)).catch(e=>toast("Econo360: não foi possível guardar as faturas na nuvem — "+(e.message||e)));else if(NUVOK()&&!nuvDesl())nuvemPut("EF",ECF,ECF.t)}catch(e){}},2000)}
 function ecfJuntar(a,b){const del=Object.assign({},b.del||{},a.del||{}),m=new Map();
   for(const x of(b.fat||[]).concat(a.fat||[]))if(x&&x.id&&!del[x.id]){const q=m.get(x.id);if(!q||(x.em||0)>=(q.em||0))m.set(x.id,x)}
   return{t:Math.max(a.t||0,b.t||0),fat:[...m.values()],del}}
 async function ecfTrazerNuvem(idx,econ){try{await ecfCarregar();const r=idx.EF;
-    if(r&&(r.t||0)>(ECF.t||0)){const j=ecfNorm(econ?await(async()=>{const x=await sbNuvem("GET","EF");return x.ok?ungz(await x.arrayBuffer()):null})():await nuvemGet("EF")),n=ecfJuntar(ECF,j);
+    if(r&&((r.t||0)>(ECF.t||0)||!ECF_SINC)){const j=ecfNorm(econ?await(async()=>{const x=await sbNuvem("GET","EF");if(!x.ok)throw new Error("EF "+x.status);return ungz(await x.arrayBuffer())})():await nuvemGet("EF")),n=ecfJuntar(ECF,j);ECF_SINC=true;
       const sig=x=>x.fat.length+"|"+Math.max(0,...x.fat.map(f=>f.em||0));ECF=n;DB.put("kv","econofat",ECF);
       if(sig(n)!==sig(j)){if(econ)sbNuvem("PUT","EF",await gz(ECF),Date.now()).catch(()=>{});else nuvemPut("EF",ECF,Date.now())}
       if(curTab==="ecoFat"&&typeof ecoRender==="function")ecoRender(curTab)}
-    else if((ECF.t||0)>((r||{}).t||0)&&ECF.fat.length){if(econ)await sbNuvem("PUT","EF",await gz(ECF),ECF.t);else await nuvemPut("EF",ECF,ECF.t)}}
+    else{ECF_SINC=true;if((ECF.t||0)>((r||{}).t||0)&&ECF.fat.length){if(econ)await sbNuvem("PUT","EF",await gz(ECF),ECF.t);else await nuvemPut("EF",ECF,ECF.t)}}}
   catch(e){if(e&&e.kind!=="nokv")console.warn("Econo360/faturas",e)}}
 
 // ----- widget do Painel (o conteúdo é desenhado por econo/econo.js, carregado quando é preciso) -----

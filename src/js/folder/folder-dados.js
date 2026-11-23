@@ -36,18 +36,20 @@ async function foLgPadrao(){const L=foDef().fins.filter(f=>f.padrao&&!foLg(f.log
 function foFinLogo(f){return f?(foLg(f.logo)?f.logo:(f.padrao&&foLg(FO_LGP[f.padrao])?FO_LGP[f.padrao]:null)):null}
 function foEd(){return!RO&&podePublicar()}
 // ---------- guardar e nuvem (como o PAP360: IndexedDB + peça «FOL») ----------
+// 0.9.231: nunca enviar para a nuvem antes da primeira leitura — uma sessão nova (dados só em memória) que guardasse antes de ler apagava tudo o que lá estava (aconteceu ao Folder360 a 23/11/2026); até lá, guardar = ler, juntar e só depois enviar
+var FO_SINC=false;
 function foGuardar(o){if(RO||LIMPAR)return;const t=Date.now();if(o){o.em=t;o.mod=String(EU&&EU.email||"")}FOL.t=t;foIdxC=null;DB.put("kv","folder",FOL);clearTimeout(foH);
-  nuvFila("foH",()=>{try{if(NUVOK()&&!nuvDesl())nuvemPut("FD",FOL,FOL.t)}catch(e){}},2500)}
+  nuvFila("foH",()=>{try{if(NUVOK()&&!nuvDesl()){if(FO_SINC)nuvemPut("FD",FOL,FOL.t);else foTrazerNuvem()}}catch(e){}},2500)}
 function foJuntar(a,b){const del=Object.assign({},b.del||{},a.del||{});
   const pick=(L1,L2)=>{const m=new Map();for(const x of(L2||[]).concat(L1||[]))if(x&&x.id&&!del[x.id]){const q=m.get(x.id);if(!q||(x.em||0)>=(q.em||0))m.set(x.id,x)}return[...m.values()]};
   const def=a.def&&b.def?((b.def.em||0)>(a.def.em||0)?b.def:a.def):(a.def||b.def||null);
   return{t:Math.max(a.t||0,b.t||0),dossiers:pick(a.dossiers,b.dossiers),mov:pick(a.mov,b.mov),conf:pick(a.conf,b.conf),cursos:pick(a.cursos,b.cursos),def,del}}
 async function foTrazerNuvem(){try{await foCarregar();if(RO||!NUVOK()||nuvDesl())return;const idx=(await(await nuvem("GET","")).json()).itens||{};
-    if(idx.FD&&(idx.FD.t||0)>(FOL.t||0)){const j=foNorm(await nuvemGet("FD")),n=foJuntar(FOL,j);
+    if(idx.FD&&((idx.FD.t||0)>(FOL.t||0)||!FO_SINC)){const j=foNorm(await nuvemGet("FD")),n=foJuntar(FOL,j);FO_SINC=true;
       const sig=x=>x.dossiers.length+"|"+x.mov.length+"|"+x.conf.length+"|"+x.cursos.length+"|"+Math.max(0,...x.dossiers.map(d=>d.em||0),...x.mov.map(d=>d.em||0),...x.conf.map(d=>d.em||0));
       const dif=sig(n)!==sig(j)||JSON.stringify(n.def)!==JSON.stringify(j.def);
       FOL=n;foIdxC=null;DB.put("kv","folder",FOL);if(dif)nuvemPut("FD",FOL,Date.now());if(curTab&&/^fo[A-Z]/.test(curTab))foRender(curTab)}
-    else if((FOL.t||0)>((idx.FD||{}).t||0)&&(FOL.dossiers.length||FOL.mov.length))await nuvemPut("FD",FOL,FOL.t)}
+    else{FO_SINC=true;if((FOL.t||0)>((idx.FD||{}).t||0)&&(FOL.dossiers.length||FOL.mov.length))await nuvemPut("FD",FOL,FOL.t)}}
   catch(e){if(e&&e.kind!=="nokv")console.warn("Folder360/nuvem",e)}}
 
 // ---------- código de localização ----------

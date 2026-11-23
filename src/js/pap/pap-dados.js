@@ -42,16 +42,18 @@ function papDef(){if(!PAP.def)PAP.def=papDef0();const d=PAP.def,z=papDef0();for(
 const papEd=()=>!RO&&podePublicar();
 // ---------- guardar e nuvem (como o Crono360: IndexedDB + peça «PAP» na base de dados) ----------
 var papH=null;
+// 0.9.231: nunca enviar para a nuvem antes da primeira leitura — uma sessão nova (dados só em memória) que guardasse antes de ler apagava tudo o que lá estava (aconteceu ao Folder360 a 23/11/2026); até lá, guardar = ler, juntar e só depois enviar
+var PAP_SINC=false;
 function papGuardar(o){if(RO||LIMPAR)return;const t=Date.now();if(o)o.em=t;PAP.t=t;DB.put("kv","pap",PAP);clearTimeout(papH);
-  nuvFila("papH",()=>{try{if(NUVOK()&&!nuvDesl())nuvemPut("PAP",PAP,PAP.t)}catch(e){}},2500)}
+  nuvFila("papH",()=>{try{if(NUVOK()&&!nuvDesl()){if(PAP_SINC)nuvemPut("PAP",PAP,PAP.t);else papTrazerNuvem()}}catch(e){}},2500)}
 function papJuntar(a,b){const del=Object.assign({},b.del||{},a.del||{});
   const pick=(L1,L2)=>{const m=new Map();for(const x of(L2||[]).concat(L1||[]))if(x&&x.id&&!del[x.id]){const q=m.get(x.id);if(!q||(x.em||0)>=(q.em||0))m.set(x.id,x)}return[...m.values()]};
   const def=a.def&&b.def?((b.def.em||0)>(a.def.em||0)?b.def:a.def):(a.def||b.def||null);
   const r={t:Math.max(a.t||0,b.t||0),provas:pick(a.provas,b.provas),contactos:pick(a.contactos,b.contactos),def,del};r.provas.forEach(papProvaNorm);return r}
 async function papTrazerNuvem(){try{await papCarregar();if(RO||!NUVOK()||nuvDesl())return;const idx=(await(await nuvem("GET","")).json()).itens||{};
-    if(idx.PAP&&(idx.PAP.t||0)>(PAP.t||0)){const j=papNorm(await nuvemGet("PAP")),n=papJuntar(PAP,j);const dif=JSON.stringify(n.provas)!==JSON.stringify(j.provas)||JSON.stringify(n.contactos)!==JSON.stringify(j.contactos);
+    if(idx.PAP&&((idx.PAP.t||0)>(PAP.t||0)||!PAP_SINC)){const j=papNorm(await nuvemGet("PAP")),n=papJuntar(PAP,j);PAP_SINC=true;const dif=JSON.stringify(n.provas)!==JSON.stringify(j.provas)||JSON.stringify(n.contactos)!==JSON.stringify(j.contactos);
       PAP=n;DB.put("kv","pap",PAP);if(dif)nuvemPut("PAP",PAP,Date.now());if(curTab&&curTab.startsWith("pap"))papRender(curTab)}
-    else if((PAP.t||0)>((idx.PAP||{}).t||0)&&(PAP.provas.length||PAP.contactos.length))await nuvemPut("PAP",PAP,PAP.t)}
+    else{PAP_SINC=true;if((PAP.t||0)>((idx.PAP||{}).t||0)&&(PAP.provas.length||PAP.contactos.length))await nuvemPut("PAP",PAP,PAP.t)}}
   catch(e){if(e&&e.kind!=="nokv")console.warn("PAP360/nuvem",e)}}
 // ---------- números por extenso (atas e classificações) ----------
 const PAP_U=["zero","um","dois","três","quatro","cinco","seis","sete","oito","nove","dez","onze","doze","treze","catorze","quinze","dezasseis","dezassete","dezoito","dezanove"];

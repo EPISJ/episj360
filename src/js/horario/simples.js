@@ -85,7 +85,21 @@ function h3Intervalos(P){const M=new Map();(P||[]).forEach((p,pi)=>{const q=P[pi
 // linhas da grelha: G.row[pi] = linha do tempo pi; G.ivs = intervalos com a sua linha; G.iv = intervalos por «tempo antes»
 function h3Grade(P,r0){const iv=h3Intervalos(P),row=[],ivs=[];let r=r0||2;(P||[]).forEach((p,pi)=>{row[pi]=r++;const x=iv.get(pi);if(x)ivs.push(Object.assign({row:r++},x))});return{row,ivs,iv}}
 const h3IvTxt=x=>`Intervalo · ${x.de}–${x.ate} · ${x.min} min`;
-const h3IvHtml=x=>`<div class="hsiv" style="grid-row:${x.row};grid-column:1/-1" title="${esc(h3IvTxt(x))}"><span>${esc(h3IvTxt(x))}</span></div>`;
+const h3IvHtml=x=>`<div class="hsiv" data-a="${h3Min(x.de)}" data-b="${h3Min(x.ate)}" style="grid-row:${x.row};grid-column:1/-1" title="${esc(h3IvTxt(x))}"><span>${esc(h3IvTxt(x))}</span></div>`;
+// 0.9.227: linha da hora atual na coluna de hoje (como no calendário do Outlook). As células de hoje levam data-ag e as horas
+// do tempo (data-a / data-b, em minutos); a linha é posta por cima da grelha e atualiza-se a cada 30 s.
+const h3AgAttr=p=>{const a=h3Min(p&&p.start),b=h3Min(p&&p.end);return a!=null&&b!=null&&b>a?` data-ag="1" data-a="${a}" data-b="${b}"`:""};
+function h3AgoraDesenhar(g){let l=g.querySelector(":scope>.hsag");const d=new Date(),now=d.getHours()*60+d.getMinutes()+d.getSeconds()/60;
+  const hj=[...g.querySelectorAll(":scope>[data-ag]")].filter(c=>c.offsetParent);let y=null;
+  if(hj.length)for(const c of hj.concat([...g.querySelectorAll(":scope>.hsiv[data-a]")])){const a=+c.dataset.a,b=+c.dataset.b;if(now>=a&&now<b){y=c.offsetTop+(now-a)/(b-a)*c.offsetHeight;break}}
+  if(y==null){if(l)l.remove();return}
+  const x0=Math.min(...[...g.querySelectorAll(":scope>.c")].filter(c=>c.offsetParent).map(c=>c.offsetLeft)),c0=hj[0],hh=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  if(!l){l=document.createElement("div");l.className="hsag";l.dataset.col="1";l.setAttribute("aria-hidden","true");l.innerHTML="<b></b><i></i>";g.append(l)}
+  l.style.top=Math.round(y)+"px";l.style.left=x0+"px";l.style.width=(g.scrollWidth-x0)+"px";l.title="Agora: "+hh;
+  const i=l.querySelector("i");i.style.left=(c0.offsetLeft-x0)+"px";i.style.width=c0.offsetWidth+"px";l.querySelector("b").textContent=hh}
+function h3Agora(){document.querySelectorAll(".mzh[data-agora]").forEach(g=>{try{h3AgoraDesenhar(g)}catch(e){}})}
+setInterval(h3Agora,30000);window.addEventListener("resize",()=>h3Agora());
+const h3AgoraJa=()=>{requestAnimationFrame(h3Agora);setTimeout(h3Agora,400)};
 
 /* ---------- 0.9.153: cores consistentes ----------
    Uma paleta só (a das cores dos módulos da EPISJ 360, sem verde — o verde é dos botões de importar), igual na Semana, em
@@ -131,7 +145,7 @@ async function hsRender(){await null;try{await esdPronto}catch(e){}try{await h3C
   const muda=[...new Set(dias.filter(d=>d.V).map(d=>d.V))];
   let h=muda.length>1?`<div class="msg info" style="margin:0 0 10px">O horário muda nesta semana: a partir de <b>${esc(calDM(dias.find(d=>d.V===muda[1]).dt,{weekday:"long",day:"numeric",month:"long"}))}</b>.</div>`:"";
   /* 0.9.189: igual a «O meu horário» — legenda das cores; 0.9.226: um bloco por tempo e os intervalos à vista */
-  h+=`<div class="mzh mzh2 hsw" style="grid-template-columns:76px repeat(${D.length},minmax(110px,1fr))"><div class="h" style="grid-row:1;grid-column:1"></div>`+dias.map((d,di)=>`<div class="h${d.dt===hj?" hj":""}" style="grid-row:1;grid-column:${di+2}">${esc(d.nome)}<small>${esc(calDM(d.dt))}</small>${d.nl?`<em class="${d.nl.t}">${esc(d.nl.n)}</em>`:d.fora?`<em>fora do ano letivo</em>`:""}</div>`).join("");
+  h+=`<div class="mzh mzh2 hsw" data-agora="1" style="grid-template-columns:76px repeat(${D.length},minmax(110px,1fr))"><div class="h" style="grid-row:1;grid-column:1"></div>`+dias.map((d,di)=>`<div class="h${d.dt===hj?" hj":""}" style="grid-row:1;grid-column:${di+2}">${esc(d.nome)}<small>${esc(calDM(d.dt))}</small>${d.nl?`<em class="${d.nl.t}">${esc(d.nl.n)}</em>`:d.fora?`<em>fora do ano letivo</em>`:""}</div>`).join("");
   const G=h3Grade(P);
   P.forEach((p,pi)=>{h+=`<div class="p" style="grid-row:${G.row[pi]};grid-column:1">${esc(p.label||pi+1)}<div class="hint" style="margin:0;font-weight:400">${esc(p.start||"")}${p.end?"–"+esc(p.end):""}</div></div>`});
   h+=G.ivs.map(h3IvHtml).join("");
@@ -139,11 +153,11 @@ async function hsRender(){await null;try{await esdPronto}catch(e){}try{await h3C
   const usadasS=new Map();
   /* 0.9.226: cada tempo no seu bloco (já não se juntam tempos seguidos) */
   dias.forEach((d,di)=>{const cl=d.nl?" nl "+d.nl.t:d.fora?" nl":"";P.forEach((p,pi)=>{const c=cel.get(d.i+"|"+pi);
-      h+=`<div class="c${cl}${d.dt===hj?" hj":""}" style="grid-row:${G.row[pi]};grid-column:${di+2}">${c?c.map(x=>{const o=hsInfo(x);usadasS.set(o.tit,o.cor);
+      h+=`<div class="c${cl}${d.dt===hj?" hj":""}"${d.dt===hj&&!d.nl&&!d.fora?h3AgAttr(p):""} style="grid-row:${G.row[pi]};grid-column:${di+2}">${c?c.map(x=>{const o=hsInfo(x);usadasS.set(o.tit,o.cor);
         return `<div class="a" style="background:${h3Tinta(o.cor,.16)};border-left:4px solid ${esc(o.cor)};color:#1b2333" title="${esc(o.dica+(p.start?" · "+p.start+(p.end?"–"+p.end:""):""))}"><b style="color:${h3Escuro(o.cor)}">${esc(o.tit)}</b><span>${esc(o.sub)}</span></div>`}).join(""):""}</div>`})});
   h+=`</div>`+(usadasS.size?`<div class="mzleg">${[...usadasS].sort((x,y)=>COLL_PTN.compare(x[0],y[0])).map(([t,c])=>`<span><i style="background:${esc(c)}"></i>${esc(t)}</span>`).join("")}</div>`:"")+`<div>`;
   const x=ESD.porAno&&ESD.porAno[a.id];
-  out.innerHTML=h+`</div>`+(n?"":`<p class="hint">Sem aulas nesta semana.</p>`)+`<p class="hint">${esc(st.name||"")} · ${esc(a.nome)}${x&&x.quando?" · horário atualizado a "+new Date(x.quando).toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"}):""}</p>`}
+  out.innerHTML=h+`</div>`+(n?"":`<p class="hint">Sem aulas nesta semana.</p>`)+`<p class="hint">${esc(st.name||"")} · ${esc(a.nome)}${x&&x.quando?" · horário atualizado a "+new Date(x.quando).toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"}):""}</p>`;h3AgoraJa()}
 function h3AvisosFormador(){const em=String(EU&&EU.email||"").toLowerCase(),tp=h3Topico(em);
   return `<div class="card" style="margin-top:14px"><h3 style="margin:0 0 6px">Avisos de alterações</h3><p class="hint" style="margin:0 0 8px">Quando o seu horário muda, a Direção avisa-o por email em <b>${esc(em)}</b>.${tp?` Para receber também uma notificação no telemóvel (gratuito, sem criar conta): instale a app <b>ntfy</b> (App Store ou Google Play), carregue em <b>+</b> e escreva o tópico abaixo — ou abra a ligação no telemóvel.`:""}</p>
     ${tp?`<div class="row" style="align-items:center"><code class="h3top">${esc(tp)}</code><a class="b s" href="https://ntfy.sh/${encodeURIComponent(tp)}" target="_blank" rel="noopener">Abrir no ntfy</a><button class="b s" data-h3cp="${esc(tp)}">Copiar tópico</button></div>`:""}</div>`}

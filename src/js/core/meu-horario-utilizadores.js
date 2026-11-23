@@ -28,7 +28,7 @@ async function renderMh(){try{await esdPronto}catch(e){}const st=mhEstado(),out=
   const prox=VL.find(v=>v.de&&v.de>hj&&(!V.de||v.de>V.de));
   const les=new Map((V.lessons||[]).map(l=>[l.id,l])),TT=new Map(T.map(t=>[t.id,t])),CC=new Map(C.map(c=>[c.id,c])),SS=new Map((st.subjects||[]).map(x=>[x.id,x])),RR=new Map((st.rooms||[]).map(x=>[x.id,x]));
   /* 0.9.188: as mesmas cores do resto da app — por formador, cada aula tem a cor da turma; por turma, a cor da disciplina.
-     Fundo claro da cor, barra de cor à esquerda, tempos seguidos da mesma aula num só bloco e legenda das cores. */
+     Fundo claro da cor, barra de cor à esquerda e legenda das cores. 0.9.226: cada tempo no seu bloco, com os intervalos entre tempos. */
   const cel=new Map(),usadas=new Map();let n=0;
   for(const cd of V.cards||[]){const l=les.get(cd.lessonId);if(!l)continue;const lin=(l.linhas||[]).map((x,i)=>Object.assign({i},x));
     const sel=tipo==="t"?lin.filter(x=>x.t===v):((l.classIds||[]).includes(v)?lin.filter(x=>!x.cls||x.cls.includes(v)):[]);if(!sel.length)continue;
@@ -39,12 +39,12 @@ async function renderMh(){try{await esdPronto}catch(e){}const st=mhEstado(),out=
         const top=tipo==="t"?(tur||s.short||s.name||"—"):(s.short||s.name||"—"),sub=tipo==="t"?[s.short||s.name,sala&&sala.name].filter(Boolean).join(" · "):[prof,sala&&sala.name].filter(Boolean).join(" · ");
         if(cd.day<(st.days||["","","","",""]).length&&cd.period+k<(st.periods||[]).length)usadas.set(top,cor);(cel.get(key)||cel.set(key,[]).get(key)).push({top,sub,cor,tit:s.name||""})}}}
   const D=st.days||["Seg","Ter","Qua","Qui","Sex"],P=st.periods||[];
-  const sig=(di,pi)=>{const L=cel.get(di+"|"+pi);return L?L.map(e=>e.top+"|"+e.sub+"|"+e.cor).join("¦"):""};
+  const G=h3Grade(P); // 0.9.226: um bloco por tempo e os intervalos à vista
   let h=`<div class="mzh mzh2" style="grid-template-columns:76px repeat(${D.length},minmax(104px,1fr))"><div class="h" style="grid-row:1;grid-column:1"></div>${D.map((d,di)=>`<div class="h" style="grid-row:1;grid-column:${di+2}">${esc(d)}</div>`).join("")}`;
-  P.forEach((p,pi)=>{h+=`<div class="p" style="grid-row:${pi+2};grid-column:1">${esc(p.label||pi+1)}<div class="hint" style="margin:0;font-weight:400">${esc(p.start||"")}${p.end?"–"+esc(p.end):""}</div></div>`});
-  D.forEach((d,di)=>{for(let pi=0;pi<P.length;){const g=sig(di,pi);let k=1;if(g)while(pi+k<P.length&&sig(di,pi+k)===g)k++;
-      const L=cel.get(di+"|"+pi);
-      h+=`<div class="c" style="grid-row:${pi+2}/span ${k};grid-column:${di+2}">${L?L.map(e=>`<div class="a" style="background:${h3Tinta(e.cor,.16)};border-left:4px solid ${esc(e.cor)};color:#1b2333" title="${esc(e.tit)}"><b style="color:${h3Escuro(e.cor)}">${esc(e.top)}</b><span>${esc(e.sub)}</span>${k>1?`<em>${k} tempos</em>`:""}</div>`).join(""):""}</div>`;pi+=k}});
+  h+=G.ivs.map(h3IvHtml).join("");
+  P.forEach((p,pi)=>{h+=`<div class="p" style="grid-row:${G.row[pi]};grid-column:1">${esc(p.label||pi+1)}<div class="hint" style="margin:0;font-weight:400">${esc(p.start||"")}${p.end?"–"+esc(p.end):""}</div></div>`});
+  D.forEach((d,di)=>{P.forEach((p,pi)=>{const L=cel.get(di+"|"+pi);
+      h+=`<div class="c" style="grid-row:${G.row[pi]};grid-column:${di+2}">${L?L.map(e=>`<div class="a" style="background:${h3Tinta(e.cor,.16)};border-left:4px solid ${esc(e.cor)};color:#1b2333" title="${esc(e.tit)}"><b style="color:${h3Escuro(e.cor)}">${esc(e.top)}</b><span>${esc(e.sub)}</span></div>`).join(""):""}</div>`})});
   h+=`</div>`+(usadas.size?`<div class="mzleg">${[...usadas].sort((x,y)=>COLL_PTN.compare(x[0],y[0])).map(([t,c])=>`<span><i style="background:${esc(c)}"></i>${esc(t)}</span>`).join("")}</div>`:"");
   out.innerHTML=(VL.length>1?`<div class="msg info" style="margin:0 0 10px">${V===vHoje?"Horário em vigor":"Horário"} ${V.de?"desde "+esc(calDMA(V.de)):""}${V.ate?" até "+esc(calDMA(V.ate)):""}.${prox&&V===vHoje?` Muda a <b>${esc(calDMA(prox.de))}</b> — escolha em «Horário» para o ver.`:""}</div>`:"")+h+(n?"":`<p class="hint">Sem aulas marcadas.</p>`)+`<p class="hint">${esc(st.name||"")} · ${esc(st.ano||anoAtivo().nome)}${PUB&&PUB.t?" · publicado a "+new Date(PUB.t).toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"}):""}</p>`}
 $("#mhPer").onchange=e=>{$("#mhPer").dataset.v=e.target.value;renderMh()};

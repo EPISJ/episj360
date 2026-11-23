@@ -411,3 +411,6 @@ html.mv .mv-lic{border:0;background:#eef2f9}
 /* barra dos logótipos de financiamento: discreta, no fim */
 html.mv .fundos{background:#fff!important;border:0!important;box-shadow:0 1px 2px rgba(15,23,42,.05)!important;border-radius:var(--mvr)!important}
 html.mv main>section .mv-dup{display:none!important}
+/* 0.9.226: intervalos no telemóvel */
+html.mv .mzh .hsiv::before{flex:0 0 20px}
+.mv-hsfs>b.iv{background:repeating-linear-gradient(0deg,#e6eaf1 0 3px,transparent 3px 6px);border-radius:2px}

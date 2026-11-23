@@ -77,6 +77,16 @@ function h3Celulas(st,V,tipo,id){const T=new Map((st.teachers||[]).map(t=>[t.id,
         const key=cd.day+"|"+(cd.period+k);(out.get(key)||out.set(key,[]).get(key)).push({s,cid:cids[0]||"",sid:x.s||"",disc:s.short||s.name||"—",nome:s.name||"",tu,form:f.short||f.name||"",formN:f.name||"",sala:sala?sala.name:""})}}}
   return out}
 
+/* ---------- 0.9.226: cada tempo é um bloco à parte e os intervalos aparecem na grelha ----------
+   Os tempos estão separados por intervalos: nunca se juntam tempos seguidos num só bloco. Entre dois tempos em que o fim de um
+   é anterior ao início do seguinte (horas de st.periods), a grelha ganha uma linha «Intervalo · 09:20–09:30 · 10 min». */
+const h3Min=s=>{const m=/^(\d{1,2})\s*[:h.]\s*(\d{2})/.exec(String(s||"").trim());return m?(+m[1])*60+(+m[2]):null};
+function h3Intervalos(P){const M=new Map();(P||[]).forEach((p,pi)=>{const q=P[pi+1];if(!q)return;const a=h3Min(p.end),b=h3Min(q.start);if(a!=null&&b!=null&&b>a)M.set(pi,{apos:pi,de:String(p.end).trim(),ate:String(q.start).trim(),min:b-a})});return M}
+// linhas da grelha: G.row[pi] = linha do tempo pi; G.ivs = intervalos com a sua linha; G.iv = intervalos por «tempo antes»
+function h3Grade(P,r0){const iv=h3Intervalos(P),row=[],ivs=[];let r=r0||2;(P||[]).forEach((p,pi)=>{row[pi]=r++;const x=iv.get(pi);if(x)ivs.push(Object.assign({row:r++},x))});return{row,ivs,iv}}
+const h3IvTxt=x=>`Intervalo · ${x.de}–${x.ate} · ${x.min} min`;
+const h3IvHtml=x=>`<div class="hsiv" style="grid-row:${x.row};grid-column:1/-1" title="${esc(h3IvTxt(x))}"><span>${esc(h3IvTxt(x))}</span></div>`;
+
 /* ---------- 0.9.153: cores consistentes ----------
    Uma paleta só (a das cores dos módulos da EPISJ 360, sem verde — o verde é dos botões de importar), igual na Semana, em
    Por formadores e no email: no horário de um formador e de uma sala a cor é a da TURMA (sempre a mesma em todo o lado);
@@ -120,15 +130,17 @@ async function hsRender(){await null;try{await esdPronto}catch(e){}try{await h3C
   hero.innerHTML=`<div class="ay-hero"><div class="ay-top"><div><h1>Semana de ${esc(tit)}</h1><div class="sub">${esc(rotT)} · ${esc(nomeQ)}${estaSem?" · esta semana":""}</div></div><span class="grow"></span><div class="ay-pct"><b>${n}</b>tempo${n===1?"":"s"} nesta semana</div></div></div>`;
   const muda=[...new Set(dias.filter(d=>d.V).map(d=>d.V))];
   let h=muda.length>1?`<div class="msg info" style="margin:0 0 10px">O horário muda nesta semana: a partir de <b>${esc(calDM(dias.find(d=>d.V===muda[1]).dt,{weekday:"long",day:"numeric",month:"long"}))}</b>.</div>`:"";
-  /* 0.9.189: igual a «O meu horário» — tempos seguidos da mesma aula num só bloco («2 tempos») e legenda das cores */
+  /* 0.9.189: igual a «O meu horário» — legenda das cores; 0.9.226: um bloco por tempo e os intervalos à vista */
   h+=`<div class="mzh mzh2 hsw" style="grid-template-columns:76px repeat(${D.length},minmax(110px,1fr))"><div class="h" style="grid-row:1;grid-column:1"></div>`+dias.map((d,di)=>`<div class="h${d.dt===hj?" hj":""}" style="grid-row:1;grid-column:${di+2}">${esc(d.nome)}<small>${esc(calDM(d.dt))}</small>${d.nl?`<em class="${d.nl.t}">${esc(d.nl.n)}</em>`:d.fora?`<em>fora do ano letivo</em>`:""}</div>`).join("");
-  P.forEach((p,pi)=>{h+=`<div class="p" style="grid-row:${pi+2};grid-column:1">${esc(p.label||pi+1)}<div class="hint" style="margin:0;font-weight:400">${esc(p.start||"")}${p.end?"–"+esc(p.end):""}</div></div>`});
+  const G=h3Grade(P);
+  P.forEach((p,pi)=>{h+=`<div class="p" style="grid-row:${G.row[pi]};grid-column:1">${esc(p.label||pi+1)}<div class="hint" style="margin:0;font-weight:400">${esc(p.start||"")}${p.end?"–"+esc(p.end):""}</div></div>`});
+  h+=G.ivs.map(h3IvHtml).join("");
   const hsInfo=x=>{const cor=h3Cor(st,x,H3S.tipo),tit=H3S.tipo==="c"?x.disc:(x.tu||x.disc),sub=H3S.tipo==="t"?[x.tu?x.disc:"",x.sala]:H3S.tipo==="c"?[x.form,x.sala]:[x.tu?x.disc:"",x.form];return{cor,tit,sub:sub.filter(Boolean).join(" · "),dica:[x.nome,x.formN,x.tu,x.sala].filter(Boolean).join(" · ")}};
-  const hsSig=(d,pi)=>{const c=cel.get(d.i+"|"+pi);return c?c.map(x=>{const o=hsInfo(x);return o.tit+"|"+o.sub+"|"+o.cor}).join("¦"):""};
   const usadasS=new Map();
-  dias.forEach((d,di)=>{const cl=d.nl?" nl "+d.nl.t:d.fora?" nl":"";for(let pi=0;pi<P.length;){const g=hsSig(d,pi);let k=1;if(g)while(pi+k<P.length&&hsSig(d,pi+k)===g)k++;const c=cel.get(d.i+"|"+pi);
-      h+=`<div class="c${cl}${d.dt===hj?" hj":""}" style="grid-row:${pi+2}/span ${k};grid-column:${di+2}">${c?c.map(x=>{const o=hsInfo(x);usadasS.set(o.tit,o.cor);
-        return `<div class="a" style="background:${h3Tinta(o.cor,.16)};border-left:4px solid ${esc(o.cor)};color:#1b2333" title="${esc(o.dica)}"><b style="color:${h3Escuro(o.cor)}">${esc(o.tit)}</b><span>${esc(o.sub)}</span>${k>1?`<em>${k} tempos</em>`:""}</div>`}).join(""):""}</div>`;pi+=k}});
+  /* 0.9.226: cada tempo no seu bloco (já não se juntam tempos seguidos) */
+  dias.forEach((d,di)=>{const cl=d.nl?" nl "+d.nl.t:d.fora?" nl":"";P.forEach((p,pi)=>{const c=cel.get(d.i+"|"+pi);
+      h+=`<div class="c${cl}${d.dt===hj?" hj":""}" style="grid-row:${G.row[pi]};grid-column:${di+2}">${c?c.map(x=>{const o=hsInfo(x);usadasS.set(o.tit,o.cor);
+        return `<div class="a" style="background:${h3Tinta(o.cor,.16)};border-left:4px solid ${esc(o.cor)};color:#1b2333" title="${esc(o.dica+(p.start?" · "+p.start+(p.end?"–"+p.end:""):""))}"><b style="color:${h3Escuro(o.cor)}">${esc(o.tit)}</b><span>${esc(o.sub)}</span></div>`}).join(""):""}</div>`})});
   h+=`</div>`+(usadasS.size?`<div class="mzleg">${[...usadasS].sort((x,y)=>COLL_PTN.compare(x[0],y[0])).map(([t,c])=>`<span><i style="background:${esc(c)}"></i>${esc(t)}</span>`).join("")}</div>`:"")+`<div>`;
   const x=ESD.porAno&&ESD.porAno[a.id];
   out.innerHTML=h+`</div>`+(n?"":`<p class="hint">Sem aulas nesta semana.</p>`)+`<p class="hint">${esc(st.name||"")} · ${esc(a.nome)}${x&&x.quando?" · horário atualizado a "+new Date(x.quando).toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"}):""}</p>`}
@@ -165,19 +177,19 @@ async function hsForRender(){await null;try{await esdPronto}catch(e){}try{await 
   const comAulas=TT.filter(x=>x.n>0),semAulas=TT.filter(x=>!x.n&&!eu(x.t));
   const mostra=H3F.todos||!comAulas.length?TT:TT.filter(x=>x.n>0||eu(x.t));
   const ocup=dias.map(()=>new Array(NP).fill(0));let tot=0;const fim=calMais(H3S.seg,D.length-1);
-  let h=`<div class="tw hsfw"><table class="hsf"><thead><tr><th class="nm" rowspan="2">Formador</th>${dias.map((d,di)=>`<th colspan="${NP}" class="dsep${di%2?" alt":""}${d.dt===hj?" hj":""}${d.nl||d.fora?" nl":""}">${esc(d.nome)} <small>${esc(calDM(d.dt))}</small>${d.dt===hj?` <i class="hjt">hoje</i>`:""}${d.nl?`<em>${esc(d.nl.n)}</em>`:d.fora?`<em>fora do ano letivo</em>`:""}</th>`).join("")}<th rowspan="2" class="tt">Tempos</th></tr><tr>${dias.map((d,di)=>P.map((p,pi)=>`<th class="${pi===0?"dsep":""}${di%2?" alt":""}${d.dt===hj?" hj":""}" title="${esc((p.start||"")+(p.end?"–"+p.end:""))}">${esc(p.label||pi+1)}</th>`).join("")).join("")}</tr></thead><tbody>`;
+  const IV=h3Intervalos(P),ivA=pi=>pi&&IV.has(pi-1)?" ivl":""; // 0.9.226: separação dos intervalos
+  let h=`<div class="tw hsfw"><table class="hsf"><thead><tr><th class="nm" rowspan="2">Formador</th>${dias.map((d,di)=>`<th colspan="${NP}" class="dsep${di%2?" alt":""}${d.dt===hj?" hj":""}${d.nl||d.fora?" nl":""}">${esc(d.nome)} <small>${esc(calDM(d.dt))}</small>${d.dt===hj?` <i class="hjt">hoje</i>`:""}${d.nl?`<em>${esc(d.nl.n)}</em>`:d.fora?`<em>fora do ano letivo</em>`:""}</th>`).join("")}<th rowspan="2" class="tt">Tempos</th></tr><tr>${dias.map((d,di)=>P.map((p,pi)=>`<th class="${pi===0?"dsep":""}${ivA(pi)}${di%2?" alt":""}${d.dt===hj?" hj":""}" title="${esc((p.start||"")+(p.end?"–"+p.end:"")+(IV.get(pi-1)&&pi?"\n"+h3IvTxt(IV.get(pi-1))+" antes":""))}">${esc(p.label||pi+1)}</th>`).join("")).join("")}</tr></thead><tbody>`;
   for(const {t,n} of mostra){let r=`<td class="nm"><a href="#" data-hsver="${esc(t.id)}" title="Ver a semana de ${esc(t.name||"")}">${esc(t.name||t.short||"—")}</a>${t.short&&t.short!==t.name?` <span class="sg">${esc(t.short)}</span>`:""}</td>`;
     dias.forEach((d,di)=>{const m=cel(t,d),base=(d.nl||d.fora?" nl":"")+(di%2?" alt":"")+(d.dt===hj?" hj":"");
-      for(let pi=0;pi<NP;){const L=m&&m.get(d.i+"|"+pi),cl=(pi===0?"dsep":"")+base;
+      for(let pi=0;pi<NP;){const L=m&&m.get(d.i+"|"+pi),cl=(pi===0?"dsep":"")+ivA(pi)+base;
         if(!L){r+=`<td class="${cl}"></td>`;pi++;continue}
-        const x=L[0],k=L.map(y=>[y.tu,y.disc,y.sala].join("|")).join("~");let len=1;
-        while(pi+len<NP){const L2=m.get(d.i+"|"+(pi+len));if(!L2||L2.map(y=>[y.tu,y.disc,y.sala].join("|")).join("~")!==k)break;len++}
-        for(let z=0;z<len;z++)ocup[di][pi+z]++;
+        const x=L[0],len=1; // 0.9.226: um tempo por célula
+        ocup[di][pi]++;
         const cor=h3Cor(st,x,"t"),pa=P[pi]||{},pz=P[pi+len-1]||{},hr=(pa.start||"")+(pz.end?"–"+pz.end:"");
         const tit=[`${x.nome||x.disc}${x.tu?" · "+x.tu:""}${x.sala?" · "+x.sala:""}`].concat(L.slice(1).map(y=>[y.nome||y.disc,y.tu,y.sala].filter(Boolean).join(" · "))).join("\n")+`\n${len} tempo${len>1?"s":""}${hr?" · "+hr:""}`;
-        r+=`<td class="${cl} on" colspan="${len}"><div class="hsb" style="--sc:${esc(cor)};background:${h3Tinta(cor,.16)};color:${h3Escuro(cor)}" title="${esc(tit)}"><b>${esc(x.tu||x.disc)}${L.length>1?` <i>+${L.length-1}</i>`:""}</b><span>${esc([x.tu?x.disc:"",x.sala].filter(Boolean).join(" · "))}${len>1?` · ${len} t`:""}</span></div></td>`;pi+=len}});
+        r+=`<td class="${cl} on"><div class="hsb" style="--sc:${esc(cor)};background:${h3Tinta(cor,.16)};color:${h3Escuro(cor)}" title="${esc(tit)}"><b>${esc(x.tu||x.disc)}${L.length>1?` <i>+${L.length-1}</i>`:""}</b><span>${esc([x.tu?x.disc:"",x.sala].filter(Boolean).join(" · "))}</span></div></td>`;pi+=len}});
     tot+=n;h+=`<tr class="${eu(t)?"eu":""}${n?"":" vz"}">${r}<td class="tt">${n||`<span class="z">0</span>`}</td></tr>`}
-  h+=`</tbody><tfoot><tr><td class="nm">Formadores em aula</td>${dias.map((d,di)=>ocup[di].map((v,pi)=>`<td class="${pi===0?"dsep":""}${di%2?" alt":""}${d.dt===hj?" hj":""}">${v||""}</td>`).join("")).join("")}<td class="tt">${tot}</td></tr></tfoot></table></div>`;
+  h+=`</tbody><tfoot><tr><td class="nm">Formadores em aula</td>${dias.map((d,di)=>ocup[di].map((v,pi)=>`<td class="${pi===0?"dsep":""}${ivA(pi)}${di%2?" alt":""}${d.dt===hj?" hj":""}">${v||""}</td>`).join("")).join("")}<td class="tt">${tot}</td></tr></tfoot></table></div>`;
   const MOV=typeof mvLigado==="function"&&mvLigado();if(MOV)h=hsForMovel(st,dias,P,mostra,cel,hj,eu); // 0.9.216: no telemóvel, um dia de cada vez
   hero.innerHTML=`<div class="ay-hero"><div class="ay-top"><div><h1>Por formadores</h1><div class="sub">Semana de ${esc(calDM(H3S.seg,{day:"numeric",month:"short"}))} a ${esc(calDM(fim,{day:"numeric",month:"short"}))}${H3S.seg===h3Seg(hj)?" · esta semana":""}${me?" · o seu horário aparece primeiro":""}</div></div><span class="grow"></span><div class="ay-pct"><b>${comAulas.length}</b>com aulas, de ${TT.length} formador${TT.length===1?"":"es"} · ${tot} tempo${tot===1?"":"s"}</div></div></div>`;
   const seg=comAulas.length&&semAulas.length?`<div class="hsfbar"><div class="frseg" role="group" aria-label="Formadores a mostrar"><button type="button" data-hsft="0" class="${H3F.todos?"":"on"}">Com aulas (${comAulas.length})</button><button type="button" data-hsft="1" class="${H3F.todos?"on":""}">Todos (${TT.length})</button></div>${H3F.todos?"":`<span class="hint" style="margin:0">${semAulas.length} sem aulas nesta semana: ${esc(semAulas.slice(0,6).map(x=>x.t.name||x.t.short).join(", "))}${semAulas.length>6?"…":""}</span>`}</div>`:"";
@@ -186,15 +198,13 @@ async function hsForRender(){await null;try{await esdPronto}catch(e){}try{await 
 /* 0.9.216: «Por formadores» no telemóvel — fila de dias e, para cada formador, os tempos desse dia numa só linha */
 function hsForMovel(st,dias,P,mostra,cel,hj,eu){const NP=P.length,n=dias.length,hjI=dias.findIndex(d=>d.dt===hj),di=mvDiaSel("hsfor",n,hjI),d=dias[di];
   const bar=mvDiasHtml(dias.map(x=>({n:String(x.nome).slice(0,3),s:calDM(x.dt),hj:x.dt===hj,nl:!!(x.nl||x.fora)})),di,"hsfor");
-  const cols=`grid-template-columns:repeat(${NP},minmax(0,1fr))`;
-  const cab=`<div class="mv-hsfh" style="${cols}">${P.map((p,pi)=>`<span>${esc(p.start||p.label||pi+1)}</span>`).join("")}</div>`;
+  const IV=h3Intervalos(P),cols=`grid-template-columns:${P.map((p,pi)=>"minmax(0,1fr)"+(IV.has(pi)&&pi<NP-1?" 5px":"")).join(" ")}`,ivI=pi=>IV.has(pi)&&pi<NP-1?`<b class="iv" title="${esc(h3IvTxt(IV.get(pi)))}"></b>`:""; // 0.9.226: intervalos
+  const cab=`<div class="mv-hsfh" style="${cols}">${P.map((p,pi)=>`<span>${esc(p.start||p.label||pi+1)}</span>`+(IV.has(pi)&&pi<NP-1?"<span></span>":"")).join("")}</div>`;
   const aviso=d.nl?`<div class="msg info" style="margin:0 0 10px">${esc(calDM(d.dt,{weekday:"long",day:"numeric",month:"long"}))}: ${esc(d.nl.n)}</div>`:d.fora?`<div class="msg info" style="margin:0 0 10px">Fora do ano letivo.</div>`:"";
   let emAula=0;const linhas=mostra.map(({t,n:nt})=>{const m=cel(t,d);let r="",tem=0;
-    for(let pi=0;pi<NP;){const L=m&&m.get(d.i+"|"+pi);if(!L){r+=`<i></i>`;pi++;continue}
-      const x=L[0],k=L.map(y=>[y.tu,y.disc,y.sala].join("|")).join("~");let len=1;
-      while(pi+len<NP){const L2=m.get(d.i+"|"+(pi+len));if(!L2||L2.map(y=>[y.tu,y.disc,y.sala].join("|")).join("~")!==k)break;len++}
-      const cor=h3Cor(st,x,"t"),pa=P[pi]||{},pz=P[pi+len-1]||{};tem+=len;
-      r+=`<div class="on" style="grid-column:span ${len};--sc:${esc(cor)};background:${h3Tinta(cor,.18)};color:${h3Escuro(cor)}" title="${esc([x.nome||x.disc,x.tu,x.sala,(pa.start||"")+(pz.end?"–"+pz.end:"")].filter(Boolean).join(" · "))}"><b>${esc(x.tu||x.disc)}</b>${x.sala&&len>1?`<span>${esc(x.sala)}</span>`:""}</div>`;pi+=len}
+    for(let pi=0;pi<NP;pi++){const L=m&&m.get(d.i+"|"+pi);if(!L){r+=`<i></i>`+ivI(pi);continue}
+      const x=L[0],cor=h3Cor(st,x,"t"),pa=P[pi]||{};tem++; // 0.9.226: um tempo por bloco
+      r+=`<div class="on" style="--sc:${esc(cor)};background:${h3Tinta(cor,.18)};color:${h3Escuro(cor)}" title="${esc([x.nome||x.disc,x.tu,x.sala,(pa.start||"")+(pa.end?"–"+pa.end:"")].filter(Boolean).join(" · "))}"><b>${esc(x.tu||x.disc)}</b></div>`+ivI(pi)}
     if(tem)emAula++;
     return `<div class="mv-hsfr${eu(t)?" eu":""}${tem?"":" vz"}"><div class="mv-hsfn"><a href="#" data-hsver="${esc(t.id)}">${esc(t.name||t.short||"—")}</a><small>${tem?tem+" tempo"+(tem>1?"s":"")+" neste dia":"sem aulas neste dia"} · ${nt} na semana</small></div><div class="mv-hsfs" style="${cols}">${r}</div></div>`}).join("");
   return bar+aviso+`<div class="mv-hsf"><div class="mv-hsft">${emAula} formador${emAula===1?"":"es"} em aula · ${esc(calDM(d.dt,{weekday:"long",day:"numeric",month:"long"}))}</div>${cab}${linhas}</div>`}
@@ -296,15 +306,14 @@ function h3EmailHtml(x){const st=mhEstado();if(!st)return "";const hj=calHoje(),
   const VL=cpVersoes(st).slice().sort((p,q)=>String(p.de||"").localeCompare(String(q.de||""))).filter(V=>!(V.ate&&V.ate<hj));
   const usadas=new Map();
   const grelha=V=>{const m=h3Celulas(st,V,"t",x.t.id),pre=V.de&&V.de>hj?"A partir de "+calDM(V.de)+" · ":"";let n=0;
-    // tempos seguidos com a mesma aula juntam-se num só bloco (rowspan)
-    const sig=(di,pi)=>{const L=m.get(di+"|"+pi);return L?L.map(c=>c.disc+"|"+c.tu+"|"+c.sala+"|"+(novo.has(h3Frase(pre,D[di],P[pi]||{},pi,c))?1:0)).join("¦"):""};
-    const tapa=new Set(),span={};D.forEach((d,di)=>{for(let pi=0;pi<P.length;pi++){const g=sig(di,pi);if(!g)continue;let k=1;while(pi+k<P.length&&sig(di,pi+k)===g){tapa.add(di+"|"+(pi+k));k++}span[di+"|"+pi]=k;pi+=k-1}});
+    // 0.9.226: um bloco por tempo e uma linha para cada intervalo
+    const IV=h3Intervalos(P);
     let h=`<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;border-spacing:4px;width:100%;max-width:760px;table-layout:fixed;${F};font-size:12px"><tr><td style="width:62px"></td>${D.map(d=>`<td style="width:${Math.floor(100/D.length)}%;padding:6px 4px 4px;text-align:center;font-weight:700;font-size:12.5px;color:#163269;border-bottom:2px solid #e3e7ee">${esc(d)}</td>`).join("")}</tr>`;
     P.forEach((p,pi)=>{h+=`<tr><td style="padding:6px 8px 4px 0;text-align:right;color:#8a92a3;white-space:nowrap;vertical-align:top;font-size:11px;line-height:1.35"><b style="color:#1b2333;font-size:12px">${esc(p.start||p.label||pi+1)}</b><br>${esc(p.end||"")}</td>`;
-      D.forEach((d,di)=>{if(tapa.has(di+"|"+pi))return;const L=m.get(di+"|"+pi);if(!L){h+=`<td style="background:#f6f8fb;border-radius:8px;height:46px"></td>`;return}
-        const k=span[di+"|"+pi]||1;
-        h+=`<td rowspan="${k}" style="vertical-align:top;padding:0;height:${46*k}px">`+L.map(c=>{n+=k;const cor=h3Cor(st,c,"t"),nv=novo.has(h3Frase(pre,d,p,pi,c));usadas.set(c.tu||c.disc,cor);
-          return `<div style="background:${h3Tinta(cor,.16)};border-left:4px solid ${esc(cor)};${nv?"outline:2px solid #1b2333;":""}border-radius:8px;padding:6px 8px;margin:0 0 3px;line-height:1.3;min-height:${46*k-14}px;color:#1b2333"><b style="font-size:13px;color:${h3Escuro(cor)}">${esc(c.tu||c.disc)}</b>${nv?` <span style="font-size:9.5px;font-weight:700;letter-spacing:.04em;background:#1b2333;color:#fff;border-radius:4px;padding:1px 5px;vertical-align:1px">NOVO</span>`:""}<br><span style="font-size:11px;color:#4a5262">${esc([c.tu?c.disc:"",c.sala].filter(Boolean).join(" · "))}</span>${k>1?`<br><span style="font-size:10.5px;color:#8a92a3">${k} tempos</span>`:""}</div>`}).join("")+`</td>`});h+=`</tr>`});
+      D.forEach((d,di)=>{const L=m.get(di+"|"+pi);if(!L){h+=`<td style="background:#f6f8fb;border-radius:8px;height:46px"></td>`;return}
+        h+=`<td style="vertical-align:top;padding:0;height:46px">`+L.map(c=>{n++;const cor=h3Cor(st,c,"t"),nv=novo.has(h3Frase(pre,d,p,pi,c));usadas.set(c.tu||c.disc,cor);
+          return `<div style="background:${h3Tinta(cor,.16)};border-left:4px solid ${esc(cor)};${nv?"outline:2px solid #1b2333;":""}border-radius:8px;padding:6px 8px;margin:0 0 3px;line-height:1.3;min-height:32px;color:#1b2333"><b style="font-size:13px;color:${h3Escuro(cor)}">${esc(c.tu||c.disc)}</b>${nv?` <span style="font-size:9.5px;font-weight:700;letter-spacing:.04em;background:#1b2333;color:#fff;border-radius:4px;padding:1px 5px;vertical-align:1px">NOVO</span>`:""}<br><span style="font-size:11px;color:#4a5262">${esc([c.tu?c.disc:"",c.sala].filter(Boolean).join(" · "))}</span></div>`}).join("")+`</td>`});h+=`</tr>`;
+      const x=IV.get(pi);if(x&&pi<P.length-1)h+=`<tr><td colspan="${D.length+1}" style="padding:1px 0;text-align:center;font-size:10.5px;color:#8a92a3;border-top:1px dashed #d5dbe5;border-bottom:1px dashed #d5dbe5;background:#fafbfd">${esc(h3IvTxt(x))}</td></tr>`});
     return {h:h+`</table>`,n}};
   let quadro="";for(const V of VL){const g=grelha(V);if(!g.n&&VL.length>1)continue;
     quadro+=`<p style="${F};font-size:14px;font-weight:700;color:#163269;margin:18px 0 6px">${VL.length>1?(V.de&&V.de>hj?"A partir de "+esc(calDMA(V.de)):"Horário em vigor"+(V.de?" desde "+esc(calDMA(V.de)):"")):"O seu horário"} <span style="font-weight:400;color:#6b7385">· ${g.n} tempo${g.n===1?"":"s"} por semana</span></p>`+g.h}

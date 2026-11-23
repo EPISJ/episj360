@@ -290,3 +290,14 @@ table.hsf td.ivl.on{border-left-color:#eef1f6}
 .mzh .hsag i::before,.mzh .hsag i::after{content:"";position:absolute;top:-5px;width:8px;height:8px;border-radius:50%;background:#2563eb}
 .mzh .hsag i::before{left:-4px}.mzh .hsag i::after{right:-4px}
 .mzh .hsag b{position:absolute;right:100%;top:-9px;margin-right:6px;font-size:10.5px;font-weight:700;color:#fff;background:#2563eb;border-radius:999px;padding:1px 6px;line-height:16px}
+/* 0.9.228: Horários360 › Semana em modo ampliado — ecrã todo, sem menu lateral; os tempos esticam para a grelha caber na altura do ecrã */
+body.hsamplo{overflow:hidden}
+body.hsamplo #hsSem{position:fixed;inset:0;z-index:60;margin:0;overflow:auto;padding:14px 24px 20px;background:var(--bg,#f5f7fb);max-width:none!important;width:auto}
+body.hsamplo #hsSem #hsHero .ay-hero{padding-top:12px;padding-bottom:12px;margin-bottom:10px}
+body.hsamplo #hsSem #hsHero h1{font-size:22px}
+body.hsamplo #hsSem #hsImpG,body.hsamplo #hsSem #hsAvisos{display:none!important}
+body.hsamplo #hsSem>.card{margin:0}
+body.hsamplo #hsSem .hsbar{margin-bottom:10px!important}
+body.hsamplo #hsSem .hsw .c{min-height:max(54px,calc((100vh - 300px - var(--hsi,0) * 22px) / var(--hsn,8)))}
+body.hsamplo #hsSem .hsw .a b{font-size:15px}body.hsamplo #hsSem .hsw .a span{font-size:13px}
+body.hsamplo #hsAmp{background:var(--brand);border-color:var(--brand);color:#fff}

@@ -145,7 +145,7 @@ async function hsRender(){await null;try{await esdPronto}catch(e){}try{await h3C
   const muda=[...new Set(dias.filter(d=>d.V).map(d=>d.V))];
   let h=muda.length>1?`<div class="msg info" style="margin:0 0 10px">O horário muda nesta semana: a partir de <b>${esc(calDM(dias.find(d=>d.V===muda[1]).dt,{weekday:"long",day:"numeric",month:"long"}))}</b>.</div>`:"";
   /* 0.9.189: igual a «O meu horário» — legenda das cores; 0.9.226: um bloco por tempo e os intervalos à vista */
-  h+=`<div class="mzh mzh2 hsw" data-agora="1" style="grid-template-columns:76px repeat(${D.length},minmax(110px,1fr))"><div class="h" style="grid-row:1;grid-column:1"></div>`+dias.map((d,di)=>`<div class="h${d.dt===hj?" hj":""}" style="grid-row:1;grid-column:${di+2}">${esc(d.nome)}<small>${esc(calDM(d.dt))}</small>${d.nl?`<em class="${d.nl.t}">${esc(d.nl.n)}</em>`:d.fora?`<em>fora do ano letivo</em>`:""}</div>`).join("");
+  h+=`<div class="mzh mzh2 hsw" data-agora="1" style="--hsn:${P.length||1};--hsi:${h3Intervalos(P).size};grid-template-columns:76px repeat(${D.length},minmax(110px,1fr))"><div class="h" style="grid-row:1;grid-column:1"></div>`+dias.map((d,di)=>`<div class="h${d.dt===hj?" hj":""}" style="grid-row:1;grid-column:${di+2}">${esc(d.nome)}<small>${esc(calDM(d.dt))}</small>${d.nl?`<em class="${d.nl.t}">${esc(d.nl.n)}</em>`:d.fora?`<em>fora do ano letivo</em>`:""}</div>`).join("");
   const G=h3Grade(P);
   P.forEach((p,pi)=>{h+=`<div class="p" style="grid-row:${G.row[pi]};grid-column:1">${esc(p.label||pi+1)}<div class="hint" style="margin:0;font-weight:400">${esc(p.start||"")}${p.end?"–"+esc(p.end):""}</div></div>`});
   h+=G.ivs.map(h3IvHtml).join("");
@@ -167,6 +167,13 @@ $("#hsData").onchange=e=>{if(e.target.value){H3S.seg=h3Seg(e.target.value);hsRen
 $("#hsAnt").onclick=()=>{H3S.seg=calMais(H3S.seg||h3Seg(calHoje()),-7);hsRender()};
 $("#hsSeg").onclick=()=>{H3S.seg=calMais(H3S.seg||h3Seg(calHoje()),7);hsRender()};
 $("#hsHoje").onclick=()=>{H3S.seg="";hsRender()};
+/* 0.9.228: Semana › modo ampliado (body.hsamplo) — o horário ocupa o ecrã todo, sem o menu lateral, com os tempos mais altos;
+   Esc, o botão ou um clique no menu de cima/lateral para sair (como no Calendário do ano e no Crono360). */
+function hsAmpSync(){const b=$("#hsAmp");if(b)b.textContent=document.body.classList.contains("hsamplo")?"Sair do modo ampliado":"Ampliar"}
+function hsAmpSet(on){document.body.classList.toggle("hsamplo",!!on);hsAmpSync();h3AgoraJa()}
+$("#hsAmp").onclick=()=>hsAmpSet(!document.body.classList.contains("hsamplo"));
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.body.classList.contains("hsamplo"))hsAmpSet(false)});
+document.addEventListener("click",e=>{if(document.body.classList.contains("hsamplo")&&e.target.closest(".top,nav.side"))hsAmpSet(false)},true);
 $("#hsImp").onclick=()=>h3Importar();
 $("#hsImpTudo").onclick=()=>h3Importar(true);
 $("#hsImpGpu").onclick=()=>h3Importar("gpu");

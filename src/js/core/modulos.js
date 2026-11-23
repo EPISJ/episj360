@@ -74,7 +74,8 @@ mostrarModulo(curMod,false);
 /* ---------- tabs ---------- */
 let curTab="box";
 $("#nav").addEventListener("click",e=>{const b=e.target.closest("button[data-t]");if(!b)return;show(b.dataset.t)});
-function show(t){if(!podeVer(t)){const f=primeiroPermitido(modDeTab(t)||curMod);if(!f||f===t)return;t=f}
+function show(t){if(t!=="hsSem")document.body.classList.remove("hsamplo"); // 0.9.228: o modo ampliado da Semana não passa a outros ecrãs
+  if(!podeVer(t)){const f=primeiroPermitido(modDeTab(t)||curMod);if(!f||f===t)return;t=f}
   curTab=t;document.body.classList.toggle("esch",t==="esch");document.body.classList.toggle("s360",/^s3/.test(t));document.body.classList.toggle("ecom",/^eco[A-Z]/.test(t));try{if(!(LOGOS.anos&&LOGOS.anos.__ok))lgMigrar();aplicarLogos()}catch(e){}{const m=modDeTab(t);if(m&&m!==curMod)mostrarModulo(m,false)}document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
   document.querySelectorAll("main>section").forEach(s=>s.classList.toggle("on",s.id===(t==="hsVer"?"mh":t))); // 0.9.191: «Horários» usa o mesmo ecrã de «O meu horário», com a procura
   if(t==="hsVer"||t==="mh")try{renderMh()}catch(e){}

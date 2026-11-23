@@ -414,3 +414,5 @@ html.mv main>section .mv-dup{display:none!important}
 /* 0.9.226: intervalos no telemóvel */
 html.mv .mzh .hsiv::before{flex:0 0 20px}
 .mv-hsfs>b.iv{background:repeating-linear-gradient(0deg,#e6eaf1 0 3px,transparent 3px 6px);border-radius:2px}
+/* 0.9.228: no telemóvel a Semana já ocupa o ecrã — sem «Ampliar» */
+html.mv #hsAmp{display:none!important}

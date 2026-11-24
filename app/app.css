@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.240 */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.241 */
 /* ===== src/css/fontes.css ===== */
 @font-face{font-family:Poppins;font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/poppins-latin-400.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:Poppins;font-style:normal;font-weight:500;font-display:swap;src:url(../fonts/poppins-latin-500.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -1814,6 +1814,7 @@ nav.side .h3modo button.sel,.h3modo button.sel{background:var(--brand);color:#ff
 .gpm.ok .gpb{background:#3db166;transform:scale(1)}
 .gpm.erro .gpb{background:#d64545;transform:scale(1)}.gpm.erro .gpn{color:#b42318}
 .gpm.off .gpi-svg,.gpm.bg .gpi-svg{opacity:.6;filter:grayscale(.6)}.gpm.off .gpb,.gpm.bg .gpb{background:#98a2b3;transform:scale(1)}
+.gpm.desl .gpi{outline:2px dashed #c3cad6;outline-offset:3px;border-radius:13px}.gpm.desl .gpn::after{content:"desligado";display:block;font-size:9.5px;font-weight:600;color:#98a2b3;margin-top:1px}
 .gpm.pop .gpi-svg{animation:gpPop .45s cubic-bezier(.2,.8,.2,1.4)}
 @keyframes gpRoda{to{transform:rotate(360deg)}}
 @keyframes gpPop{0%{transform:scale(.82)}60%{transform:scale(1.1)}100%{transform:scale(1)}}

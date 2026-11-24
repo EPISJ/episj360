@@ -232,7 +232,11 @@ function progMod(id,st){if(st)GP.mods[id]=st;else delete GP.mods[id];gpTick()}
 function gpOrdem(){const L=[...document.querySelectorAll("#mods button[data-m]")].map(b=>b.dataset.m),S=new Set(L);return L.concat(GP_MODS.map(x=>x[0]).filter(m=>!S.has(m)))}
 function gpIco(m){const sv=document.querySelector(`#mods button[data-m="${m}"] svg`);if(sv){const c=sv.cloneNode(true);c.removeAttribute("class");c.setAttribute("class","gpi-svg");return c.outerHTML}
   const n=(GP_MODS.find(x=>x[0]===m)||[m,m])[1];return `<span class="gpi-svg gpi-l">${esc(String(n).charAt(0))}</span>`}
-function gpTick(){const el=document.getElementById("gpMods");if(!el)return;const ids=gpOrdem().filter(m=>GP.mods[m]);
+// 0.9.241: só os módulos que esta conta pode abrir (a mesma regra da barra de cima): o administrador vê todos, incluindo os que
+// desligou (marcados «desligado»); as outras contas só veem os ícones dos módulos a que têm acesso
+function gpPode(m){try{return!EU||!!primeiroPermitido(m)}catch(e){return true}}
+function gpDesl(m){try{return!!(EU&&EU.admin&&MODS_OFF.includes(m))}catch(e){return false}}
+function gpTick(){const el=document.getElementById("gpMods");if(!el)return;const ids=gpOrdem().filter(m=>GP.mods[m]&&gpPode(m));
   if(!el.querySelector(".gpg"))el.innerHTML=`<div class="gpg" role="list"></div><div class="gptn" aria-live="polite"></div>`;
   const G=el.querySelector(".gpg");
   for(const m of ids){let t=G.querySelector(`[data-gpm="${m}"]`);const e=GP.mods[m]||"wait",n=(GP_MODS.find(x=>x[0]===m)||[m,m])[1];
@@ -240,8 +244,9 @@ function gpTick(){const el=document.getElementById("gpMods");if(!el)return;const
       t.innerHTML=`<span class="gpi">${gpIco(m)}<i class="gpb" aria-hidden="true"></i></span><span class="gpn">${esc(n).replace(/360$/,'<b class="sup360">360</b>')}</span>`;G.appendChild(t)}
     if(t.dataset.e!==e){const era=t.dataset.e;t.dataset.e=e;t.className="gpm "+e+(era&&era!=="ok"&&e==="ok"?" pop":"");
       t.querySelector(".gpb").textContent=e==="ok"?"✓":e==="erro"?"!":e==="wait"?"":"–";
-      t.title=n+": "+(e==="ok"?"pronto":e==="wait"?"a carregar…":GP_EST[e]||e);t.setAttribute("aria-label",t.title)}}
-  G.querySelectorAll("[data-gpm]").forEach(t=>{if(!GP.mods[t.dataset.gpm])t.remove()});
+      t.title=n+": "+(e==="ok"?"pronto":e==="wait"?"a carregar…":GP_EST[e]||e)+(gpDesl(m)?" (módulo desligado — só os administradores o veem)":"");t.setAttribute("aria-label",t.title)}
+    t.classList.toggle("desl",gpDesl(m))}
+  G.querySelectorAll("[data-gpm]").forEach(t=>{if(!ids.includes(t.dataset.gpm))t.remove()});
   const ok=ids.filter(m=>GP.mods[m]==="ok").length,w=ids.filter(m=>GP.mods[m]==="wait"),er=ids.filter(m=>GP.mods[m]==="erro").length;
   const nm=m=>(GP_MODS.find(x=>x[0]===m)||[m,m])[1];
   el.querySelector(".gptn").textContent=!ids.length?"":ok===ids.length?`Todos os ${ids.length} módulos prontos`

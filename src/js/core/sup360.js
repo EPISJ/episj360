@@ -12,7 +12,8 @@ var S360_SALTA={SCRIPT:1,STYLE:1,TEXTAREA:1,INPUT:1,SELECT:1,OPTION:1,CODE:1,PRE
 var S360_OBS=null;
 function sup360Uni(t){return String(t||"").replace(S360_RE,"$1³⁶⁰")}
 function sup360No(n){for(let e=n.parentNode;e&&e.nodeType===1;e=e.parentNode){if(S360_SALTA[e.nodeName.toUpperCase()]||e.isContentEditable||e.namespaceURI==="http://www.w3.org/2000/svg"||(e.classList&&(e.classList.contains("sup360")||e.classList.contains("sup360-nao"))))return false}return true}
-function sup360Texto(n){const t=n.nodeValue;if(!t||t.indexOf("360")<0)return;S360_RE.lastIndex=0;if(!S360_RE.test(t)||!sup360No(n))return;
+function sup360Texto(n){const t=n.nodeValue;if(!t||t.indexOf("360")<0||!n.parentNode)return; // 0.9.241: texto já trocado entretanto (mudou duas vezes seguidas)
+S360_RE.lastIndex=0;if(!S360_RE.test(t)||!sup360No(n))return;
   S360_RE.lastIndex=0;const doc=n.ownerDocument,f=doc.createDocumentFragment();let i=0,m;
   while((m=S360_RE.exec(t))){f.appendChild(doc.createTextNode(t.slice(i,m.index)+m[1]));const s=doc.createElement("sup");s.className="sup360";s.textContent="360";f.appendChild(s);i=m.index+m[0].length}
   f.appendChild(doc.createTextNode(t.slice(i)));n.parentNode.replaceChild(f,n)}

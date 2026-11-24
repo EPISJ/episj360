@@ -138,7 +138,15 @@ function nuvPorEnviar(){return (NUV_FILA?NUV_FILA.size:0)+(NUV_VOO||0)}
 addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")nuvFilaJa()});
 addEventListener("pagehide",()=>{nuvFilaJa()});
 addEventListener("beforeunload",e=>{if(LIMPAR)return;nuvFilaJa();if(nuvPorEnviar()>0){e.preventDefault();e.returnValue="A EPISJ 360 ainda está a guardar na nuvem. Se sair agora, as últimas alterações perdem-se."}});
-async function nuvemPut(name,obj,t){if(nuvDesl()||LIMPAR)return;t=t||Date.now();
+/* 0.9.239: ler antes de escrever, em toda a app. Uma peça só é gravada na nuvem depois de, nesta sessão, ter sido lida de lá
+   (ou de se ter visto que ainda não existe). Antes disso, uma gravação gravaria por cima do que está guardado (a memória do navegador
+   começa vazia a cada recarga) — é recusada e o módulo vai buscar a peça, junta e só depois grava. */
+var CFG_SINC=false;
+var NUV_GUARDA={estado:()=>CFG_SINC,ES:()=>ES_SINC,CR:()=>CR_SINC,avisos:()=>AV_SINC,PW:()=>!!pwS().lido,PAP:()=>PAP_SINC,FD:()=>FO_SINC,OF:()=>OF_SINC,EC:()=>ECO_SINC,EF:()=>ECF_SINC,H3:()=>H3_SINC};
+function nuvPodeGravar(name){const g=NUV_GUARDA[name];if(!g)return true;try{return!!g()}catch(e){return false}}
+async function nuvemPut(name,obj,t){if(nuvDesl()||LIMPAR)return;
+  if(!nuvPodeGravar(name)){console.warn("EPISJ 360: «"+name+"» ainda não foi lida da nuvem nesta sessão — não gravo por cima");try{cargaVer()}catch(e){}return}
+  t=t||Date.now();
   try{await nuvem("PUT",name,await gz(obj),t);nuvSetT(name,t);NUV.ultimo=Date.now();NUV.erro=""}
   catch(e){if(e.kind!=="nokv")NUV.erro=e.message}
   nuvemUI()}
@@ -186,7 +194,8 @@ async function nuvemTrazer(so1){
     const idx=(await (await nuvem("GET","")).json()).itens||{},L=nuvT();
     // 1) configuração, pontos de restauro, modelos, pasta
     const E=idx.estado;
-    if(E&&(E.t||0)>cfgT()){const e=await nuvemGet("estado");
+    // 0.9.239: na primeira leitura da sessão junta-se sempre com a nuvem (antes, se a cópia daqui parecesse mais recente, ia por cima da nuvem)
+    if(E&&((E.t||0)>cfgT()||!CFG_SINC)){const e=await nuvemGet("estado");
       const vazio=!cfg.mods.length&&!cfg.profs.length;
       if(!vazio&&e.cfg!==JSON.stringify(cfg)&&Date.now()-(window.__pontoNuv||0)>30*60e3){window.__pontoNuv=Date.now();ponto("Antes de trazer da nuvem a configuração de outro computador")} // 0.9.49: no máximo um ponto por meia hora (com o tempo real)
       cfg=juntarCfg(JSON.parse(e.cfg),cfg);migrate();lastJSON=JSON.stringify(cfg);cfgRev++;persist(lastJSON); // 0.9.22: junta, não substitui
@@ -198,11 +207,12 @@ async function nuvemTrazer(so1){
         if(e.bases){const bi=basesIdx();for(const k in e.bases)if(!bi[k]||!bi[k].length)bi[k]=e.bases[k];localStorage.setItem("box_bases",JSON.stringify(bi))}
         if(e.folder&&e.folder.id&&curFolder.id==="0"){curFolder=e.folder;localStorage.setItem("box_last_folder",JSON.stringify(curFolder))}
         if(e.root&&!localStorage.getItem("box_last_root"))localStorage.setItem("box_last_root",e.root)}catch(x){}
-      mudou=true}
+      CFG_SINC=true;mudou=true}
     // 0.9.91: os logótipos das Definições vêm sempre da nuvem quando faltam aqui (antes só vinham se a configuração da nuvem fosse mais recente,
     // e um computador com configuração própria mais recente ficava sem os logótipos do canto esquerdo e do canto direito)
     else if(E&&(!LOGOS.main||!LOGOS.right)&&!window.__lgNuv){window.__lgNuv=1;try{const e=await nuvemGet("estado");if(e&&e.logos&&typeof e.logos==="object"&&lgJuntar(e.logos))mudou=true}catch(x){}}
-    else if(!E?(cfg.mods.length||cfg.profs.length):cfgT()>(E.t||0)){if(!cfgT())localStorage.setItem("boxcheck_cfg_t",String(Date.now()));await nuvemPut("estado",estadoAtual(),cfgT())}
+    else if(!E?(cfg.mods.length||cfg.profs.length):cfgT()>(E.t||0)){CFG_SINC=true;if(!cfgT())localStorage.setItem("boxcheck_cfg_t",String(Date.now()));await nuvemPut("estado",estadoAtual(),cfgT())}
+    CFG_SINC=true;
     if(!so1){
     // 2) análises de cada pasta
     const R=resumos();

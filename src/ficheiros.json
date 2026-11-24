@@ -48,7 +48,8 @@
   "js/core/arranque.js",
   "js/core/gaveta-tabelas.js",
   "js/core/movel.js",
-  "js/core/sup360.js"
+  "js/core/sup360.js",
+  "js/core/carga.js"
  ],
  "modulos": {
   "pap": [

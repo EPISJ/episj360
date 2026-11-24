@@ -15,9 +15,11 @@ function crJuntar(a,b){const del=Object.assign({},b.del||{},a.del||{}),m=new Map
   return{t:Math.max(a.t||0,b.t||0),pontos:[...m.values()].sort((x,y)=>String(y.data).localeCompare(String(x.data))||(y.em||0)-(x.em||0)),del,apl:[...ma.values()].sort((x,y)=>(y.em||0)-(x.em||0)).slice(0,60)}}
 var crH=null;
 function crGuardar(){if(RO||LIMPAR)return;CR.t=Date.now();DB.put("kv","crono",CR);clearTimeout(crH);nuvFila("crH",()=>{try{if(NUVOK()&&!nuvDesl())nuvemPut("CR",CR,CR.t)}catch(e){}},3000);try{guidePubAgendar()}catch(e){}}
+// 0.9.239: CR_SINC — na primeira leitura da sessão junta sempre com a nuvem antes de gravar
+var CR_SINC=false;
 async function crTrazerNuvem(){try{await crPronto;if(RO||!NUVOK()||nuvDesl())return;const idx=(await(await nuvem("GET","")).json()).itens||{};
-    if(idx.CR&&(idx.CR.t||0)>(CR.t||0)){const j=crNorm(await nuvemGet("CR")),n=crJuntar(CR,j);const mais=n.pontos.length>j.pontos.length;CR=n;DB.put("kv","crono",CR);if(mais)nuvemPut("CR",CR,Date.now());if(curTab&&curTab.startsWith("cr"))crRender(curTab)}
-    else if((CR.t||0)>((idx.CR||{}).t||0)&&CR.pontos.length)await nuvemPut("CR",CR,CR.t)}
+    if(idx.CR&&((idx.CR.t||0)>(CR.t||0)||!CR_SINC)){const j=crNorm(await nuvemGet("CR")),n=crJuntar(CR,j);const mais=n.pontos.length>j.pontos.length;CR=n;CR_SINC=true;DB.put("kv","crono",CR);if(mais)nuvemPut("CR",CR,Date.now());if(curTab&&curTab.startsWith("cr"))crRender(curTab)}
+    else{CR_SINC=true;if((CR.t||0)>((idx.CR||{}).t||0)&&CR.pontos.length)await nuvemPut("CR",CR,CR.t)}}
   catch(e){if(e&&e.kind!=="nokv")console.warn("Crono360/nuvem",e)}
   crAutoAgendar()}
 function crPublico(){return{pontos:CR.pontos.slice(0,16)}}

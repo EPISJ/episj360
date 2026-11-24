@@ -10,10 +10,12 @@ let ESD={t:0,porAno:{},copias:{},mapaT:{},mapaC:{},ligT:{},ligC:{},mapaA:{},ligA
 const esdPronto=DB.get("kv","esched").then(v=>{if(v&&typeof v==="object")ESD=Object.assign(ESD,v)}).catch(()=>{});
 let esdH=null;
 function esdGuardar(){if(RO||LIMPAR)return;guidePubAgendar();ESD.t=Date.now();DB.put("kv","esched",ESD);clearTimeout(esdH);nuvFila("esdH",()=>{if(NUVOK()&&!nuvDesl())nuvemPut("ES",ESD,ESD.t)},8000)}
+// 0.9.239: ES_SINC — na primeira leitura da sessão a nuvem manda (o que está na nuvem nunca é substituído por uma cópia que não a leu)
+var ES_SINC=false;
 async function esTrazerNuvem(){try{await esdPronto;if(!NUVOK()||nuvDesl())return;
-  const idx=(await (await nuvem("GET","")).json()).itens||{};
-  if(idx.ES&&(idx.ES.t||0)>(ESD.t||0)){const j=await nuvemGet("ES");if(j&&typeof j==="object"){ESD=Object.assign({t:0,porAno:{},copias:{},mapaT:{},mapaC:{},ligT:{},ligC:{},mapaA:{},ligA:{}},j);DB.put("kv","esched",ESD);esRecarregar(true)}}
-  else if((ESD.t||0)>((idx.ES||{}).t||0))await nuvemPut("ES",ESD,ESD.t)}catch(e){if(e.kind!=="nokv")console.warn("Horários360/nuvem",e)}}
+  const idx=(await (await nuvem("GET","")).json()).itens||{};const prim=!ES_SINC;
+  if(idx.ES&&((idx.ES.t||0)>(ESD.t||0)||prim)){const j=await nuvemGet("ES");if(j&&typeof j==="object"){ESD=Object.assign({t:0,porAno:{},copias:{},mapaT:{},mapaC:{},ligT:{},ligC:{},mapaA:{},ligA:{}},j);DB.put("kv","esched",ESD);esRecarregar(true)}ES_SINC=true}
+  else{ES_SINC=true;if((ESD.t||0)>((idx.ES||{}).t||0))await nuvemPut("ES",ESD,ESD.t)}}catch(e){if(e.kind!=="nokv")console.warn("Horários360/nuvem",e)}}
 
 let ES_ANO=null,ES_SIG="";
 function esAno(){return escData().anos.find(a=>a.id===ES_ANO)||anoAtivo()}

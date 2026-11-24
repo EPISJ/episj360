@@ -18,18 +18,10 @@ function ofFormadores(){let P=[];try{P=(cfg.profs||[]).slice().sort(cmpProf).map
 function ofDataPT(s){return s?calDMA(s):"—"}
 function ofDataC(s){if(!s)return"";const[y,m,d]=String(s).split("-");return d&&m&&y?`${d}-${m}-${y}`:s}
 
-function ofRender(t){ofCarregar().then(()=>{try{ofDef();ofEsperaUI(t);
+function ofRender(t){ofCarregar().then(()=>{try{ofDef();
   document.querySelectorAll("[data-ofdir]").forEach(x=>x.disabled=!ofEd());
   if(t==="ofInicio")ofInicioUI();else if(t==="ofRedigir")ofRedUI();else if(t==="ofEnt")ofEntUI();else if(t==="ofLivro")ofLivUI();else if(t==="ofDef")ofDefUI()}
   catch(e){console.warn("Ofício360",e)}})}
-// 0.9.238: enquanto os ofícios guardados não chegam da nuvem, avisa (em vez de parecer vazio), não deixa editar nem importar, e vai buscá-los já
-function ofEsperaUI(t){const sec=document.getElementById(t);let el=document.getElementById("ofEspera");
-  if(OF_SINC||RO){if(el)el.remove();return}
-  if(!OF_TRZ&&Date.now()-OF_TENT>15000)try{if(NUVOK()&&!nuvDesl())ofTrazerNuvem()}catch(e){}
-  if(!sec)return;if(!el){el=document.createElement("div");el.id="ofEspera";el.className="ay-aviso"}
-  el.style.cssText="margin:0 0 12px;padding:10px 14px;border-radius:10px;background:#EEF1F8;color:#2D3170;font-weight:600";
-  el.textContent="A trazer da nuvem os ofícios guardados… Assim que chegarem aparecem aqui e pode voltar a editar e importar.";
-  if(el.parentNode!==sec)sec.prepend(el)}
 
 // ================= Correspondência (início): números, filtros, lista e ficha =================
 function ofFiltrados(){const U=OF_UI,q=norm(U.q||""),hj=ofHoje();return OFI.reg.filter(r=>{

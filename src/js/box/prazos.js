@@ -59,13 +59,16 @@ const contar=L=>{const c={prazo:0,atraso:0,falta:0,pendente:0};for(const x of L)
 const AVLOG="boxcheck_avisos_log";
 let AVL=lsJ(AVLOG,[])||[];
 const avKeys=()=>new Set(AVL.map(x=>x.k));
+// 0.9.239: o registo só vai para a nuvem depois de juntar com o que lá está (senão perdiam-se registos e havia avisos reenviados)
+var AV_SINC=false;
 function avGuardar(){AVL=AVL.slice(-3000);try{localStorage.setItem(AVLOG,JSON.stringify(AVL))}catch(e){}
-  if(NUVOK()&&!nuvDesl())nuvemPut("avisos",AVL)}
+  if(NUVOK()&&!nuvDesl()){if(AV_SINC)nuvemPut("avisos",AVL);else avTrazerNuvem().then(()=>{if(AV_SINC)nuvemPut("avisos",AVL)})}}
 function avJuntar(arr){if(!Array.isArray(arr))return 0;const K=new Set(AVL.map(x=>x.k+"|"+x.t));let n=0;
   for(const x of arr)if(x&&x.k&&!K.has(x.k+"|"+x.t)){AVL.push(x);n++}
   if(n){AVL.sort((a,b)=>a.t-b.t);try{localStorage.setItem(AVLOG,JSON.stringify(AVL))}catch(e){}}return n}
 async function avTrazerNuvem(){if(!NUVOK()||nuvDesl())return;
-  try{const idx=(await (await nuvem("GET","")).json()).itens||{};if(!idx.avisos)return;const arr=await nuvemGet("avisos");avJuntar(arr)}catch(e){}}
+  try{const idx=(await (await nuvem("GET","")).json()).itens||{};if(!idx.avisos){AV_SINC=true;return}const arr=await nuvemGet("avisos");avJuntar(arr);AV_SINC=true;
+    const K=new Set((Array.isArray(arr)?arr:[]).map(x=>x&&x.k+"|"+x.t));if(AVL.some(x=>!K.has(x.k+"|"+x.t)))nuvemPut("avisos",AVL)}catch(e){}}
 // já enviado para este formador (ok) nesta ocorrência?
 const enviado=k=>AVL.some(x=>x.k===k&&x.ok);
 

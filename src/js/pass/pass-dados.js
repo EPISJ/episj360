@@ -54,11 +54,12 @@ function pwBloquear(silencio){const S=pwS();const ab=pwAberto();S.dek=null;S.dad
   if(ab&&!silencio)toast("Cofre do Pass360 fechado");if(curTab&&/^pw/.test(curTab))pwRender(curTab)}
 // nuvem: traz o cofre mais recente; se estiver aberto, junta as entradas (as duas versões, a mais recente de cada entrada)
 async function pwTrazerNuvem(){try{await pwCarregar();if(RO||!pwPode()||!NUVOK()||nuvDesl())return;const S=pwS();
-    const idx=(await(await nuvem("GET","")).json()).itens||{};S.chk=true;S.nuvemTem=!!idx.PW;
-    if(idx.PW&&(idx.PW.t||0)>((S.blob&&S.blob.t)||0)){const r=await nuvemGet("PW");if(!r||!r.wM)return;
+    const idx=(await(await nuvem("GET","")).json()).itens||{};const prim=!S.chk;S.nuvemTem=!!idx.PW;
+    // 0.9.239: na primeira leitura da sessão o cofre da nuvem manda (um cofre criado aqui antes disso nunca vai por cima do da escola)
+    if(idx.PW&&((idx.PW.t||0)>((S.blob&&S.blob.t)||0)||prim)){const r=await nuvemGet("PW");if(!r||!r.wM)return;S.chk=true;S.lido=true;
       if(pwAberto()){let d=null;try{d=r.ct?pwNorm(await pwDecifrar(S.dek,r)):{itens:[],del:{}}}catch(e){}
         if(d){const n=pwJuntar(S.dados,d);const muda=JSON.stringify(n.itens)!==JSON.stringify(d.itens);S.blob=Object.assign({},r);S.dados=n;try{await DB.put("kv","pw",S.blob)}catch(e){}if(muda)await pwGravar()}
         else{S.blob=r;try{await DB.put("kv","pw",r)}catch(e){}pwBloquear(true);toast("O cofre do Pass360 foi substituído noutro computador — volte a abri-lo")}}
       else{S.blob=r;try{await DB.put("kv","pw",r)}catch(e){}}
       if(curTab&&/^pw/.test(curTab))pwRender(curTab)}
-    else if(S.blob&&S.blob.ct&&(S.blob.t||0)>((idx.PW||{}).t||0))await nuvemPut("PW",S.blob,S.blob.t)}catch(e){}}
+    else{S.chk=true;S.lido=true;if(S.blob&&S.blob.ct&&(S.blob.t||0)>((idx.PW||{}).t||0))await nuvemPut("PW",S.blob,S.blob.t)}}catch(e){}}

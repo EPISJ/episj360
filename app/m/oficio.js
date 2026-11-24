@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.237 — ecrã do módulo «oficio», carregado quando é aberto */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.238 — ecrã do módulo «oficio», carregado quando é aberto */
 "use strict";
 // ===== src/js/oficio/oficio.js =====
 /* Ofício360 — ecrã do módulo (carregado só quando o Ofício360 é aberto; os dados estão em oficio/oficio-dados.js) */
@@ -21,10 +21,18 @@ function ofFormadores(){let P=[];try{P=(cfg.profs||[]).slice().sort(cmpProf).map
 function ofDataPT(s){return s?calDMA(s):"—"}
 function ofDataC(s){if(!s)return"";const[y,m,d]=String(s).split("-");return d&&m&&y?`${d}-${m}-${y}`:s}
 
-function ofRender(t){ofCarregar().then(()=>{try{ofDef();
+function ofRender(t){ofCarregar().then(()=>{try{ofDef();ofEsperaUI(t);
   document.querySelectorAll("[data-ofdir]").forEach(x=>x.disabled=!ofEd());
   if(t==="ofInicio")ofInicioUI();else if(t==="ofRedigir")ofRedUI();else if(t==="ofEnt")ofEntUI();else if(t==="ofLivro")ofLivUI();else if(t==="ofDef")ofDefUI()}
   catch(e){console.warn("Ofício360",e)}})}
+// 0.9.238: enquanto os ofícios guardados não chegam da nuvem, avisa (em vez de parecer vazio), não deixa editar nem importar, e vai buscá-los já
+function ofEsperaUI(t){const sec=document.getElementById(t);let el=document.getElementById("ofEspera");
+  if(OF_SINC||RO){if(el)el.remove();return}
+  if(!OF_TRZ&&Date.now()-OF_TENT>15000)try{if(NUVOK()&&!nuvDesl())ofTrazerNuvem()}catch(e){}
+  if(!sec)return;if(!el){el=document.createElement("div");el.id="ofEspera";el.className="ay-aviso"}
+  el.style.cssText="margin:0 0 12px;padding:10px 14px;border-radius:10px;background:#EEF1F8;color:#2D3170;font-weight:600";
+  el.textContent="A trazer da nuvem os ofícios guardados… Assim que chegarem aparecem aqui e pode voltar a editar e importar.";
+  if(el.parentNode!==sec)sec.prepend(el)}
 
 // ================= Correspondência (início): números, filtros, lista e ficha =================
 function ofFiltrados(){const U=OF_UI,q=norm(U.q||""),hj=ofHoje();return OFI.reg.filter(r=>{
@@ -56,7 +64,7 @@ function ofListaUI(){const L=ofFiltrados(),U=OF_UI,N=Math.min(L.length,U.n);
         <td class="fd-nw">${esc(calDM(r.data,{day:"numeric",month:"short",year:"numeric"}))}</td><td class="fd-cur"><span>${esc(ofQuem(r)||"—")}</span></td>
         <td>${esc(r.assunto||"(sem assunto)")}${nA?` <span class="of-clip" title="${nA} documento${nA===1?"":"s"}">${OF_ICO.clip}${nA>1?nA:""}</span>`:""}</td><td class="fd-nw">${esc(ofVia(r.via))}</td><td>${ofChip(r)}</td></tr>`}).join("")}</tbody></table></div>
       ${L.length>N?`<div style="text-align:center;margin-top:10px"><button class="b s" data-ofmais>Mostrar mais ${Math.min(150,L.length-N)} (de ${L.length-N})</button></div>`:""}`
-    :ofVz("carta",OFI.reg.length?"Nenhum ofício com estes filtros.":"Ainda não há ofícios registados."+(ofEd()?` Registe a primeira entrada, redija um ofício ou traga o livro de registo que já existe:<br><span class="row" style="gap:8px;justify-content:center;margin-top:10px"><label class="b imp">Importar livro de registo (Excel)<input type="file" accept=".xlsx,.xls,.csv,.ods" data-ofimpxls hidden></label></span>`:""))}
+    :ofVz("carta",OFI.reg.length?"Nenhum ofício com estes filtros.":!OF_SINC?"A trazer os ofícios guardados na nuvem…":"Ainda não há ofícios registados."+(ofEd()?` Registe a primeira entrada, redija um ofício ou traga o livro de registo que já existe:<br><span class="row" style="gap:8px;justify-content:center;margin-top:10px"><label class="b imp">Importar livro de registo (Excel)<input type="file" accept=".xlsx,.xls,.csv,.ods" data-ofimpxls hidden></label></span>`:""))}
 
 function ofFichaUI(){const r=ofSel(),el=$("#ofFicha");if(!el)return;
   if(!r){el.innerHTML=`<div class="card fd-fvz">${ofVz("carta","Escolha um ofício da lista para ver os dados, os documentos e o despacho.")}</div>`;return}

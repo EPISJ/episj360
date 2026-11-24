@@ -36,7 +36,8 @@ function ofDef(){if(!OFI.def)OFI.def=ofDef0();const d=OFI.def,z=ofDef0();for(con
   ["trat","classif","deps"].forEach(k=>{if(!Array.isArray(d[k]))d[k]=z[k]});return d}
 function ofDep(a){const A=String(a||"").trim().toUpperCase();return ofDef().deps.find(d=>String(d.a||"").toUpperCase()===A)||null}
 function ofDepNome(a){const d=ofDep(a);return d?d.n:(a||"")}
-function ofEd(){return!RO&&podePublicar()}
+// 0.9.238: só se edita depois de os ofícios guardados na nuvem estarem na memória (senão um ofício novo levava um n.º já dado e uma nova importação duplicava tudo)
+function ofEd(){return!RO&&podePublicar()&&OF_SINC}
 // ---------- guardar e nuvem (como o Folder360: nunca enviar antes da primeira leitura) ----------
 var OF_SINC=false;
 function ofGuardar(o){if(RO||LIMPAR)return;const t=Date.now();if(o){o.em=t;o.mod=String(EU&&EU.email||"")}OFI.t=t;DB.put("kv","oficio",OFI);clearTimeout(ofH);
@@ -45,7 +46,11 @@ function ofJuntar(a,b){const del=Object.assign({},b.del||{},a.del||{});
   const pick=(L1,L2)=>{const m=new Map();for(const x of(L2||[]).concat(L1||[]))if(x&&x.id&&!del[x.id]){const q=m.get(x.id);if(!q||(x.em||0)>=(q.em||0))m.set(x.id,x)}return[...m.values()]};
   const def=a.def&&b.def?((b.def.em||0)>(a.def.em||0)?b.def:a.def):(a.def||b.def||null);
   return{t:Math.max(a.t||0,b.t||0),reg:pick(a.reg,b.reg),ent:pick(a.ent,b.ent),def,del}}
-async function ofTrazerNuvem(){try{await ofCarregar();if(RO||!NUVOK()||nuvDesl())return;const idx=(await(await nuvem("GET","")).json()).itens||{};
+// 0.9.238: um só pedido de cada vez (o arranque e a abertura do módulo podem pedir ao mesmo tempo); quando fica pronto, redesenha o ecrã aberto
+var OF_TRZ=null,OF_TENT=0;
+function ofTrazerNuvem(){if(OF_TRZ)return OF_TRZ;OF_TENT=Date.now();const antes=OF_SINC;
+  return OF_TRZ=ofTrazerNuvem0().finally(()=>{OF_TRZ=null;if(!antes&&OF_SINC&&curTab&&/^of[A-Z]/.test(curTab))try{ofRender(curTab)}catch(e){}})}
+async function ofTrazerNuvem0(){try{await ofCarregar();if(RO||!NUVOK()||nuvDesl())return;const idx=(await(await nuvem("GET","")).json()).itens||{};
     if(idx.OF&&((idx.OF.t||0)>(OFI.t||0)||!OF_SINC)){const j=ofNorm(await nuvemGet("OF")),n=ofJuntar(OFI,j);OF_SINC=true;
       const sig=x=>x.reg.length+"|"+x.ent.length+"|"+Object.keys(x.del).length+"|"+Math.max(0,...x.reg.map(d=>d.em||0),...x.ent.map(d=>d.em||0));
       const dif=sig(n)!==sig(j)||JSON.stringify(n.def)!==JSON.stringify(j.def);

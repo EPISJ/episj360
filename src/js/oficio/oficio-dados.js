@@ -9,7 +9,7 @@
    · livro de registo em PDF e Excel; entidades (destinatários e remetentes) reutilizáveis.
    Dados na peça «OF» de g360_estado, só da Direção; juntam-se registo a registo (pela data da última alteração) e nunca se apagam
    sem o utilizador pedir. Os números já dados nunca mudam (um ofício anulado fica no livro, riscado). */
-var OF_COR="#ff7a59",OF_VER="1.0";
+var OF_COR="#ff7a59",OF_VER="1.1";
 var OFI=OFI||{t:0,reg:[],ent:[],def:null,del:{}};
 var OF_UI=OF_UI||{q:"",tipo:"",estado:"",via:"",ano:"",classif:"",sel:"",n:150,red:"",livAno:"",livTipo:"",entQ:"",entSel:""};
 var ofPronto,ofH;
@@ -18,7 +18,10 @@ var OF_VIAS=[{v:"carta",t:"Carta simples"},{v:"registada",t:"Carta registada"},{
   {v:"digital",t:"Plataforma digital"},{v:"mao",t:"Entregue em mão"},{v:"outro",t:"Outra via"}];
 var OF_EST={ent:[{v:"novo",t:"Por tratar",k:"wa"},{v:"tratar",t:"Em tratamento",k:"ok"},{v:"resp",t:"Respondido",k:"mu"},{v:"arq",t:"Arquivado",k:"mu"}],
   sai:[{v:"rasc",t:"Rascunho",k:"wa"},{v:"reg",t:"Registado",k:"ok"},{v:"env",t:"Enviado",k:"mu"},{v:"arq",t:"Arquivado",k:"mu"}]};
-function ofDef0(){return{em:0,prefE:"E",prefS:"S",dig:3,ciclo:"civil",prazo:10,local:"Velas",
+// 0.9.236: numeração das saídas igual à «Listagem de Ofícios» (Mod. DP333): «n.º/ABREVIATURA/ano» (001/PE/2026 … 154/RC/2026), número seguido no ano para todos os departamentos
+var OF_DEPS0=[{a:"DP",n:"Direção Pedagógica"},{a:"PE",n:"Presidência Executiva"},{a:"DAF",n:"Direção Administrativa e Financeira"},{a:"FOR",n:"Formadores"},{a:"RC",n:"Responsável de Curso"},
+  {a:"OE",n:"Orientador Educativo"},{a:"TIOP",n:"Técnico de Inserção e Orientação Profissional"},{a:"SA",n:"Serviços Administrativos"},{a:"SC",n:"Serviços Contabilísticos"}];
+function ofDef0(){return{em:0,prefE:"E",prefS:"S",dig:3,ciclo:"civil",prazo:10,local:"Velas",fmtS:"{n3}/{dep}/{ano}",depOm:"DP",deps:OF_DEPS0.map(d=>Object.assign({},d)),listUlt:null,
   trat:["Exmo. Senhor","Exma. Senhora","Exmos. Senhores","Ao Cuidado de"],
   classif:["Direção Regional","Fundos comunitários / FSE","Formadores","Formandos e encarregados de educação","Entidades de FCT e parceiros","Autarquias","Fornecedores","Outros"],
   fecho:"Com os melhores cumprimentos,",sigCargo:"O Diretor",sigNome:"",sigImg:null,
@@ -30,7 +33,9 @@ function ofNorm(v){const o=v&&typeof v==="object"?v:{},A=k=>Array.isArray(o[k])?
 function ofCarregar(){return ofPronto||(ofPronto=DB.get("kv","oficio").then(v=>{if(!RO){const n=ofNorm(v);if((n.t||0)>=(OFI.t||0))OFI=n}}).catch(()=>{}))}
 ofCarregar();
 function ofDef(){if(!OFI.def)OFI.def=ofDef0();const d=OFI.def,z=ofDef0();for(const k in z)if(d[k]===undefined||d[k]===null&&k!=="sigImg")d[k]=z[k];
-  ["trat","classif"].forEach(k=>{if(!Array.isArray(d[k]))d[k]=z[k]});return d}
+  ["trat","classif","deps"].forEach(k=>{if(!Array.isArray(d[k]))d[k]=z[k]});return d}
+function ofDep(a){const A=String(a||"").trim().toUpperCase();return ofDef().deps.find(d=>String(d.a||"").toUpperCase()===A)||null}
+function ofDepNome(a){const d=ofDep(a);return d?d.n:(a||"")}
 function ofEd(){return!RO&&podePublicar()}
 // ---------- guardar e nuvem (como o Folder360: nunca enviar antes da primeira leitura) ----------
 var OF_SINC=false;
@@ -54,7 +59,9 @@ function ofHoje(){return calS(new Date())}
 function ofCiclo(data){const d=String(data||ofHoje()),y=+d.slice(0,4)||new Date().getFullYear();if(ofDef().ciclo!=="letivo")return String(y);
   const m=+d.slice(5,7)||1;return m>=9?`${y}/${y+1}`:`${y-1}/${y}`}
 function ofProxN(tipo,ciclo){let m=0;for(const r of OFI.reg)if(r.tipo===tipo&&r.ciclo===ciclo&&+r.n>m)m=+r.n;return m+1}
-function ofNumTxt(r){if(!r||!r.n)return"";const D=ofDef(),p=r.tipo==="ent"?D.prefE:D.prefS;return `${p?p+"-":""}${String(r.n).padStart(+D.dig||3,"0")}/${r.ciclo}`}
+function ofNumTxt(r){if(!r||!r.n)return"";const D=ofDef();
+  if(r.tipo==="sai"&&D.fmtS)return String(D.fmtS).replace(/\{n3\}/g,String(r.n).padStart(+D.dig||3,"0")).replace(/\{n\}/g,String(r.n)).replace(/\{dep\}/g,String(r.dep||D.depOm||"").toUpperCase()).replace(/\{ano\}/g,r.ciclo);
+  const p=r.tipo==="ent"?D.prefE:D.prefS;return `${p?p+"-":""}${String(r.n).padStart(+D.dig||3,"0")}/${r.ciclo}`}
 function ofNumerar(r){if(r.n)return;r.ciclo=ofCiclo(r.data);r.n=ofProxN(r.tipo,r.ciclo);r.num=ofNumTxt(r)}
 function ofRepetido(r){return!!r.n&&OFI.reg.some(x=>x!==r&&x.tipo===r.tipo&&x.ciclo===r.ciclo&&+x.n===+r.n)}
 function ofEstado(r){return(OF_EST[r.tipo]||OF_EST.ent).find(e=>e.v===r.estado)||(OF_EST[r.tipo]||OF_EST.ent)[0]}

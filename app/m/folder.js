@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.235 — ecrã do módulo «folder», carregado quando é aberto */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.236 — ecrã do módulo «folder», carregado quando é aberto */
 "use strict";
 // ===== src/js/folder/fmp12.js =====
 /* ===================== Leitor de ficheiros FileMaker .fmp12 (0.9.234) =====================

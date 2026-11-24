@@ -374,12 +374,10 @@ if(curMod!=="boxcheck"){const M=MODULOS.find(x=>x.id===curMod);if(M)try{show(M.i
      if(RO){t=PUB&&PUB.t?"Só leitura · publicado a "+new Date(PUB.t).toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"}):"Só leitura";tit="Os dados são os que a Direção publicou; só a Direção os muda."} // 0.9.50
      const b=document.getElementById("subUp");if(b)b.hidden=!!RO}catch(e){}el.textContent=t;el.title=tit};
  window.__subEst=est;
- /* 0.9.180: quem tem a sessão aberta, à esquerda da barra (nome, email e perfil) */
- const usr=()=>{const el=document.getElementById("subUsr");if(!el)return;if(!EU||!EU.email){el.innerHTML="";return}
-   const em=String(EU.email),nm=String(EU.nome||"").trim()||(()=>{try{const p=(cfg.profs||[]).find(q=>profEmail(q)===em.toLowerCase());return p?p.nome:""}catch(e){return ""}})(),
-     pf=EU.admin?"Administrador":(PERFIL_CURTO[EU.perfil]||EU.perfil||""),ini=(nm||em).split(/[\s.@]+/).filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join(""),
-     k=em+"|"+nm+"|"+pf;if(el.dataset.k===k)return;el.dataset.k=k;
-   el.innerHTML=`<span class="av">${esc(ini)}</span><span class="tx"><b>${esc(nm||em)}</b><small>${nm?esc(em)+" · ":""}${esc(pf)}</small></span>`;el.title="Sessão iniciada como "+em;try{euFotoAplicar()}catch(e){}};
+ /* 0.9.242: à esquerda da barra, o nome do sistema (antes repetia quem tinha a sessão aberta, que já aparece na saudação e no menu) */
+ const usr=()=>{const el=document.getElementById("subUsr");if(!el)return;if(!EU||!EU.email){el.innerHTML="";el.dataset.k="";return}
+   const k="sgi|"+EU.email;if(el.dataset.k===k)return;el.dataset.k=k;
+   el.innerHTML=`<span class="tx sgi"><b>Sistema de Gestão de Informação</b><span class="sgi-sep"> - </span><span class="sgi-esc">Escola Profissional da Ilha de São Jorge</span></span>`;el.title="Sessão iniciada como "+EU.email};
  const est0=est;
  est0();usr();setInterval(()=>{est0();usr()},4000)}
 loginUI();

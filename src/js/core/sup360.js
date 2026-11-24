@@ -7,7 +7,7 @@
    - Título do separador do navegador e nome no ecrã principal do telemóvel: algarismos sobrescritos Unicode (³⁶⁰).
    - PDF: pdfTxt360() desenha o 360 mais pequeno e subido (rodapé de todos os documentos).
    Só `function`/`var` aqui (regra do arranque). */
-var S360_RE=/(EPISJ|Escola|ESCOLA|Box|BOX|Hor[aá]rios?|HOR[AÁ]RIOS?|Sala|SALA|Crono|CRONO|Social|SOCIAL|PAP|Pass|PASS|Folder|FOLDER|Econo|ECONO) ? ?360(?![\w@\/-]|\.[a-z])/g;
+var S360_RE=/(EPISJ|Escola|ESCOLA|Box|BOX|Hor[aá]rios?|HOR[AÁ]RIOS?|Sala|SALA|Crono|CRONO|Social|SOCIAL|PAP|Pass|PASS|Folder|FOLDER|Econo|ECONO|Of[ií]cio|OF[IÍ]CIO) ? ?360(?![\w@\/-]|\.[a-z])/g;
 var S360_SALTA={SCRIPT:1,STYLE:1,TEXTAREA:1,INPUT:1,SELECT:1,OPTION:1,CODE:1,PRE:1,NOSCRIPT:1,TITLE:1,SUP:1};
 var S360_OBS=null;
 function sup360Uni(t){return String(t||"").replace(S360_RE,"$1³⁶⁰")}

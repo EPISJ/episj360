@@ -1634,3 +1634,7 @@ b.sup360,i.sup360{font-style:normal}
 /* 0.9.242: barra de cima de cada ecrã — nome do sistema em vez de quem tem a sessão aberta */
 #subbar .subusr .tx.sgi{flex-direction:row;align-items:baseline;gap:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;font-size:13px;color:var(--muted)}
 #subbar .subusr .tx.sgi b{font-size:13px;font-weight:650;color:var(--ink);overflow:visible}
+
+/* 0.9.243: versões no rodapé em carrossel (uma de cada vez) */
+#fVers.fv-car{display:inline-block;transition:opacity .3s ease,transform .3s ease;cursor:default}
+#fVers.fv-fora{opacity:0;transform:translateY(3px)}

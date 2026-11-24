@@ -91,7 +91,7 @@ function nuvMS(){try{return !!(MSACC&&EU&&!EU.provisorio&&!RO&&(EU.admin||EU.per
 function nuvDesl(){try{return NUV.ativo===false&&!nuvSB()}catch(e){return false}}
 function NUVOK(){try{return nuvSB()||nuvMS()||!!(SES&&workerUrl())}catch(e){return false}}
 async function nuvemSincMS(){if(!nuvMS()&&!nuvSB())return;
-  try{await nuvemTrazer()}catch(e){}try{await avTrazerNuvem()}catch(e){}try{await rcTrazer(false)}catch(e){}try{await esTrazerNuvem()}catch(e){}try{await crTrazerNuvem()}catch(e){}try{await papTrazerNuvem()}catch(e){}try{await pwTrazerNuvem()}catch(e){}try{await foTrazerNuvem()}catch(e){}try{await ecoTrazerNuvem()}catch(e){}try{await h3TrazerNuvem()}catch(e){}try{await cpAnularTrazer()}catch(e){}try{await rpTrazer()}catch(e){}
+  try{await nuvemTrazer()}catch(e){}try{await avTrazerNuvem()}catch(e){}try{await rcTrazer(false)}catch(e){}try{await esTrazerNuvem()}catch(e){}try{await crTrazerNuvem()}catch(e){}try{await papTrazerNuvem()}catch(e){}try{await pwTrazerNuvem()}catch(e){}try{await foTrazerNuvem()}catch(e){}try{await ecoTrazerNuvem()}catch(e){}try{await ofTrazerNuvem()}catch(e){}try{await h3TrazerNuvem()}catch(e){}try{await cpAnularTrazer()}catch(e){}try{await rpTrazer()}catch(e){}
   try{guidePubAgendar()}catch(e){}nuvemUI()}
 async function nuvem(method,name,body,t){
   if(nuvSB()){const r=await sbNuvem(method,name,body,t);NUV.ativo=true;NUV.via="sb";if(method==="GET"&&!name)return nuvListaPos(r);return r}

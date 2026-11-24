@@ -159,7 +159,7 @@ function whoUI(){const n=EU.nome||EU.email,ini=n.split(/\s+/).filter(Boolean).ma
 async function sairLocais(){ // [peça na nuvem, rótulo, data da cópia local]
   const kv=async k=>{try{const v=await DB.get("kv",k);return v&&+v.t||0}catch(e){return 0}};
   return [["estado","Configuração da escola",cfgT()],["ES","Horários360",await kv("esched")],["CR","Crono360",await kv("crono")],["PAP","PAP360",await kv("pap")],
-    ["FD","Folder360",await kv("folder")],["EC","Econo360",await kv("econo")],["EF","Econo360 (faturas)",await kv("econofat")],["PW","Pass360",await kv("pw")],["H3","Horários360 (avisos e contactos)",await kv("h3")]]}
+    ["FD","Folder360",await kv("folder")],["OF","Ofício360",await kv("oficio")],["EC","Econo360",await kv("econo")],["EF","Econo360 (faturas)",await kv("econofat")],["PW","Pass360",await kv("pw")],["H3","Horários360 (avisos e contactos)",await kv("h3")]]}
 async function sairVerificar(msg){msg=msg||(()=>{});
   if(!navigator.onLine)return{ok:false,porque:"Este computador está sem Internet: não dá para confirmar que está tudo na nuvem."};
   let L=await sairLocais();
@@ -228,7 +228,7 @@ async function carregarPublico(){
   try{await esdPronto}catch(e){}
   ESD=Object.assign({t:0,porAno:{},copias:{},mapaT:{},mapaC:{},ligT:{},ligC:{}},j&&j.es||{});try{CR=crNorm(j&&j.cr);CR_CACHE.k=""}catch(e){}
   try{renderAnoTopo();refreshAll()}catch(e){console.warn(e)}aplicarPerfil();if(curTab==="mh")renderMh();try{window.__subEst&&window.__subEst()}catch(e){}}
-function sairSoLeitura(){RO=false;PUB=null;cfg=load()||defaultCfg();lastJSON=JSON.stringify(cfg);try{DB.get("kv","econo").then(v=>{ECO=ecoNorm(v);ecoCalcC=null}).catch(()=>{})}catch(e){}try{DB.get("kv","econofat").then(v=>{ECF=ecfNorm(v)}).catch(()=>{})}catch(e){}try{DB.get("kv","folder").then(v=>{FOL=foNorm(v);foIdxC=null}).catch(()=>{})}catch(e){}try{DB.get("kv","pap").then(v=>{PAP=papNorm(v)}).catch(()=>{})}catch(e){}try{DB.get("kv","crono").then(v=>{CR=crNorm(v);CR_CACHE.k=""}).catch(()=>{})}catch(e){}
+function sairSoLeitura(){RO=false;PUB=null;cfg=load()||defaultCfg();lastJSON=JSON.stringify(cfg);try{DB.get("kv","econo").then(v=>{ECO=ecoNorm(v);ecoCalcC=null}).catch(()=>{})}catch(e){}try{DB.get("kv","econofat").then(v=>{ECF=ecfNorm(v)}).catch(()=>{})}catch(e){}try{DB.get("kv","folder").then(v=>{FOL=foNorm(v);foIdxC=null}).catch(()=>{})}catch(e){}try{DB.get("kv","oficio").then(v=>{OFI=ofNorm(v)}).catch(()=>{})}catch(e){}try{DB.get("kv","pap").then(v=>{PAP=papNorm(v)}).catch(()=>{})}catch(e){}try{DB.get("kv","crono").then(v=>{CR=crNorm(v);CR_CACHE.k=""}).catch(()=>{})}catch(e){}
   DB.get("kv","esched").then(v=>{ESD=Object.assign({t:0,porAno:{},copias:{},mapaT:{},mapaC:{},ligT:{},ligC:{}},v&&typeof v==="object"?v:{})}).catch(()=>{});
   try{renderAnoTopo();refreshAll()}catch(e){}aplicarPerfil()}
 

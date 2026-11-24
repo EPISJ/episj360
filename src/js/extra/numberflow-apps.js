@@ -5,7 +5,7 @@
 (function(){
   const btn=document.getElementById("appsBtn"),pop=document.getElementById("appsPop");if(!btn||!pop)return;
   const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  const COR={escola:"#1d4ed8",boxcheck:"#0b72d9",eduschedule:"#7c3aed",roomcheck:"#16a34a",crono:"#0f8b8d",social:"#c13584",pap:"#a21caf",pass:"#475569",folder:"#8a5a2b",econo:"#a16207"};
+  const COR={escola:"#1d4ed8",boxcheck:"#0b72d9",eduschedule:"#7c3aed",roomcheck:"#16a34a",crono:"#0f8b8d",social:"#c13584",pap:"#a21caf",pass:"#475569",folder:"#8a5a2b",econo:"#a16207",oficio:"#c2410c"};
   const ICON=btn.querySelector("svg").outerHTML;
   const nome360=t=>esc(t).replace(/360$/,'<i class="sup360">360</i>');
   const vis=el=>el&&getComputedStyle(el).display!=="none"&&!el.hidden;

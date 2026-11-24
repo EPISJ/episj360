@@ -12,11 +12,11 @@ var MV_MQ="(max-width:760px), (pointer:coarse) and (max-height:500px) and (max-w
 // separadores principais de cada módulo (os primeiros que o perfil pode ver vão para a barra de baixo; o resto fica em «Mais»)
 var MV_PRIM={escola:["esc","tur","prof","for"],boxcheck:["box","meu","rel","est"],eduschedule:["esch","hsSem","mh","hsFor","hsVer"],roomcheck:["rcMapa","rcLista","rcEsp"],
   crono:["crPs","crCron","crAno","crHist"],social:["s3feed","s3cal","s3ap","s3inbox"],pap:["papInicio","papProva","papGrelha","papDocs"],pass:["pwCofre","pwGerar","pwSaude","pwDef"],
-  folder:["foInicio","foMapa","foMov","foConf"],econo:["ecoInicio","ecoFat","ecoMovs","ecoReq"]};
+  folder:["foInicio","foMapa","foMov","foConf"],econo:["ecoInicio","ecoFat","ecoMovs","ecoReq"],oficio:["ofInicio","ofRedigir","ofEnt","ofLivro"]};
 // nomes curtos para a barra de baixo (o título do ecrã usa sempre o nome completo)
 var MV_CURTO={esc:"Início",anos:"Anos",cal:"Calendário",pc:"Planos",dsd:"DSD",hsFor:"Formadores",mh:"O meu",hsVer:"Procurar",esch:"Editor",hsCom:"Comunicar",
   rcLista:"Reservas",crPs:"Situação",crCron:"Cronogr.",crAno:"Ano",crHist:"Histórico",crCump:"Ajustar",papInicio:"Provas",papProva:"Prova",papGrelha:"Grelhas",papDocs:"Documentos",papJuri:"Júri",
-  foInicio:"Arquivo",foMapa:"Mapa",foMov:"Requisições",foConf:"Conferir",foImp:"Etiquetas",foRel:"Relatórios",ecoInicio:"Artigos",ecoMovs:"Movimentos",ecoReq:"Requisições",ecoCompras:"Compras",ecoInv:"Inventário",
+  foInicio:"Arquivo",foMapa:"Mapa",foMov:"Requisições",foConf:"Conferir",foImp:"Etiquetas",foRel:"Relatórios",ofInicio:"Ofícios",ofRedigir:"Redigir",ofEnt:"Entidades",ofLivro:"Livro",ofDef:"Definições",ecoInicio:"Artigos",ecoMovs:"Movimentos",ecoReq:"Requisições",ecoCompras:"Compras",ecoInv:"Inventário",
   meu:"Entregas",est:"Números",rel:"Relatório",box:"Análise",alt:"Alterações",config:"Atribuições",s3feed:"Feed",s3cal:"Calendário",s3ap:"Aprovar",s3inbox:"Mensagens",s3media:"Media",s3an:"Análise",
   pwCofre:"Cofre",pwGerar:"Gerador",pwSaude:"Saúde",def:"Definições",pwDef:"Definições",crDef:"Definições",papDef:"Definições",foDef:"Definições",ecoDef:"Definições",s3def:"Definições"};
 // separadores «filhos» (no menu aparecem por baixo do pai): no telemóvel têm seta para voltar ao pai

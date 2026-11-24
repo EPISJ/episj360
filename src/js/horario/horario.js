@@ -353,7 +353,7 @@ renderAnoTopo();
 if(curMod!=="boxcheck"){const M=MODULOS.find(x=>x.id===curMod);if(M)try{show(M.inicio)}catch(e){console.error("EPISJ 360: não foi possível abrir "+M.nome+" no arranque",e)}} // 0.9.93: um módulo com erro nunca impede a entrada
 
 /* ---------- 0.10: menu e barra de cada módulo como no EduSchedule ---------- */
-{const SUB={econo:"economato da escola",folder:"arquivo físico dos dossiers",pass:"palavras-passe da escola",pap:"provas de aptidão profissional",social:"redes sociais",escola:"dados comuns da escola",eduschedule:"horários da escola",roomcheck:"reservas de espaços",boxcheck:"entregas na Box"};
+{const SUB={oficio:"ofícios recebidos e enviados",econo:"economato da escola",folder:"arquivo físico dos dossiers",pass:"palavras-passe da escola",pap:"provas de aptidão profissional",social:"redes sociais",escola:"dados comuns da escola",eduschedule:"horários da escola",roomcheck:"reservas de espaços",boxcheck:"entregas na Box"};
  document.querySelectorAll("#nav .mgrp").forEach(g=>{const h=g.querySelector(".mh");if(!h||h.querySelector(".msub"))return;const t=g.dataset.m?SUB[g.dataset.m]:"definições gerais";if(t)h.insertAdjacentHTML("beforeend",`<span class="msub">${t}</span>`)});
  const sb=document.createElement("div");sb.id="subbar";sb.innerHTML=`<span class="subusr" id="subUsr"></span><span class="sst" id="subSt"></span>`;const mn=document.querySelector("main");mn.insertBefore(sb,mn.firstChild);
  const u=document.querySelector(".top .undo"),f=document.querySelector(".top .fsz");if(u)sb.appendChild(u);if(f)sb.appendChild(f);

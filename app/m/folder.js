@@ -1,5 +1,97 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.233 — ecrã do módulo «folder», carregado quando é aberto */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.234 — ecrã do módulo «folder», carregado quando é aberto */
 "use strict";
+// ===== src/js/folder/fmp12.js =====
+/* ===================== Leitor de ficheiros FileMaker .fmp12 (0.9.234) =====================
+   Port em JavaScript do fmptools — Copyright (c) 2020 Evan Miller, licença MIT (https://github.com/evanmiller/fmptools):
+   setores de 4096 bytes, cadeia de blocos-folha, pedaços com caminhos (push/pop), texto em SCSU com XOR 0x5A.
+   Só leitura; corre no navegador sobre um ArrayBuffer (o ficheiro inteiro). */
+function fmpLer(buf){
+  const u8=new Uint8Array(buf),SS=4096,HL=20,MAG=[0,1,0,0,0,2,0,1,0,5,0,2,0,2,0xC0];
+  for(let i=0;i<MAG.length;i++)if(u8[i]!==MAG[i])throw new Error("Não é um ficheiro do FileMaker (.fmp12).");
+  const sig=String.fromCharCode(...u8.subarray(15,20));
+  if(sig==="HBAMe")throw new Error("Este ficheiro do FileMaker está cifrado (Encryption at Rest): abra-o no FileMaker e grave uma cópia sem cifra.");
+  if(sig!=="HBAM7")throw new Error("Versão do FileMaker não suportada (só .fmp12).");
+  const I2=o=>(u8[o]<<8)|u8[o+1],I4=o=>((u8[o]<<24)>>>0)+(u8[o+1]<<16)+(u8[o+2]<<8)+u8[o+3];
+  const nb=I4(SS+8);if(!nb||(nb+1)*SS!==u8.length)throw new Error("O ficheiro do FileMaker parece incompleto ou danificado.");
+  const off=i=>SS+i*SS; // bloco i (0 = primeiro, a seguir ao cabeçalho)
+  const lvl=i=>I2(off(i)+12),prev=i=>I4(off(i)+4),next=i=>I4(off(i)+8);
+  let first=2;for(let i=1;i<nb;i++)if(lvl(i)===0&&prev(i)===0){first=i+1;break}
+  // pedaços de um bloco: {t:tipo,c:código,r:ref,s:segmento,o:início,l:comprimento}  (t: S=dados simples, R=ref simples, L=ref longa, G=segmento, P=push, Q=pop)
+  function pedacos(bi){const base=off(bi)+HL,end=base+SS-HL,out=[];let p=base,pops=0;
+    while(p<end){let c=u8[p],k=null;if((c&0xC0)===0xC0){c&=0x3F;pops++}
+      if(c===0x00){p++;if(p>=end||u8[p]===0)break;k={t:"S",o:p,l:1};p+=1}
+      else if(c<=0x05){p++;const r=u8[p++],l=(c===1?1:0)+2*(c-1);k={t:"R",r,o:p,l};p+=l}
+      else if(c===0x06){p++;const r=u8[p++],l=u8[p++];k={t:"R",r,o:p,l};p+=l}
+      else if(c===0x07){p++;const s=u8[p++],l=I2(p);p+=2;k={t:"G",s,o:p,l};p+=l}
+      else if(c===0x08){p++;k={t:"S",o:p,l:2};p+=2}
+      else if(c===0x0E&&u8[p+1]===0xFF){p++;k={t:"S",o:p,l:6};p+=6}
+      else if(c<=0x0D){p++;const r=0x80+((u8[p]&0x7F)<<8)+u8[p+1];p+=2;const l=(c===9?1:0)+2*(c-9);k={t:"R",r,o:p,l,k2:1};p+=l}
+      else if(c===0x0E){p++;const r=0x80+((u8[p]&0x7F)<<8)+u8[p+1];p+=2;const l=u8[p++];k={t:"R",r,o:p,l,k2:1};p+=l}
+      else if(c===0x0F){p++;const s=0x80+((u8[p]&0x7F)<<8)+u8[p+1];p+=2;const l=I2(p);p+=2;k={t:"G",s,o:p,l,k2:1};p+=l}
+      else if(c===0x10){p++;k={t:"S",o:p,l:3};p+=3}
+      else if(c>=0x11&&c<=0x15){p++;const l=3+(c===0x11?1:0)+2*(c-0x11);k={t:"S",o:p,l};p+=l}
+      else if(c===0x16){p++;p+=3;const l=u8[p++];k={t:"L",o:p,l};p+=l}
+      else if(c===0x17){p++;p+=3;const l=I2(p);p+=2;k={t:"L",o:p,l};p+=l}
+      else if(c===0x18){p++;const l=u8[p++];k={t:"S",o:p,l};p+=l}
+      else if(c===0x1B&&!u8[p+1]){p+=2;const r=u8[p++];k={t:"R",r,o:p,l:4};p+=4}
+      else if(c>=0x19&&c<=0x1D){p++;const l=u8[p++];k={t:"S",o:p,l};p+=l+(c===0x19?1:0)+2*(c-0x19)}
+      else if(c===0x1E){p++;const rl=u8[p++];p+=rl;const l=u8[p++];k={t:"L",o:p,l};p+=l}
+      else if(c===0x1F){p++;const rl=u8[p++];p+=rl;const l=I2(p);p+=2;k={t:"L",o:p,l};p+=l}
+      else if(c===0x20){p++;if(u8[p]===0xFE){p++;k={t:"P",o:p,l:8};p+=8}else{k={t:"P",o:p,l:1};p+=1}}
+      else if(c===0x23){p++;const l=u8[p++];k={t:"S",o:p,l};p+=l}
+      else if(c===0x28){p++;k={t:"P",o:p,l:2};p+=2}
+      else if(c===0x30){p++;k={t:"P",o:p,l:3};p+=3}
+      else if(c===0x38){p++;const l=u8[p++];k={t:"P",o:p,l};p+=l}
+      else if(c===0x3D||c===0x40){p++;k={t:"Q"}}
+      else if(c===0x80||c===0x88){p++;continue}
+      else break; // código desconhecido: fica com o que já leu
+      k.c=c;out.push(k);while(pops){out.push({t:"Q"});pops--}}
+    return out}
+  const pv=k=>{if(!k)return 0;if(k.l===1)return u8[k.o];if(k.l===2)return 0x80+((u8[k.o]&0x7F)<<8)+u8[k.o+1];if(k.l===3)return 0x80+(u8[k.o+1]<<8)+u8[k.o+2];return 0};
+  // percorre a cadeia de folhas; f(pedaço, caminho) devolve "fim" para parar
+  function percorrer(f){const vis=new Uint8Array(nb+1);let b=first;
+    while(b&&b-1<nb&&!vis[b]){vis[b]=1;const path=[];
+      for(const k of pedacos(b-1)){if(k.t==="Q"){if(path.length)path.pop();continue}if(k.t==="P")path.push(k);if(f(k,path)==="fim")return}
+      b=next(b-1)}}
+  function texto(o,l){const a=new Uint8Array(l);for(let i=0;i<l;i++)a[i]=u8[o+i]^0x5A;return fmpScsu(a)}
+  function nomeChunk(k,path,nl){ // name_chunk do fmptools
+    if(path.length===nl)return k.t==="R"&&k.r===16?1:0;
+    if(path.length===nl+1&&pv(path[nl])===16){if(k.t==="R"&&k.r>=1)return k.r===1?1:2;if(k.t==="G"&&k.s>=1)return k.s===1?1:2}return 0}
+  function tabelas(){const T=[];percorrer((k,path)=>{if(pv(path[0])>3)return "fim";
+      if(path.length>=4&&pv(path[0])===3&&pv(path[1])===16&&pv(path[2])===5&&pv(path[3])>=128){const n=nomeChunk(k,path,4);if(!n)return;
+        const i=pv(path[3])-128;if(!i)return;const t=T[i]||(T[i]={i,nome:""});const s=texto(k.o,k.l);t.nome=n===1?s:t.nome+s}});
+    return T.filter(Boolean)}
+  // registos de uma tabela: [{campo:valor}] (texto; repetições separadas por \u001D)
+  function registos(ti){const cols=[],rows=new Map(),T=ti+128;let cur=null,lastRow=0,lastCol=0,raw=[];
+    const fecha=()=>{if(!cur)return;const r=rows.get(cur.row)||rows.set(cur.row,{}).get(cur.row),n=cols[cur.col]||("campo"+cur.col);
+      const tot=raw.reduce((s,x)=>s+x.length,0),a=new Uint8Array(tot);let o=0;for(const x of raw){a.set(x,o);o+=x.length}
+      for(let i=0;i<a.length;i++)a[i]^=0x5A;const v=fmpScsu(a);r[n]=r[n]!==undefined&&cur.long?r[n]+v:v;cur=null;raw=[]};
+    percorrer((k,path)=>{const p0=pv(path[0]);if(p0>T)return "fim";if(p0<T)return;if(k.t!=="R"&&k.t!=="G")return;
+      const d=path.length-1;
+      if(path.length>=4&&pv(path[1])===3&&pv(path[2])===5){const n=nomeChunk(k,path,4);if(n){const ci=pv(path[3]);if(ci){const s=texto(k.o,k.l);cols[ci]=n===1?s:(cols[ci]||"")+s}return}}
+      if((d===3||d===4)&&pv(path[1])===3&&pv(path[2])===5)return;
+      let ci=0,long=false;const row=pv(path[2]);
+      if(d===3&&pv(path[0])>=128&&pv(path[1])===5){const cp=path[path.length-1];ci=pv(cp);if(cp.l===2&&ci>=0x80&&!cols[ci])ci=(ci-0x80)>>8;
+        if(!ci||!(lastCol===0||ci<lastCol?row>lastRow:row===lastRow))return;if(k.t==="R"&&k.r===0)return;long=true}
+      else if(d===2&&pv(path[0])>=128&&pv(path[1])===5){if(k.t==="R"){if(k.r===252)return;ci=k.r}else ci=k.s;if(ci>=0x80&&k.k2&&!cols[ci])ci=(ci-0x80)>>8}
+      if(!ci||!cols[ci])return;
+      if(cur&&(ci!==cur.col||row!==cur.row))fecha();else if(cur&&!long)fecha();
+      if(!cur)cur={row,col:ci,long};raw.push(u8.slice(k.o,k.o+k.l));lastRow=row;lastCol=ci});
+    fecha();return{campos:cols.map((n,i)=>n?{i,n}:null).filter(Boolean),registos:[...rows.entries()].sort((a,b)=>a[0]-b[0]).map(x=>x[1])}}
+  return{tabelas,registos}}
+// SCSU → texto (como o convert_scsu_to_utf8 do fmptools)
+function fmpScsu(a){const SW=[0,0x80,0x100,0x300,0x2000,0x2080,0x2100,0x3000],DW=[0x80,0xC0,0x400,0x600,0x900,0x3040,0x30A0,0xFF00];
+  const OT=x=>x>0&&x<0x68?x*0x80:x<0xA8?x*0x80+0xAC00:x===0xF9?0xC0:x===0xFA?0x250:x===0xFB?0x370:x===0xFC?0x530:x===0xFD?0x3040:x===0xFE?0x30A0:x===0xFF?0xFF60:0;
+  let i=0,uni=0,sh=0,win=0,hs=0,last=0,s="";while(i<a.length&&a[i]===0x20)i++; // o fmptools tira os espaços do início
+  while(i<a.length){const c=a[i++];let u=0;
+    if(uni){if(c===0xF0){u=(a[i]<<8)|a[i+1];i+=2}else if(c>=0xE0&&c<=0xE7){win=c-0xE0;uni=0;continue}else if(c>=0xE8&&c<=0xEF){DW[win=c-0xE8]=OT(a[i++]);uni=0;continue}else if(c===0xF1){DW[win=(a[i]&0xE0)>>5]=0x10000+0x80*(((a[i]&0x1F)<<8)+a[i+1]);i+=2;uni=0;continue}else{u=(c<<8)|a[i++]}}
+    else if(sh){const w=sh-1;u=c<0x80?SW[w]+c:DW[w]+(c-0x80);sh=0}
+    else if(c===0x0F){uni=1;continue}else if(c===0x0E){u=(a[i]<<8)|a[i+1];i+=2}else if(c>=1&&c<=8){sh=c;continue}else if(c>=0x10&&c<=0x17){win=c-0x10;continue}
+    else if(c>=0x18&&c<=0x1F){DW[win=c-0x18]=OT(a[i++]);continue}else if(c===0x0B){DW[win=(a[i]&0xE0)>>5]=0x10000+0x80*(((a[i]&0x1F)<<8)+a[i+1]);i+=2;continue}
+    else if(c===0x09)u=32;else if(c===0x0A&&last===0x0D){last=c;continue}else if(c===0x0A||c===0x0D)u=10;else if(c>=0x20&&c<=0x7F)u=c;else if(c>=0x80)u=DW[win]+(c-0x80);else u=0xFFFD;
+    if(u>=0xDC00&&u<=0xDFFF)u=0x10000+(hs<<10)+(u&0x3FF);else if(u>=0xD800&&u<=0xDBFF){hs=u&0x3FF;continue}hs=0;
+    if(u>0)s+=String.fromCodePoint(u);last=u}
+  return s}
 // ===== src/js/folder/folder.js =====
 /* Folder360 — ecrã do módulo (carregado só quando o Folder360 é aberto; os dados estão em folder/folder-dados.js) */
 // ---------- Code 128 (conjuntos B e C) ----------
@@ -75,7 +167,7 @@ function foListaUI(){const L=foFiltrados(),U=FO_UI,nm=Object.keys(U.marc).filter
   $("#foLista").innerHTML=L.length?`<div class="tw"><table class="rt fd-t"><thead><tr><th style="width:30px"><input type="checkbox" data-fdtodos${todos?" checked":""} aria-label="Selecionar todos"></th><th>Código</th><th>Curso</th><th>Dossier</th><th>Vol.</th><th>Ano letivo</th><th>Estado</th></tr></thead><tbody>${L.slice(0,N).map(d=>{const e=foEstado(d),r=foRepetido(d);
       return `<tr data-fd="${d.id}" class="${U.sel===d.id?"on":""}"><td><input type="checkbox" data-fdmarc${U.marc[d.id]?" checked":""} aria-label="Selecionar"></td><td class="fd-cod">${esc(foCod(d))}</td><td class="fd-cur"><span title="${esc(foCursoCurto(d))}">${esc(foCursoCurto(d))}</span></td><td>${esc(d.tit||"")}${d.princ?' <span class="pp-chip mu" title="Dossier principal">principal</span>':""}</td><td class="fd-nw">${esc(foVolTxt(d))}</td><td class="fd-nw">${esc(d.ano||"")}${d.anoCur?`<br><span class="hint" style="margin:0">${esc(d.anoCur)}</span>`:""}</td><td>${e.k==="ok"?"":foChip(e)}${r?' <span class="pp-chip ba" title="Há outro dossier com o mesmo código (o mesmo sítio)">repetido</span>':""}</td></tr>`}).join("")}</tbody></table></div>
       ${L.length>N?`<div style="text-align:center;margin-top:10px"><button class="b s" data-fdmais>Mostrar mais ${Math.min(150,L.length-N)} (de ${L.length-N})</button></div>`:""}`
-    :foVz("pasta",FOL.dossiers.length?"Nenhum dossier com estes filtros.":"Ainda não há dossiers no arquivo."+(foEd()?` Carregue em «Novo dossier» ou traga os dossiers do FileMaker:<br><label class="b imp" style="margin-top:10px">Importar cópia (.json)<input type="file" accept=".json,application/json" data-foimp hidden></label><div id="foImpMsg"></div>`:""))}
+    :foVz("pasta",FOL.dossiers.length?"Nenhum dossier com estes filtros.":"Ainda não há dossiers no arquivo."+(foEd()?` Carregue em «Novo dossier» ou traga os dossiers do FileMaker:<br><span class="row" style="gap:8px;justify-content:center;margin-top:10px"><label class="b imp">Importar do FileMaker (.fmp12)<input type="file" accept=".fmp12" data-foimpfm hidden></label><label class="b imp">Importar cópia (.json)<input type="file" accept=".json,application/json" data-foimp hidden></label></span><div id="foImpMsg"></div>`:""))}
 function foSel(){return FOL.dossiers.find(d=>d.id===FO_UI.sel)||null}
 function foFichaUI(){const d=foSel(),el=$("#foFicha");if(!el)return;
   if(!d){el.innerHTML=`<div class="card fd-fvz">${foVz("pasta","Escolha um dossier da lista para ver onde está, mudar os dados ou imprimir a lombada.")}</div>`;return}
@@ -434,7 +526,7 @@ function foRelUI(){const D=FOL.dossiers,arqs=foUniq(foDef().arqs.map(a=>a.cod).c
       ${nm?`<button class="b s" data-fdrel="marc">Só os ${nm} selecionados</button>`:""}<button class="b" data-fdrel="arqs">Criar o relatório</button></div></div>
     <div class="card"><h2>Lista de conferência</h2><p class="hint">Para conferir o arquivo em papel: uma linha por dossier, pela ordem das prateleiras, com um quadrado para marcar e espaço para observações. Para conferir com o leitor de códigos, use a <a href="#" data-fdir="foConf">Conferência</a>.</p>
       <div class="row" style="gap:10px"><span class="grow"></span><button class="b" data-fdrel="lista">Criar a lista</button></div></div>
-    <div class="card"><h2>Exportar e importar</h2><p class="hint">O Excel leva todos os dossiers, com todos os campos, o estado e quem os tem. A cópia de segurança (.json) leva tudo o que está no Folder360 e pode voltar a ser importada: junta-se ao que já existe, nada é apagado (em cada dossier fica a versão alterada mais recentemente).</p><div class="row" style="gap:10px"><span class="grow"></span><button class="b s" data-fdrel="xls">Excel (.xlsx)</button><button class="b s" data-fdrel="json">Cópia de segurança (.json)</button>${foEd()?`<label class="b imp" title="Traz uma cópia do Folder360 (.json), por exemplo a dos dossiers do FileMaker. Junta-se ao que já existe, nada é apagado.">Importar cópia (.json)<input type="file" accept=".json,application/json" data-foimp hidden></label>`:""}</div><div id="foImpMsg"></div></div>`}
+    <div class="card"><h2>Exportar e importar</h2><p class="hint">O Excel leva todos os dossiers, com todos os campos, o estado e quem os tem. A cópia de segurança (.json) leva tudo o que está no Folder360 e pode voltar a ser importada: junta-se ao que já existe, nada é apagado (em cada dossier fica a versão alterada mais recentemente).</p><div class="row" style="gap:10px"><span class="grow"></span><button class="b s" data-fdrel="xls">Excel (.xlsx)</button><button class="b s" data-fdrel="json">Cópia de segurança (.json)</button>${foEd()?`<label class="b imp" title="Traz uma cópia do Folder360 (.json), por exemplo a dos dossiers do FileMaker. Junta-se ao que já existe, nada é apagado.">Importar cópia (.json)<input type="file" accept=".json,application/json" data-foimp hidden></label><label class="b imp" title="Lê diretamente o ficheiro do FileMaker (dbGUIDE-DTP.fmp12): entram os dossiers e os cursos que ainda não estão no Folder360. Nada é apagado nem substituído.">Importar do FileMaker (.fmp12)<input type="file" accept=".fmp12" data-foimpfm hidden></label>`:""}</div><div id="foImpMsg"></div></div>`}
 (function(){const S=document.getElementById("foRel");if(!S)return;
   S.addEventListener("change",e=>{if(e.target.dataset.fdra)FO_UI.relArqs[e.target.dataset.fdra]=e.target.checked});
   S.addEventListener("click",e=>{const a=e.target.closest("[data-fdir]");if(a){e.preventDefault();show(a.dataset.fdir);return}const b=e.target.closest("[data-fdrel]");if(!b)return;const k=b.dataset.fdrel,sel=FOL.dossiers.filter(d=>FO_UI.relArqs[d.arq]);
@@ -449,6 +541,49 @@ async function foImportar(fl){if(!foEd()||!fl)return;try{const j=JSON.parse(awai
     toast(m);if(curTab)foRender(curTab);setTimeout(()=>escLinhaMsg("#foImpMsg",m,"ok"),60)}
   catch(e){escLinhaMsg("#foImpMsg","Não foi possível ler esse ficheiro ("+esc(e.message||e)+").","bad")}}
 document.querySelectorAll("#foInicio,#foRel").forEach(S=>S.addEventListener("change",e=>{const x=e.target.closest("[data-foimp]");if(x&&x.files&&x.files[0]){foImportar(x.files[0]);x.value=""}}));
+// ----- 0.9.234: Importar diretamente do FileMaker (.fmp12) — leitor em fmp12.js -----
+// Entram os dossiers e os cursos que ainda não existem; os que já estão no Folder360 (mesmo identificador do FileMaker ou
+// mesmo sítio + ano + título + volume) ficam como estão — nada é apagado nem substituído. O Património fica de fora (decisão do diretor).
+function foFmData(s){const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/.exec(String(s||"").trim());return m?new Date(+m[3],+m[2]-1,+m[1],+(m[4]||0),+(m[5]||0),+(m[6]||0)).getTime():0}
+function foFmChave(d){return norm([d.arq,d.arm,d.prat,String(d.ns||"").replace(/^0+/,""),d.ano,d.tit,d.vol||"1"].join("|"))}
+async function foImportarFM(fl){if(!foEd()||!fl)return;const msg=(t,k)=>escLinhaMsg("#foImpMsg",t,k);
+  try{msg(`A ler ${esc(fl.name)} (${Math.round(fl.size/1048576)} MB)…`,"info");await new Promise(r=>setTimeout(r,30));
+    if(typeof FO_SINC!=="undefined"&&!FO_SINC)try{await foTrazerNuvem()}catch(e){} // comparar com o que está mesmo na nuvem
+    const f=fmpLer(await fl.arrayBuffer());await new Promise(r=>setTimeout(r,0));
+    const T=f.tabelas(),tD=T.find(t=>norm(t.nome)==="dossiers"),tC=T.find(t=>norm(t.nome)==="cursos");
+    if(!tD){msg("Esse ficheiro do FileMaker não tem a tabela «Dossiers» (é o dbGUIDE-DTP?).","bad");return}
+    const D=f.registos(tD.i).registos,C=tC?f.registos(tC.i).registos:[];
+    const vale=v=>{v=String(v??"").trim();return /^-+$/.test(v)?"":v};
+    // cursos
+    const cPorNome=new Map(FOL.cursos.map(c=>[norm(c.nome),c]));let nC=0;const mapaC=new Map(),NCU=[];
+    for(const r of C){const num=vale(r["NúmeroCurso"]),des=vale(r["Designação"]),nome=vale(r.NomeCurso)||(num?num+" - "+des:des);if(!nome)continue;mapaC.set(norm(nome),{nome,num});
+      if(cPorNome.has(norm(nome)))continue;const c={id:"fm-"+(r.PrimaryKey||uid()),num,des:des||nome,nome,cr:foFmData(r.CreationTimestamp)||Date.now(),em:foFmData(r.ModificationTimestamp)||Date.now(),origem:"filemaker"};
+      NCU.push(c);cPorNome.set(norm(nome),c);nC++}
+    // dossiers
+    const ids=new Set(FOL.dossiers.map(d=>d.id)),pks=new Set(FOL.dossiers.map(d=>d.fmPk).filter(Boolean)),chaves=new Set(FOL.dossiers.map(foFmChave)),idsTxt=FOL.dossiers.map(d=>String(d.id)).join("\n");
+    const criados=new Set(FOL.dossiers.filter(d=>d.cr).map(d=>Math.round(d.cr/1000)+"|"+norm(d.tit))),cbs=new Set(FOL.dossiers.filter(d=>d.cbAntigo).map(d=>norm(d.cbAntigo+"|"+d.ano+"|"+d.tit+"|"+(d.vol||"1")))); // o mesmo registo, mesmo que já tenha mudado de sítio na app
+    let novos=0,ja=0;const NOV=[];const E=foDef(),arqs=new Map(E.arqs.map(a=>[a.cod,a]));let defMud=false;
+    for(const r of D){const pk=vale(r.PrimaryKey),curso=vale(r.Curso),cc=mapaC.get(norm(curso));
+      const d={id:pk?"fm-"+pk:uid()+uid(),fmPk:pk,arq:vale(r["Localização"]),arm:vale(r["Armário"]),prat:vale(r.Prateleira),ns:vale(r["NúmeroSérie"]),ano:vale(r.AnoLetivo),anoCur:vale(r.AnoCurricular),
+        curso,cursoNum:foNumCurso(cc&&cc.num?cc.num:curso),tit:vale(r["Título"]),vol:vale(r.Volume)||"1",volT:vale(r.TotalVolume)||"1",proj:vale(r["NúmeroProjeto"]),fin:vale(r.FSE),tipo:vale(r.Tipo)||"Tecnicopedagógico",
+        princ:vale(r.Principal)==="Sim",url:vale(r.URL),obs:"",cbAntigo:vale(r.BARCODENUMBER),cr:foFmData(r.CreationTimestamp)||Date.now(),por:vale(r.CreatedBy),em:foFmData(r.ModificationTimestamp)||Date.now(),mod:vale(r.ModifiedBy),origem:"filemaker"};
+      if(ids.has(d.id)||ids.has(pk)||(pk&&(pks.has(pk)||idsTxt.includes(pk)))||chaves.has(foFmChave(d))||criados.has(Math.round(d.cr/1000)+"|"+norm(d.tit))||(d.cbAntigo&&cbs.has(norm(d.cbAntigo+"|"+d.ano+"|"+d.tit+"|"+d.vol)))){ja++;continue}
+      NOV.push(d);ids.add(d.id);chaves.add(foFmChave(d));novos++}
+    // 0.9.234: confirmar antes de juntar (para se ver logo se o número de novos não faz sentido)
+    if(novos&&!confirm(`O ficheiro do FileMaker tem ${D.length} dossiers: ${ja} já estão no Folder360 e ${novos} ${novos===1?"é novo":"são novos"}.${nC?`\nHá também ${nC} curso${nC===1?"":"s"} novo${nC===1?"":"s"}.`:""}\n\nJuntar os novos ao Folder360? (Nada é apagado nem substituído.)`)){
+      msg("Importação cancelada: nada foi alterado.","info");return}
+    if(!novos&&nC&&!confirm(`Os dossiers do FileMaker já estão todos no Folder360, mas há ${nC} curso${nC===1?"":"s"} novo${nC===1?"":"s"}. Juntá-lo${nC===1?"":"s"}?`)){msg("Importação cancelada: nada foi alterado.","info");return}
+    FOL.dossiers.push(...NOV);FOL.cursos.push(...NCU);
+    for(const d of NOV){if(d.arq){let a=arqs.get(d.arq);if(!a){a={cod:d.arq,nome:"",arms:"",prats:""};E.arqs.push(a);arqs.set(d.arq,a);defMud=true}
+        for(const [k,v] of [["arms",d.arm],["prats",d.prat]])if(v&&!foLista(a[k]).includes(v)){a[k]=foLista(a[k]).concat(v).join(",");defMud=true}}
+      if(d.fin&&!E.fins.some(x=>norm(x.n)===norm(d.fin))){E.fins.push({n:d.fin,logo:null});defMud=true}}
+    if(defMud)E.em=Date.now();
+    if(novos||nC||defMud){foIdxC=null;foGuardar()}
+    const m=novos||nC?`Importado do FileMaker: ${novos} dossier${novos===1?"":"s"} novo${novos===1?"":"s"}${nC?` e ${nC} curso${nC===1?"":"s"}`:""}${ja?` (${ja} já estavam no Folder360 e ficaram como estavam)`:""}. Agora há ${FOL.dossiers.length} dossiers.`
+      :`Nada de novo: os ${ja} dossiers do FileMaker já estão todos no Folder360 (ficaram como estavam).`;
+    toast(m);if(curTab)foRender(curTab);setTimeout(()=>msg(esc(m),"ok"),60)}
+  catch(e){msg("Não foi possível ler esse ficheiro do FileMaker ("+esc(e.message||e)+").","bad")}}
+document.querySelectorAll("#foInicio,#foRel").forEach(S=>S.addEventListener("change",e=>{const x=e.target.closest("[data-foimpfm]");if(x&&x.files&&x.files[0]){foImportarFM(x.files[0]);x.value=""}}));
 // ----- Definições -----
 function foDefUI(){const E=foDef(),ed=foEd(),dis=ed?"":"disabled",{m,r}=pdfLogos();
   const lst=(k,t,h)=>`<label class="w2">${t}<textarea data-fdlst="${k}" rows="3" ${dis}>${esc(E[k].join("\n"))}</textarea>${h?`<small class="hint">${h}</small>`:""}</label>`;

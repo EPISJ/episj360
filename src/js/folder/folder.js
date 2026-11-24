@@ -72,7 +72,7 @@ function foListaUI(){const L=foFiltrados(),U=FO_UI,nm=Object.keys(U.marc).filter
   $("#foLista").innerHTML=L.length?`<div class="tw"><table class="rt fd-t"><thead><tr><th style="width:30px"><input type="checkbox" data-fdtodos${todos?" checked":""} aria-label="Selecionar todos"></th><th>Código</th><th>Curso</th><th>Dossier</th><th>Vol.</th><th>Ano letivo</th><th>Estado</th></tr></thead><tbody>${L.slice(0,N).map(d=>{const e=foEstado(d),r=foRepetido(d);
       return `<tr data-fd="${d.id}" class="${U.sel===d.id?"on":""}"><td><input type="checkbox" data-fdmarc${U.marc[d.id]?" checked":""} aria-label="Selecionar"></td><td class="fd-cod">${esc(foCod(d))}</td><td class="fd-cur"><span title="${esc(foCursoCurto(d))}">${esc(foCursoCurto(d))}</span></td><td>${esc(d.tit||"")}${d.princ?' <span class="pp-chip mu" title="Dossier principal">principal</span>':""}</td><td class="fd-nw">${esc(foVolTxt(d))}</td><td class="fd-nw">${esc(d.ano||"")}${d.anoCur?`<br><span class="hint" style="margin:0">${esc(d.anoCur)}</span>`:""}</td><td>${e.k==="ok"?"":foChip(e)}${r?' <span class="pp-chip ba" title="Há outro dossier com o mesmo código (o mesmo sítio)">repetido</span>':""}</td></tr>`}).join("")}</tbody></table></div>
       ${L.length>N?`<div style="text-align:center;margin-top:10px"><button class="b s" data-fdmais>Mostrar mais ${Math.min(150,L.length-N)} (de ${L.length-N})</button></div>`:""}`
-    :foVz("pasta",FOL.dossiers.length?"Nenhum dossier com estes filtros.":"Ainda não há dossiers no arquivo."+(foEd()?` Carregue em «Novo dossier» ou traga os dossiers do FileMaker:<br><label class="b imp" style="margin-top:10px">Importar cópia (.json)<input type="file" accept=".json,application/json" data-foimp hidden></label><div id="foImpMsg"></div>`:""))}
+    :foVz("pasta",FOL.dossiers.length?"Nenhum dossier com estes filtros.":"Ainda não há dossiers no arquivo."+(foEd()?` Carregue em «Novo dossier» ou traga os dossiers do FileMaker:<br><span class="row" style="gap:8px;justify-content:center;margin-top:10px"><label class="b imp">Importar do FileMaker (.fmp12)<input type="file" accept=".fmp12" data-foimpfm hidden></label><label class="b imp">Importar cópia (.json)<input type="file" accept=".json,application/json" data-foimp hidden></label></span><div id="foImpMsg"></div>`:""))}
 function foSel(){return FOL.dossiers.find(d=>d.id===FO_UI.sel)||null}
 function foFichaUI(){const d=foSel(),el=$("#foFicha");if(!el)return;
   if(!d){el.innerHTML=`<div class="card fd-fvz">${foVz("pasta","Escolha um dossier da lista para ver onde está, mudar os dados ou imprimir a lombada.")}</div>`;return}
@@ -431,7 +431,7 @@ function foRelUI(){const D=FOL.dossiers,arqs=foUniq(foDef().arqs.map(a=>a.cod).c
       ${nm?`<button class="b s" data-fdrel="marc">Só os ${nm} selecionados</button>`:""}<button class="b" data-fdrel="arqs">Criar o relatório</button></div></div>
     <div class="card"><h2>Lista de conferência</h2><p class="hint">Para conferir o arquivo em papel: uma linha por dossier, pela ordem das prateleiras, com um quadrado para marcar e espaço para observações. Para conferir com o leitor de códigos, use a <a href="#" data-fdir="foConf">Conferência</a>.</p>
       <div class="row" style="gap:10px"><span class="grow"></span><button class="b" data-fdrel="lista">Criar a lista</button></div></div>
-    <div class="card"><h2>Exportar e importar</h2><p class="hint">O Excel leva todos os dossiers, com todos os campos, o estado e quem os tem. A cópia de segurança (.json) leva tudo o que está no Folder360 e pode voltar a ser importada: junta-se ao que já existe, nada é apagado (em cada dossier fica a versão alterada mais recentemente).</p><div class="row" style="gap:10px"><span class="grow"></span><button class="b s" data-fdrel="xls">Excel (.xlsx)</button><button class="b s" data-fdrel="json">Cópia de segurança (.json)</button>${foEd()?`<label class="b imp" title="Traz uma cópia do Folder360 (.json), por exemplo a dos dossiers do FileMaker. Junta-se ao que já existe, nada é apagado.">Importar cópia (.json)<input type="file" accept=".json,application/json" data-foimp hidden></label>`:""}</div><div id="foImpMsg"></div></div>`}
+    <div class="card"><h2>Exportar e importar</h2><p class="hint">O Excel leva todos os dossiers, com todos os campos, o estado e quem os tem. A cópia de segurança (.json) leva tudo o que está no Folder360 e pode voltar a ser importada: junta-se ao que já existe, nada é apagado (em cada dossier fica a versão alterada mais recentemente).</p><div class="row" style="gap:10px"><span class="grow"></span><button class="b s" data-fdrel="xls">Excel (.xlsx)</button><button class="b s" data-fdrel="json">Cópia de segurança (.json)</button>${foEd()?`<label class="b imp" title="Traz uma cópia do Folder360 (.json), por exemplo a dos dossiers do FileMaker. Junta-se ao que já existe, nada é apagado.">Importar cópia (.json)<input type="file" accept=".json,application/json" data-foimp hidden></label><label class="b imp" title="Lê diretamente o ficheiro do FileMaker (dbGUIDE-DTP.fmp12): entram os dossiers e os cursos que ainda não estão no Folder360. Nada é apagado nem substituído.">Importar do FileMaker (.fmp12)<input type="file" accept=".fmp12" data-foimpfm hidden></label>`:""}</div><div id="foImpMsg"></div></div>`}
 (function(){const S=document.getElementById("foRel");if(!S)return;
   S.addEventListener("change",e=>{if(e.target.dataset.fdra)FO_UI.relArqs[e.target.dataset.fdra]=e.target.checked});
   S.addEventListener("click",e=>{const a=e.target.closest("[data-fdir]");if(a){e.preventDefault();show(a.dataset.fdir);return}const b=e.target.closest("[data-fdrel]");if(!b)return;const k=b.dataset.fdrel,sel=FOL.dossiers.filter(d=>FO_UI.relArqs[d.arq]);
@@ -446,6 +446,49 @@ async function foImportar(fl){if(!foEd()||!fl)return;try{const j=JSON.parse(awai
     toast(m);if(curTab)foRender(curTab);setTimeout(()=>escLinhaMsg("#foImpMsg",m,"ok"),60)}
   catch(e){escLinhaMsg("#foImpMsg","Não foi possível ler esse ficheiro ("+esc(e.message||e)+").","bad")}}
 document.querySelectorAll("#foInicio,#foRel").forEach(S=>S.addEventListener("change",e=>{const x=e.target.closest("[data-foimp]");if(x&&x.files&&x.files[0]){foImportar(x.files[0]);x.value=""}}));
+// ----- 0.9.234: Importar diretamente do FileMaker (.fmp12) — leitor em fmp12.js -----
+// Entram os dossiers e os cursos que ainda não existem; os que já estão no Folder360 (mesmo identificador do FileMaker ou
+// mesmo sítio + ano + título + volume) ficam como estão — nada é apagado nem substituído. O Património fica de fora (decisão do diretor).
+function foFmData(s){const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/.exec(String(s||"").trim());return m?new Date(+m[3],+m[2]-1,+m[1],+(m[4]||0),+(m[5]||0),+(m[6]||0)).getTime():0}
+function foFmChave(d){return norm([d.arq,d.arm,d.prat,String(d.ns||"").replace(/^0+/,""),d.ano,d.tit,d.vol||"1"].join("|"))}
+async function foImportarFM(fl){if(!foEd()||!fl)return;const msg=(t,k)=>escLinhaMsg("#foImpMsg",t,k);
+  try{msg(`A ler ${esc(fl.name)} (${Math.round(fl.size/1048576)} MB)…`,"info");await new Promise(r=>setTimeout(r,30));
+    if(typeof FO_SINC!=="undefined"&&!FO_SINC)try{await foTrazerNuvem()}catch(e){} // comparar com o que está mesmo na nuvem
+    const f=fmpLer(await fl.arrayBuffer());await new Promise(r=>setTimeout(r,0));
+    const T=f.tabelas(),tD=T.find(t=>norm(t.nome)==="dossiers"),tC=T.find(t=>norm(t.nome)==="cursos");
+    if(!tD){msg("Esse ficheiro do FileMaker não tem a tabela «Dossiers» (é o dbGUIDE-DTP?).","bad");return}
+    const D=f.registos(tD.i).registos,C=tC?f.registos(tC.i).registos:[];
+    const vale=v=>{v=String(v??"").trim();return /^-+$/.test(v)?"":v};
+    // cursos
+    const cPorNome=new Map(FOL.cursos.map(c=>[norm(c.nome),c]));let nC=0;const mapaC=new Map(),NCU=[];
+    for(const r of C){const num=vale(r["NúmeroCurso"]),des=vale(r["Designação"]),nome=vale(r.NomeCurso)||(num?num+" - "+des:des);if(!nome)continue;mapaC.set(norm(nome),{nome,num});
+      if(cPorNome.has(norm(nome)))continue;const c={id:"fm-"+(r.PrimaryKey||uid()),num,des:des||nome,nome,cr:foFmData(r.CreationTimestamp)||Date.now(),em:foFmData(r.ModificationTimestamp)||Date.now(),origem:"filemaker"};
+      NCU.push(c);cPorNome.set(norm(nome),c);nC++}
+    // dossiers
+    const ids=new Set(FOL.dossiers.map(d=>d.id)),pks=new Set(FOL.dossiers.map(d=>d.fmPk).filter(Boolean)),chaves=new Set(FOL.dossiers.map(foFmChave)),idsTxt=FOL.dossiers.map(d=>String(d.id)).join("\n");
+    const criados=new Set(FOL.dossiers.filter(d=>d.cr).map(d=>Math.round(d.cr/1000)+"|"+norm(d.tit))),cbs=new Set(FOL.dossiers.filter(d=>d.cbAntigo).map(d=>norm(d.cbAntigo+"|"+d.ano+"|"+d.tit+"|"+(d.vol||"1")))); // o mesmo registo, mesmo que já tenha mudado de sítio na app
+    let novos=0,ja=0;const NOV=[];const E=foDef(),arqs=new Map(E.arqs.map(a=>[a.cod,a]));let defMud=false;
+    for(const r of D){const pk=vale(r.PrimaryKey),curso=vale(r.Curso),cc=mapaC.get(norm(curso));
+      const d={id:pk?"fm-"+pk:uid()+uid(),fmPk:pk,arq:vale(r["Localização"]),arm:vale(r["Armário"]),prat:vale(r.Prateleira),ns:vale(r["NúmeroSérie"]),ano:vale(r.AnoLetivo),anoCur:vale(r.AnoCurricular),
+        curso,cursoNum:foNumCurso(cc&&cc.num?cc.num:curso),tit:vale(r["Título"]),vol:vale(r.Volume)||"1",volT:vale(r.TotalVolume)||"1",proj:vale(r["NúmeroProjeto"]),fin:vale(r.FSE),tipo:vale(r.Tipo)||"Tecnicopedagógico",
+        princ:vale(r.Principal)==="Sim",url:vale(r.URL),obs:"",cbAntigo:vale(r.BARCODENUMBER),cr:foFmData(r.CreationTimestamp)||Date.now(),por:vale(r.CreatedBy),em:foFmData(r.ModificationTimestamp)||Date.now(),mod:vale(r.ModifiedBy),origem:"filemaker"};
+      if(ids.has(d.id)||ids.has(pk)||(pk&&(pks.has(pk)||idsTxt.includes(pk)))||chaves.has(foFmChave(d))||criados.has(Math.round(d.cr/1000)+"|"+norm(d.tit))||(d.cbAntigo&&cbs.has(norm(d.cbAntigo+"|"+d.ano+"|"+d.tit+"|"+d.vol)))){ja++;continue}
+      NOV.push(d);ids.add(d.id);chaves.add(foFmChave(d));novos++}
+    // 0.9.234: confirmar antes de juntar (para se ver logo se o número de novos não faz sentido)
+    if(novos&&!confirm(`O ficheiro do FileMaker tem ${D.length} dossiers: ${ja} já estão no Folder360 e ${novos} ${novos===1?"é novo":"são novos"}.${nC?`\nHá também ${nC} curso${nC===1?"":"s"} novo${nC===1?"":"s"}.`:""}\n\nJuntar os novos ao Folder360? (Nada é apagado nem substituído.)`)){
+      msg("Importação cancelada: nada foi alterado.","info");return}
+    if(!novos&&nC&&!confirm(`Os dossiers do FileMaker já estão todos no Folder360, mas há ${nC} curso${nC===1?"":"s"} novo${nC===1?"":"s"}. Juntá-lo${nC===1?"":"s"}?`)){msg("Importação cancelada: nada foi alterado.","info");return}
+    FOL.dossiers.push(...NOV);FOL.cursos.push(...NCU);
+    for(const d of NOV){if(d.arq){let a=arqs.get(d.arq);if(!a){a={cod:d.arq,nome:"",arms:"",prats:""};E.arqs.push(a);arqs.set(d.arq,a);defMud=true}
+        for(const [k,v] of [["arms",d.arm],["prats",d.prat]])if(v&&!foLista(a[k]).includes(v)){a[k]=foLista(a[k]).concat(v).join(",");defMud=true}}
+      if(d.fin&&!E.fins.some(x=>norm(x.n)===norm(d.fin))){E.fins.push({n:d.fin,logo:null});defMud=true}}
+    if(defMud)E.em=Date.now();
+    if(novos||nC||defMud){foIdxC=null;foGuardar()}
+    const m=novos||nC?`Importado do FileMaker: ${novos} dossier${novos===1?"":"s"} novo${novos===1?"":"s"}${nC?` e ${nC} curso${nC===1?"":"s"}`:""}${ja?` (${ja} já estavam no Folder360 e ficaram como estavam)`:""}. Agora há ${FOL.dossiers.length} dossiers.`
+      :`Nada de novo: os ${ja} dossiers do FileMaker já estão todos no Folder360 (ficaram como estavam).`;
+    toast(m);if(curTab)foRender(curTab);setTimeout(()=>msg(esc(m),"ok"),60)}
+  catch(e){msg("Não foi possível ler esse ficheiro do FileMaker ("+esc(e.message||e)+").","bad")}}
+document.querySelectorAll("#foInicio,#foRel").forEach(S=>S.addEventListener("change",e=>{const x=e.target.closest("[data-foimpfm]");if(x&&x.files&&x.files[0]){foImportarFM(x.files[0]);x.value=""}}));
 // ----- Definições -----
 function foDefUI(){const E=foDef(),ed=foEd(),dis=ed?"":"disabled",{m,r}=pdfLogos();
   const lst=(k,t,h)=>`<label class="w2">${t}<textarea data-fdlst="${k}" rows="3" ${dis}>${esc(E[k].join("\n"))}</textarea>${h?`<small class="hint">${h}</small>`:""}</label>`;

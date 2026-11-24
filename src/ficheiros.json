@@ -58,6 +58,7 @@
    "js/pass/pass.js"
   ],
   "folder": [
+   "js/folder/fmp12.js",
    "js/folder/folder.js"
   ],
   "econo": [

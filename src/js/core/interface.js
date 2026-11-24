@@ -235,3 +235,19 @@ try{localStorage.removeItem("box_skip")}catch(e){}
 qualInit();renderAll();renderRP();renderEnvios();renderAnalises();
 $("#gTo").value=cfg.mail.relatorio_para||"";
 
+
+/* 0.9.237: listas de escolha (<input list="…">) — ao clicar num campo que já tem uma opção escolhida, mostra outra vez TODAS as opções
+   (o navegador só mostrava as que começam pelo texto que lá está, obrigando a apagar). O valor atual fica à vista como texto cinzento;
+   se sair sem escolher nem escrever nada, volta tal como estava (sem disparar «input»/«change», por isso nada se grava nem se perde). */
+(()=>{const TIPOS=/^(text|search|email|tel|url|)$/;
+  const ok=el=>el&&el.tagName==="INPUT"&&el.hasAttribute("list")&&TIPOS.test((el.getAttribute("type")||"").toLowerCase())&&!el.disabled&&!el.readOnly;
+  const repor=el=>{if(!el||el.dataset.dlAntes==null)return;if(el.value==="")el.value=el.dataset.dlAntes;el.placeholder=el.dataset.dlPh||"";if(!el.dataset.dlPh)el.removeAttribute("placeholder");delete el.dataset.dlAntes;delete el.dataset.dlPh};
+  document.addEventListener("pointerdown",e=>{const el=e.target;if(!ok(el)||el.dataset.dlAntes!=null||el.value==="")return;
+    el.dataset.dlAntes=el.value;el.dataset.dlPh=el.getAttribute("placeholder")||"";el.placeholder=el.value;el.value=""},true);
+  /* escreveu ou escolheu: passa a valer o que lá está */
+  document.addEventListener("input",e=>{const el=e.target;if(el&&el.dataset&&el.dataset.dlAntes!=null){el.placeholder=el.dataset.dlPh||"";if(!el.dataset.dlPh)el.removeAttribute("placeholder");delete el.dataset.dlAntes;delete el.dataset.dlPh}},true);
+  /* saiu sem escolher, ou Enter / Esc com o campo vazio: repõe o valor (antes de qualquer outro código o ler) */
+  window.addEventListener("blur",e=>repor(e.target),true);
+  window.addEventListener("focusout",e=>repor(e.target),true);
+  document.addEventListener("keydown",e=>{const el=e.target;if(el&&el.dataset&&el.dataset.dlAntes!=null&&(e.key==="Enter"||e.key==="Escape")&&el.value==="")repor(el)},true);
+})();

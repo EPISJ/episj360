@@ -140,7 +140,7 @@ function mvBarra(m,t){const bar=document.getElementById("mvTabs");if(!bar)return
   document.documentElement.classList.toggle("mv-sembar",!vis.length)}
 // avatar (iniciais), sinal de «a guardar / por guardar»
 function mvConta0(){const a=document.getElementById("mvAvI");if(!a)return;let ini="";try{if(EU&&(EU.nome||EU.email)){const n=String(EU.nome||EU.email.split("@")[0]).replace(/[._]/g," ").trim().split(/\s+/);ini=(n[0][0]+(n.length>1?n[n.length-1][0]:"")).toUpperCase()}}catch(e){}
-  if(a.textContent!==ini)a.textContent=ini;
+  if(a.textContent!==ini)a.textContent=ini;try{euFotoAplicar()}catch(e){}
   const s=document.getElementById("mvSinc"),st=(document.getElementById("subSt")||{}).textContent||"";if(s){const err=/volta a tentar|só neste navegador/i.test(st)&&!/Só leitura/.test(st);s.classList.toggle("err",err);s.title=st}}
 
 /* ---------- folhas que sobem de baixo ---------- */
@@ -195,7 +195,7 @@ function mvFolhaConta(){let nome="",mail="",pf="";try{nome=EU&&EU.nome||"";mail=
     <div class="mv-sec">Ligações da escola</div><div class="mv-lista">${lig}</div>
     ${EU?`<button type="button" class="b s mv-sair" data-mvacao="sair">${mvSvg(MV_ICO.sair)} Terminar sessão</button>`:""}
     <p class="mv-ver">EPISJ 360 ${esc(typeof VERSAO!=="undefined"?VERSAO:"")}</p>`;
-  const f=mvFolha("Conta",html,"mv-fconta");mvLigarFolha(f);
+  const f=mvFolha("Conta",html,"mv-fconta");mvLigarFolha(f);try{euFotoAplicar()}catch(e){}
   const s=f.querySelector("[data-mvano]");if(s)s.addEventListener("change",()=>{try{sel.value=s.value;mudarAnoAtivo(s.value)}catch(e){console.warn(e)}})}
 function mvAcao(a,el){
   if(a==="guardar"){try{guardarAgora()}catch(e){}el.disabled=true;return}

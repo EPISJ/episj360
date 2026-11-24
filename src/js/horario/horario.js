@@ -377,7 +377,7 @@ if(curMod!=="boxcheck"){const M=MODULOS.find(x=>x.id===curMod);if(M)try{show(M.i
    const em=String(EU.email),nm=String(EU.nome||"").trim()||(()=>{try{const p=(cfg.profs||[]).find(q=>profEmail(q)===em.toLowerCase());return p?p.nome:""}catch(e){return ""}})(),
      pf=EU.admin?"Administrador":(PERFIL_CURTO[EU.perfil]||EU.perfil||""),ini=(nm||em).split(/[\s.@]+/).filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join(""),
      k=em+"|"+nm+"|"+pf;if(el.dataset.k===k)return;el.dataset.k=k;
-   el.innerHTML=`<span class="av">${esc(ini)}</span><span class="tx"><b>${esc(nm||em)}</b><small>${nm?esc(em)+" · ":""}${esc(pf)}</small></span>`;el.title="Sessão iniciada como "+em};
+   el.innerHTML=`<span class="av">${esc(ini)}</span><span class="tx"><b>${esc(nm||em)}</b><small>${nm?esc(em)+" · ":""}${esc(pf)}</small></span>`;el.title="Sessão iniciada como "+em;try{euFotoAplicar()}catch(e){}};
  const est0=est;
  est0();usr();setInterval(()=>{est0();usr()},4000)}
 loginUI();

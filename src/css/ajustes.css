@@ -301,3 +301,5 @@ body.hsamplo #hsSem .hsbar{margin-bottom:10px!important}
 body.hsamplo #hsSem .hsw .c{min-height:max(54px,calc((100vh - 300px - var(--hsi,0) * 22px) / var(--hsn,8)))}
 body.hsamplo #hsSem .hsw .a b{font-size:15px}body.hsamplo #hsSem .hsw .a span{font-size:13px}
 body.hsamplo #hsAmp{background:var(--brand);border-color:var(--brand);color:#fff}
+/* 0.9.233: fotografia do perfil do Office 365 nos avatares */
+.av.comfoto,#mvAvI.comfoto,.mv-eav.comfoto{background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;color:transparent!important;font-size:0!important;background-color:#dfe5ef}

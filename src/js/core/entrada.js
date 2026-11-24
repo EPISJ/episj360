@@ -134,9 +134,20 @@ async function guideCarregarModulos0(){
   const pBox=pMe.then(me=>{gpPasso(76,"Box360: ligado à Box");return connected(me)}).then(async()=>{if(nuvSB())try{await recuperarLocal()}catch(e){}});pBox.catch(()=>{});
   try{await gpAte(pBox,45000);fim("boxcheck","ok");fim("roomcheck","ok");fim("escola","ok");fim("eduschedule","ok");odCopiaDiaria()}
   catch(e){fim("boxcheck",e.tempo?"bg":"erro");fim("roomcheck",e.tempo?"bg":"ok")}}
+/* 0.9.234: fotografia do perfil da conta do Office 365 (Microsoft Graph /me/photo) nos avatares da app, em vez das iniciais.
+   Fica só em memória (URL blob), nunca no computador; sem fotografia na conta, ficam as iniciais. */
+var EU_FOTO=null,EU_FOTO_DE="",EU_FOTO_P=null;
+function euFotoAplicar(){if(!EU_FOTO)return;document.querySelectorAll("#who .av,#subUsr .av,#mvAvI,.mv-eav").forEach(a=>{if(a.dataset.foto===EU_FOTO)return;a.dataset.foto=EU_FOTO;a.classList.add("comfoto");a.style.backgroundImage=`url("${EU_FOTO}")`;a.setAttribute("aria-label",(EU&&EU.nome)||"Fotografia do perfil")})}
+function euFoto(){const em=String((EU&&EU.email)||"").toLowerCase();if(!em||!MSACC||String(MSACC.username||"").toLowerCase()!==em)return Promise.resolve(null);
+  if(EU_FOTO_DE===em&&(EU_FOTO||EU_FOTO_P))return EU_FOTO_P||Promise.resolve(EU_FOTO);
+  EU_FOTO_DE=em;EU_FOTO_P=(async()=>{try{const tok=await guideTok();let r=await fetch("https://graph.microsoft.com/v1.0/me/photos/120x120/$value",{headers:{Authorization:"Bearer "+tok},cache:"no-store"});
+      if(!r.ok)r=await fetch("https://graph.microsoft.com/v1.0/me/photo/$value",{headers:{Authorization:"Bearer "+tok},cache:"no-store"});
+      if(!r.ok)return null;const b=await r.blob();if(!b.size||!/^image\//.test(b.type||"image/"))return null;
+      if(EU_FOTO)try{URL.revokeObjectURL(EU_FOTO)}catch(e){}EU_FOTO=URL.createObjectURL(b);euFotoAplicar();return EU_FOTO}catch(e){return null}finally{EU_FOTO_P=null}})();return EU_FOTO_P}
 function whoUI(){const n=EU.nome||EU.email,ini=n.split(/\s+/).filter(Boolean).map(w=>w[0]).slice(0,2).join("").toUpperCase();
   $("#who").innerHTML=`<span class="av">${esc(ini)}</span><span title="${esc(EU.email)}">${esc(n)}</span><span class="pf${EU.admin?" adm":""}" title="${esc(EU.admin?"Administrador da EPISJ 360 — perfil: "+(EU.perfilNome||PERFIL_CURTO[EU.perfil]||""):"Perfil da conta")}">${esc(EU.admin?"Administrador":(EU.perfilNome||PERFIL_CURTO[EU.perfil]||""))}</span><a href="#" id="whoOut" title="Terminar sessão" aria-label="Terminar sessão">Terminar sessão</a>`;
   $("#who").style.display="flex";$("#whoOut").onclick=e=>{e.preventDefault();guideSair()};setTimeout(()=>{legadoLimpar().catch(()=>{})},15000);
+  try{euFotoAplicar();euFoto()}catch(e){}
   try{$("#privBtn").hidden=false;renderPriv();const lk=localStorage.getItem(PRIV_ON);if(lk&&lk!==String(EU.email||"").toLowerCase())privDesbloquear()}catch(e){}}
 /* ---------- 0.9.148: nada fica no computador ----------
    A app já não grava nada no navegador (ver src/js/inicio/sem-armazenamento.js e DB em box/armazenamento.js).

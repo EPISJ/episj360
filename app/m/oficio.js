@@ -1,4 +1,4 @@
-/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.244 — ecrã do módulo «oficio», carregado quando é aberto */
+/* GERADO por tools/montar.mjs a partir de src/ — não editar aqui (as alterações perdem-se). EPISJ 360 0.9.245 — ecrã do módulo «oficio», carregado quando é aberto */
 "use strict";
 // ===== src/js/oficio/oficio.js =====
 /* Ofício360 — ecrã do módulo (carregado só quando o Ofício360 é aberto; os dados estão em oficio/oficio-dados.js) */
